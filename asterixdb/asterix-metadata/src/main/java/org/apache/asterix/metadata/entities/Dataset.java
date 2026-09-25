@@ -47,6 +47,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
@@ -460,6 +461,18 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public IResourceFactory getResourceFactory(MetadataProvider mdProvider, Index index, ARecordType recordType,
             ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties)
             throws AlgebricksException {
+        return getResourceFactory(mdProvider, index, recordType, metaType, mergePolicyFactory, mergePolicyProperties,
+                IndexCompletionMode.ON_CREATE);
+    }
+
+    /**
+     * @param completionMode whether the index this factory creates is to be marked pending-creation until it is
+     *                     loaded (ASTERIXDB-3839)
+     * @see #getResourceFactory(MetadataProvider, Index, ARecordType, ARecordType, ILSMMergePolicyFactory, Map)
+     */
+    public IResourceFactory getResourceFactory(MetadataProvider mdProvider, Index index, ARecordType recordType,
+            ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+            IndexCompletionMode completionMode) throws AlgebricksException {
         ITypeTraits[] filterTypeTraits = DatasetUtil.computeFilterTypeTraits(this, recordType, metaType);
         IBinaryComparatorFactory[] filterCmpFactories = DatasetUtil.computeFilterBinaryComparatorFactories(this,
                 recordType, metaType, mdProvider.getStorageComponentProvider().getComparatorFactoryProvider());
@@ -499,7 +512,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
                         index.getIndexType().toString());
         }
-        return new DatasetLocalResourceFactory(datasetId, resourceFactory);
+        return new DatasetLocalResourceFactory(datasetId, resourceFactory, completionMode);
     }
 
     /**

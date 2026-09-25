@@ -19,6 +19,7 @@
 package org.apache.asterix.transaction.management.resource;
 
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.common.IResource;
@@ -29,16 +30,23 @@ public class DatasetLocalResourceFactory implements IResourceFactory {
     private static final long serialVersionUID = 1L;
     private final int datasetId;
     private final IResourceFactory resourceFactory;
+    private final IndexCompletionMode completionMode;
 
     public DatasetLocalResourceFactory(int datasetId, IResourceFactory resourceFactory) {
+        this(datasetId, resourceFactory, IndexCompletionMode.ON_CREATE);
+    }
+
+    public DatasetLocalResourceFactory(int datasetId, IResourceFactory resourceFactory,
+            IndexCompletionMode completionMode) {
         this.datasetId = datasetId;
         this.resourceFactory = resourceFactory;
+        this.completionMode = completionMode;
     }
 
     @Override
     public IResource createResource(FileReference fileRef) {
         int partition = StoragePathUtil.getPartitionNumFromRelativePath(fileRef.getRelativePath());
         IResource resource = resourceFactory.createResource(fileRef);
-        return new DatasetLocalResource(datasetId, partition, resource);
+        return new DatasetLocalResource(datasetId, partition, resource, completionMode);
     }
 }

@@ -54,6 +54,7 @@ import org.apache.asterix.common.storage.DatasetCopyIdentifier;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.storage.ResourceStorageStats;
 import org.apache.asterix.common.utils.Partitions;
@@ -176,8 +177,12 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 createResourceFileMask(resourceFile);
                 byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
                 ioManager.overwrite(resourceFile, bytes);
+                IndexCompletionMode completionMode =
+                        ((DatasetLocalResource) resource.getResource()).getCompletionMode();
+                boolean pendingCreation = completionMode == IndexCompletionMode.ON_LOAD;
                 indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(
-                        UNINITIALIZED_COMPONENT_SEQ, 0, LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId(), null);
+                        UNINITIALIZED_COMPONENT_SEQ, 0, LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId(),
+                        pendingCreation, null);
                 deleteResourceFileMask(resourceFile);
             } catch (Exception e) {
                 cleanup(resourceFile);

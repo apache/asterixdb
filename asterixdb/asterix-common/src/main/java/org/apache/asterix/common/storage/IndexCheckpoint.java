@@ -46,9 +46,10 @@ public class IndexCheckpoint {
     private Map<Long, Long> masterNodeFlushMap;
     private String masterNodeId;
     private long masterValidSeq;
+    private boolean pendingCreation;
 
     public static IndexCheckpoint first(long lastComponentSequence, long lowWatermark, long validComponentId,
-            String masterNodeId) {
+            String masterNodeId, boolean pendingCreation) {
         IndexCheckpoint firstCheckpoint = new IndexCheckpoint();
         firstCheckpoint.id = INITIAL_CHECKPOINT_ID;
         firstCheckpoint.lowWatermark = lowWatermark;
@@ -58,11 +59,12 @@ public class IndexCheckpoint {
         firstCheckpoint.masterNodeFlushMap.put(HAS_NULL_MISSING_VALUES_FIX, HAS_NULL_MISSING_VALUES_FIX);
         firstCheckpoint.masterNodeId = masterNodeId;
         firstCheckpoint.masterValidSeq = lastComponentSequence;
+        firstCheckpoint.pendingCreation = pendingCreation;
         return firstCheckpoint;
     }
 
     public static IndexCheckpoint next(IndexCheckpoint latest, long lowWatermark, long validComponentSequence,
-            long lastComponentId, String masterNodeId) {
+            long lastComponentId, String masterNodeId, boolean pendingCreation) {
         if (lowWatermark < latest.getLowWatermark()) {
             if (LOGGER.isErrorEnabled()) {
                 LOGGER.error("low watermark {} less than the latest checkpoint low watermark {}", lowWatermark, latest);
@@ -75,6 +77,7 @@ public class IndexCheckpoint {
         next.lastComponentId = lastComponentId;
         next.validComponentSequence = validComponentSequence;
         next.masterNodeFlushMap = latest.getMasterNodeFlushMap();
+        next.pendingCreation = pendingCreation;
         if (masterNodeId != null) {
             next.masterNodeId = masterNodeId;
             next.masterValidSeq = validComponentSequence;
@@ -109,6 +112,10 @@ public class IndexCheckpoint {
 
     public long getId() {
         return id;
+    }
+
+    public boolean isPendingCreation() {
+        return pendingCreation;
     }
 
     public boolean hasNullMissingValuesFix() {

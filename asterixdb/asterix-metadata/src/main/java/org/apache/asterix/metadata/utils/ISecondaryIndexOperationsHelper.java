@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.utils;
 
 import java.util.Set;
 
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -33,7 +34,7 @@ public interface ISecondaryIndexOperationsHelper {
 
     void init() throws AlgebricksException;
 
-    JobSpecification buildCreationJobSpec() throws AlgebricksException;
+    JobSpecification buildCreationJobSpec(IndexCompletionMode completionMode) throws AlgebricksException;
 
     JobSpecification buildLoadingJobSpec() throws AlgebricksException;
 

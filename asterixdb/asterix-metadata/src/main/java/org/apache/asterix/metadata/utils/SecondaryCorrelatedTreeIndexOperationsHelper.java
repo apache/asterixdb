@@ -286,7 +286,7 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
         LSMSecondaryIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp =
                 new LSMSecondaryIndexBulkLoadOperatorDescriptor(spec, taggedSecondaryRecDesc, primaryIndexHelperFactory,
                         secondaryIndexHelperFactory, fieldPermutation, NUM_TAG_FIELDS, numSecondaryKeys, numPrimaryKeys,
-                        hasBuddyBtree);
+                        hasBuddyBtree, true);
         treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);

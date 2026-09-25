@@ -33,6 +33,7 @@ import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.dataflow.data.common.AOrderedListVectorBinaryAccessorFactory;
@@ -498,7 +499,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
                         false, // checkIfEmptyIndex
                         dataflowHelperFactory, primaryIndexHelperFactory, BulkLoadUsage.CREATE_INDEX,
                         dataset.getDatasetId(), null, // tupleFilterFactory
-                        partitionerFactory, partitioningProperties.getComputeStorageMap());
+                        partitionerFactory, partitioningProperties.getComputeStorageMap(), true);
         sortedBulkLoaderOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sortedBulkLoaderOp,
                 primaryPartitionConstraint);
@@ -522,7 +523,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
     }
 
     @Override
-    public JobSpecification buildCreationJobSpec() throws AlgebricksException {
+    public JobSpecification buildCreationJobSpec(IndexCompletionMode completionMode) throws AlgebricksException {
         Index.VectorIndexDetails vectorIndexDetails = (Index.VectorIndexDetails) index.getIndexDetails();
         VectorIndexParameters vectorParameters = vectorIndexDetails.getVectorParameters();
 
@@ -679,7 +680,7 @@ public class SecondaryVectorOperationsHelper extends SecondaryTreeIndexOperation
             indexBuilderFactories[i] = new QuantizedIndexBuilderFactory[len];
             for (int k = 0; k < len; k++) {
                 IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType,
-                        metaType, mergePolicyFactory, mergePolicyProperties);
+                        metaType, mergePolicyFactory, mergePolicyProperties, completionMode);
                 indexBuilderFactories[i][k] = new QuantizedIndexBuilderFactory(
                         metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider,
                         resourceFactory, true);

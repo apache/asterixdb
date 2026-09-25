@@ -25,6 +25,8 @@ import java.util.Map;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
+import org.apache.asterix.common.storage.DatasetResourceReference;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
@@ -49,14 +51,16 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
     protected final IDatasetLifecycleManager datasetManager;
     protected final int datasetId;
     protected final int partition;
+    protected final boolean completesIndexCreation;
+    protected final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     protected ILSMIndex[] primaryIndexes;
 
     public LSMIndexBulkLoadOperatorNodePushable(IIndexDataflowHelperFactory indexDataflowHelperFactory,
             IIndexDataflowHelperFactory priamryIndexDataflowHelperFactory, IHyracksTaskContext ctx, int partition,
             int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex, RecordDescriptor recDesc, BulkLoadUsage usage, int datasetId,
-            ITupleFilterFactory tupleFilterFactory, ITuplePartitionerFactory partitionerFactory, int[][] partitionsMap)
-            throws HyracksDataException {
+            ITupleFilterFactory tupleFilterFactory, ITuplePartitionerFactory partitionerFactory, int[][] partitionsMap,
+            boolean completesIndexCreation) throws HyracksDataException {
         super(indexDataflowHelperFactory, ctx, partition, fieldPermutation, fillFactor, verifyInput, numElementsHint,
                 checkIfEmptyIndex, recDesc, tupleFilterFactory, partitionerFactory, partitionsMap);
 
@@ -78,6 +82,8 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
         INcApplicationContext ncCtx =
                 (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         datasetManager = ncCtx.getDatasetLifecycleManager();
+        this.completesIndexCreation = completesIndexCreation;
+        this.indexCheckpointManagerProvider = ncCtx.getIndexCheckpointManagerProvider();
     }
 
     @Override
@@ -114,6 +120,15 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
         } finally {
             if (primaryIndexHelpers != null) {
                 closeIndexes(primaryIndexes, primaryIndexHelpers, primaryIndexHelpersOpen);
+            }
+        }
+        if (completesIndexCreation && !failed) {
+            // the load is the creator's last step on this partition: the index now holds what it starts with, so it
+            // is no longer pending (ASTERIXDB-3839). A load that failed -- or one whose close() above threw -- leaves
+            // the index pending, for storage cleanup to reclaim.
+            for (IIndexDataflowHelper indexHelper : indexHelpers) {
+                indexCheckpointManagerProvider.get(DatasetResourceReference.of(indexHelper.getResource()))
+                        .creationCompleted();
             }
         }
     }

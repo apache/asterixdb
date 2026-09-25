@@ -55,6 +55,7 @@ import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResource;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
@@ -238,7 +239,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             throws HyracksDataException {
         LOGGER.debug("performing local recovery for dataset {} partition {}", datasetResource.getDatasetInfo(),
                 partition);
-        FileReference indexRootRef = StoragePathUtil.getIndexRootPath(serviceCtx.getIoManager(), resourcePath);
+        IIOManager ioManager = serviceCtx.getIoManager();
+        FileReference indexRootRef = StoragePathUtil.getIndexRootPath(ioManager, resourcePath);
         Map<Long, LocalResource> resources = resourceRepository.getResources(r -> true, List.of(indexRootRef));
 
         List<ILSMIndex> indexes = new ArrayList<>();
@@ -250,6 +252,14 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             ILSMIndex index = getOrCreateIndex(resource);
             boolean undoTouch = !resourcePath.equals(resource.getPath());
             openResource(resource.getPath(), undoTouch);
+            if (!index.isPrimaryIndex() && index.getDiskComponents().isEmpty()
+                    && indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).isPendingCreation()) {
+                // still being created: it has no components yet, and recovering it as if it had lost them drags the
+                // whole partition's rollback point down to LSMComponentId.NOT_FOUND. See ASTERIXDB-3839. The flag is
+                // only consulted while the index is empty, so one left set on a built index is inert.
+                LOGGER.debug("excluding {} from local recovery - it is still being created", resource.getPath());
+                continue;
+            }
             indexes.add(index);
         }
 

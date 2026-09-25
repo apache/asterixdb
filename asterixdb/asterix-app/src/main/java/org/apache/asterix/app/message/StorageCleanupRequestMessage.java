@@ -20,35 +20,35 @@ package org.apache.asterix.app.message;
 
 import static org.apache.hyracks.util.ExitUtil.EC_NC_FAILED_TO_NOTIFY_TASKS_COMPLETED;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.app.nc.StorageCleanupUtil;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.messaging.CcIdentifiedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
+import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-
 public class StorageCleanupRequestMessage extends CcIdentifiedMessage implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
-    private final IntOpenHashSet validDatasetIds;
+    private final Map<Integer, HashSet<String>> validIndexes;
     private final long reqId;
 
-    public StorageCleanupRequestMessage(long reqId, IntOpenHashSet validDatasetIds) {
-        this.validDatasetIds = validDatasetIds;
+    public StorageCleanupRequestMessage(long reqId, Map<Integer, HashSet<String>> validIndexes) {
+        this.validIndexes = validIndexes;
         this.reqId = reqId;
     }
 
@@ -65,9 +65,14 @@ public class StorageCleanupRequestMessage extends CcIdentifiedMessage implements
                 // skip metadata indexes
                 continue;
             }
-            if (!validDatasetIds.contains(lr.getDatasetId())) {
+            Set<String> datasetIndexes = validIndexes.get(lr.getDatasetId());
+            if (datasetIndexes == null) {
                 LOGGER.warn("found invalid index {} with dataset id {}", resource.getPath(), lr.getDatasetId());
-                deleteInvalidIndex(appContext, localResourceRepository, resource);
+                StorageCleanupUtil.deleteIndex(appContext, resource.getPath());
+            } else if (isUnknownSecondary(resource, datasetIndexes)) {
+                LOGGER.warn("found index {} that metadata has no entry for; its creation never completed",
+                        resource.getPath());
+                StorageCleanupUtil.deleteIndex(appContext, resource.getPath());
             }
         }
         localResourceRepository.cleanup(nodePartitions);
@@ -79,30 +84,9 @@ public class StorageCleanupRequestMessage extends CcIdentifiedMessage implements
         }
     }
 
-    private void deleteInvalidIndex(INcApplicationContext appContext,
-            PersistentLocalResourceRepository localResourceRepository, LocalResource resource)
-            throws HyracksDataException {
-        IDatasetLifecycleManager lcManager = appContext.getDatasetLifecycleManager();
-        String resourceRelPath = resource.getPath();
-        synchronized (lcManager) {
-            IIndex index;
-            index = lcManager.get(resourceRelPath);
-            if (index != null) {
-                LOGGER.warn("unregistering invalid index {}", resourceRelPath);
-                lcManager.unregister(resourceRelPath);
-            } else {
-                LOGGER.warn("initializing unregistered invalid index {}", resourceRelPath);
-                try {
-                    index = resource.getResource().createInstance(appContext.getServiceContext());
-                } catch (Exception e) {
-                    LOGGER.warn("failed to initialize invalid index {}", resourceRelPath, e);
-                }
-            }
-            localResourceRepository.delete(resourceRelPath);
-            if (index != null) {
-                index.destroy();
-            }
-        }
+    private static boolean isUnknownSecondary(LocalResource resource, Set<String> datasetIndexes) {
+        DatasetResourceReference ref = DatasetResourceReference.of(resource);
+        return !ref.getIndex().equals(ref.getDataset()) && !datasetIndexes.contains(ref.getIndex());
     }
 
     @Override

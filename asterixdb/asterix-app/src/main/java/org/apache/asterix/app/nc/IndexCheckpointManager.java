@@ -57,8 +57,8 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public synchronized void init(long validComponentSequence, long lsn, long validComponentId, String masterNodeId)
-            throws HyracksDataException {
+    public synchronized void init(long validComponentSequence, long lsn, long validComponentId, boolean pendingCreation,
+            String masterNodeId) throws HyracksDataException {
         List<IndexCheckpoint> checkpoints;
         try {
             checkpoints = getCheckpoints();
@@ -70,7 +70,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
             delete();
         }
         IndexCheckpoint firstCheckpoint =
-                IndexCheckpoint.first(validComponentSequence, lsn, validComponentId, masterNodeId);
+                IndexCheckpoint.first(validComponentSequence, lsn, validComponentId, masterNodeId, pendingCreation);
         persist(firstCheckpoint);
     }
 
@@ -88,8 +88,8 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     public synchronized void flushed(long componentSequence, long lsn, long componentId, String masterNodeId)
             throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
-        IndexCheckpoint nextCheckpoint =
-                IndexCheckpoint.next(latest, lsn, componentSequence, componentId, masterNodeId);
+        IndexCheckpoint nextCheckpoint = IndexCheckpoint.next(latest, lsn, componentSequence, componentId, masterNodeId,
+                latest.isPendingCreation());
         persist(nextCheckpoint);
         deleteHistory(nextCheckpoint.getId(), HISTORY_CHECKPOINTS);
     }
@@ -105,7 +105,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         latest.getMasterNodeFlushMap().put(masterLsn, localLsn);
         LOGGER.trace("index {} master flush {} -> {}", indexPath, masterLsn, localLsn);
         final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(),
-                latest.getValidComponentSequence(), latest.getLastComponentId(), null);
+                latest.getValidComponentSequence(), latest.getLastComponentId(), null, latest.isPendingCreation());
         persist(next);
         notifyAll();
     }
@@ -121,6 +121,25 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
             return true;
         }
         return getLatest().getMasterNodeFlushMap().containsKey(masterLsn);
+    }
+
+    @Override
+    public synchronized void creationCompleted() throws HyracksDataException {
+        IndexCheckpoint latest = getLatest();
+        if (!latest.isPendingCreation()) {
+            return;
+        }
+        IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(),
+                latest.getValidComponentSequence(), latest.getLastComponentId(), null, false);
+        persist(next);
+        deleteHistory(next.getId(), HISTORY_CHECKPOINTS);
+    }
+
+    @Override
+    public synchronized boolean isPendingCreation() throws HyracksDataException {
+        // a resource with no checkpoint at all is corrupt, not pending; storage cleanup asks this of every
+        // secondary it finds on disk, so it must not throw on one
+        return isValidIndex() && getLatest().isPendingCreation();
     }
 
     @Override
@@ -171,7 +190,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     public synchronized void setLastComponentId(long componentId) throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
         final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(),
-                latest.getValidComponentSequence(), componentId, null);
+                latest.getValidComponentSequence(), componentId, null, latest.isPendingCreation());
         persist(next);
     }
 
@@ -180,8 +199,8 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
             throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
         if (componentSequence > latest.getValidComponentSequence()) {
-            final IndexCheckpoint next =
-                    IndexCheckpoint.next(latest, latest.getLowWatermark(), componentSequence, componentId, null);
+            final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(), componentSequence,
+                    componentId, null, latest.isPendingCreation());
             persist(next);
         }
     }

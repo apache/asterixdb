@@ -62,7 +62,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     protected final IIndexBulkLoader[] bulkLoaders;
     protected ITupleFilter tupleFilter;
     protected FrameTupleReference frameTuple;
-    private boolean failed = false;
+    protected boolean failed = false;
 
     public IndexBulkLoadOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,

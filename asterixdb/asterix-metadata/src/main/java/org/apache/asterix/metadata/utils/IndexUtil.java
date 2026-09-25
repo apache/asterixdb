@@ -41,6 +41,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.filter.NoOpDeltaTableFilterEvaluatorFactory;
@@ -184,10 +185,11 @@ public class IndexUtil {
     }
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(Dataset dataset, Index index,
-            MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
+            MetadataProvider metadataProvider, SourceLocation sourceLoc, IndexCompletionMode completionMode)
+            throws AlgebricksException {
         ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
-        JobSpecification spec = secondaryIndexHelper.buildCreationJobSpec();
+        JobSpecification spec = secondaryIndexHelper.buildCreationJobSpec(completionMode);
         spec.setProperty(HyracksJobProperty.JOB_KIND, JobKind.DDL);
         return spec;
     }

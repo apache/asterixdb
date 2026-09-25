@@ -31,6 +31,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
@@ -218,7 +219,8 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
     }
 
     @Override
-    public abstract JobSpecification buildCreationJobSpec() throws AlgebricksException;
+    public abstract JobSpecification buildCreationJobSpec(IndexCompletionMode completionMode)
+            throws AlgebricksException;
 
     @Override
     public abstract JobSpecification buildLoadingJobSpec() throws AlgebricksException;
@@ -495,7 +497,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new LSMIndexBulkLoadOperatorDescriptor(spec,
                 secondaryRecDesc, fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory,
                 primaryIndexDataflowHelperFactory, BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId(), null,
-                partitionerFactory, partitioningProperties.getComputeStorageMap());
+                partitionerFactory, partitioningProperties.getComputeStorageMap(), true);
         treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);

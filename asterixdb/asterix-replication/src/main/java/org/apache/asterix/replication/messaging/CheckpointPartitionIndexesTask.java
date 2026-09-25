@@ -84,7 +84,7 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
             if (indexCheckpointManager.getCheckpointCount() > 0) {
                 indexCheckpointManager.flushed(maxComponentSequence, currentLSN, maxComponentId, masterNodeId);
             } else {
-                indexCheckpointManager.init(maxComponentSequence, currentLSN, maxComponentId, masterNodeId);
+                indexCheckpointManager.init(maxComponentSequence, currentLSN, maxComponentId, false, masterNodeId);
             }
         }
         ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());

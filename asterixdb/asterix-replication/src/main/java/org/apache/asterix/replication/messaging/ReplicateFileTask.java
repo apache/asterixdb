@@ -111,7 +111,7 @@ public class ReplicateFileTask implements IReplicaTask {
         final long currentLSN = appCtx.getTransactionSubsystem().getLogManager().getAppendLSN();
         indexCheckpointManager.delete();
         indexCheckpointManager.init(UNINITIALIZED_COMPONENT_SEQ, currentLSN,
-                LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId(), masterNodeId);
+                LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId(), false, masterNodeId);
         LOGGER.info(() -> "Checkpoint index: " + indexRef);
     }
 

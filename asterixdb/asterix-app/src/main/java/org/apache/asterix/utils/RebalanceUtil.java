@@ -39,6 +39,7 @@ import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
@@ -440,8 +441,8 @@ public class RebalanceUtil {
             IHyracksClientConnection hcc, List<Index> indexes) throws Exception {
         for (Index index : indexes) {
             // Creates the secondary index.
-            JobSpecification indexCreationJobSpec =
-                    IndexUtil.buildSecondaryIndexCreationJobSpec(target, index, metadataProvider, null);
+            JobSpecification indexCreationJobSpec = IndexUtil.buildSecondaryIndexCreationJobSpec(target, index,
+                    metadataProvider, null, IndexCompletionMode.ON_LOAD);
             JobUtils.forceRunJob(hcc, indexCreationJobSpec, true);
 
             // Loads the secondary index.

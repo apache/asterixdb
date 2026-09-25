@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.dataflow;
 
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
@@ -44,11 +45,18 @@ public class DatasetLocalResource implements IResource, IResourceWrapper {
      */
     private int partition;
     private final IResource resource;
+    /** When the creation of this index completes; a creation-time instruction, never persisted. */
+    private final transient IndexCompletionMode completionMode;
 
     public DatasetLocalResource(int datasetId, int partition, IResource resource) {
+        this(datasetId, partition, resource, IndexCompletionMode.ON_CREATE);
+    }
+
+    public DatasetLocalResource(int datasetId, int partition, IResource resource, IndexCompletionMode completionMode) {
         this.datasetId = datasetId;
         this.partition = partition;
         this.resource = resource;
+        this.completionMode = completionMode;
     }
 
     public int getPartition() {
@@ -71,6 +79,10 @@ public class DatasetLocalResource implements IResource, IResourceWrapper {
 
     public void setPartition(int partition) {
         this.partition = partition;
+    }
+
+    public IndexCompletionMode getCompletionMode() {
+        return completionMode;
     }
 
     @Override

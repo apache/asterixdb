@@ -51,6 +51,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -372,8 +373,9 @@ public class DatasetUtil {
         // prepare a LocalResourceMetadata which will be stored in NC's local resource
         // repository
         int[][] computeStorageMap = partitioningProperties.getComputeStorageMap();
-        IndexBuilderFactory[][] indexBuilderFactories = getIndexBuilderFactories(dataset, metadataProvider, index,
-                itemType, metaItemType, splitsProvider, compactionInfo.first, compactionInfo.second, computeStorageMap);
+        IndexBuilderFactory[][] indexBuilderFactories =
+                getIndexBuilderFactories(dataset, metadataProvider, index, itemType, metaItemType, splitsProvider,
+                        compactionInfo.first, compactionInfo.second, computeStorageMap, IndexCompletionMode.ON_CREATE);
         IndexCreateOperatorDescriptor indexCreateOp =
                 new IndexCreateOperatorDescriptor(spec, indexBuilderFactories, computeStorageMap);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
@@ -386,14 +388,14 @@ public class DatasetUtil {
     public static IndexBuilderFactory[][] getIndexBuilderFactories(Dataset dataset, MetadataProvider metadataProvider,
             Index index, ARecordType itemType, ARecordType metaItemType, IFileSplitProvider fileSplitProvider,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
-            int[][] computeStorageMap) throws AlgebricksException {
+            int[][] computeStorageMap, IndexCompletionMode completionMode) throws AlgebricksException {
         IndexBuilderFactory[][] indexBuilderFactories = new IndexBuilderFactory[computeStorageMap.length][];
         for (int i = 0; i < computeStorageMap.length; i++) {
             int len = computeStorageMap[i].length;
             indexBuilderFactories[i] = new IndexBuilderFactory[len];
             for (int k = 0; k < len; k++) {
                 IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType,
-                        metaItemType, mergePolicyFactory, mergePolicyProperties);
+                        metaItemType, mergePolicyFactory, mergePolicyProperties, completionMode);
                 IndexBuilderFactory indexBuilderFactory =
                         new IndexBuilderFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
                                 fileSplitProvider, resourceFactory, true);
@@ -805,6 +807,10 @@ public class DatasetUtil {
 
     public static boolean isNotView(Dataset dataset) {
         return dataset.getDatasetType() != DatasetType.VIEW;
+    }
+
+    public static boolean isView(Dataset dataset) {
+        return dataset.getDatasetType() == DatasetType.VIEW;
     }
 
     public static boolean isFieldAccessPushdownSupported(Dataset dataset) {

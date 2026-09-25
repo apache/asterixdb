@@ -28,11 +28,13 @@ public interface IIndexCheckpointManager {
      * @param validComponentSequence
      * @param lsn
      * @param validComponentId
+     * @param pendingCreation
+     *            whether the index is still being created; see {@link #isPendingCreation()}
      * @param masterNodeId
      * @throws HyracksDataException
      */
-    void init(long validComponentSequence, long lsn, long validComponentId, String masterNodeId)
-            throws HyracksDataException;
+    void init(long validComponentSequence, long lsn, long validComponentId, boolean pendingCreation,
+            String masterNodeId) throws HyracksDataException;
 
     /**
      * Called when a new LSM disk component is flushed due to a replicated component.
@@ -101,6 +103,21 @@ public interface IIndexCheckpointManager {
      * Deletes all checkpoints
      */
     void delete();
+
+    /**
+     * The creator's last step: the index holds what it starts with, so it is no longer pending. A no-op on an index
+     * that was not created pending.
+     */
+    void creationCompleted() throws HyracksDataException;
+
+    /**
+     * Whether the index is still being created. Set on the index's first checkpoint at resource creation for a
+     * secondary index built by a load; until {@link #creationCompleted()} the index has no components and a
+     * checkpoint of NOT_FOUND, which local recovery would otherwise take for a secondary whose first flush was lost
+     * and roll the whole partition back to NOT_FOUND. Local recovery leaves a pending index out, and storage cleanup
+     * at node registration reclaims one, since no creation is in flight across a restart (ASTERIXDB-3839).
+     */
+    boolean isPendingCreation() throws HyracksDataException;
 
     void deleteLatest(long latestId);
 

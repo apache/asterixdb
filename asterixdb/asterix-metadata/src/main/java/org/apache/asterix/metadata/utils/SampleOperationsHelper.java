@@ -29,6 +29,7 @@ import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -168,11 +169,11 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     }
 
     @Override
-    public JobSpecification buildCreationJobSpec() throws AlgebricksException {
+    public JobSpecification buildCreationJobSpec(IndexCompletionMode completionMode) throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        IndexBuilderFactory[][] indexBuilderFactories =
-                DatasetUtil.getIndexBuilderFactories(dataset, metadataProvider, sampleIdx, itemType, metaType,
-                        fileSplitProvider, mergePolicyFactory, mergePolicyProperties, computeStorageMap);
+        IndexBuilderFactory[][] indexBuilderFactories = DatasetUtil.getIndexBuilderFactories(dataset, metadataProvider,
+                sampleIdx, itemType, metaType, fileSplitProvider, mergePolicyFactory, mergePolicyProperties,
+                computeStorageMap, completionMode);
         IndexCreateOperatorDescriptor indexCreateOp =
                 new IndexCreateOperatorDescriptor(spec, indexBuilderFactories, computeStorageMap);
         indexCreateOp.setSourceLocation(sourceLoc);
@@ -478,7 +479,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new LSMIndexBulkLoadOperatorDescriptor(spec,
                 recordDesc, fieldPermutation, fillFactor, false, numElementHint, true, dataflowHelperFactory, null,
                 LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage.LOAD, dataset.getDatasetId(), null, partitionerFactory,
-                computeStorageMap);
+                computeStorageMap, true);
         treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 partitionConstraint);

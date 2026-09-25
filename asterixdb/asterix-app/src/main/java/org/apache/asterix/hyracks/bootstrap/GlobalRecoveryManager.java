@@ -21,7 +21,10 @@ package org.apache.asterix.hyracks.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -37,14 +40,13 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public class GlobalRecoveryManager implements IGlobalRecoveryManager {
 
@@ -126,13 +128,21 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
 
     protected void performGlobalStorageCleanup(MetadataTransactionContext mdTxnCtx, int storageGlobalCleanupTimeoutSecs)
             throws Exception {
-        List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
-        IntOpenHashSet validDatasetIds = new IntOpenHashSet();
-        for (Dataverse dataverse : dataverses) {
+        Map<Integer, HashSet<String>> validIndexes = new HashMap<>();
+        for (Dataverse dataverse : MetadataManager.INSTANCE.getDataverses(mdTxnCtx)) {
             List<Dataset> dataverseDatasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx,
                     dataverse.getDatabaseName(), dataverse.getDataverseName());
-            dataverseDatasets.stream().filter(DatasetUtil::isNotView).mapToInt(Dataset::getDatasetId)
-                    .forEach(validDatasetIds::add);
+            for (Dataset dataset : dataverseDatasets) {
+                if (DatasetUtil.isView(dataset)) {
+                    continue;
+                }
+                HashSet<String> indexNames = new HashSet<>();
+                for (Index index : MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataset.getDatabaseName(),
+                        dataset.getDataverseName(), dataset.getDatasetName())) {
+                    indexNames.add(index.getIndexName());
+                }
+                validIndexes.put(dataset.getDatasetId(), indexNames);
+            }
         }
         ICcApplicationContext ccAppCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
         final List<String> ncs = new ArrayList<>(ccAppCtx.getClusterStateManager().getParticipantNodes());
@@ -140,7 +150,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         long reqId = messageBroker.newRequestId();
         List<StorageCleanupRequestMessage> requests = new ArrayList<>();
         for (int i = 0; i < ncs.size(); i++) {
-            requests.add(new StorageCleanupRequestMessage(reqId, validDatasetIds));
+            requests.add(new StorageCleanupRequestMessage(reqId, validIndexes));
         }
         messageBroker.sendSyncRequestToNCs(reqId, ncs, requests,
                 TimeUnit.SECONDS.toMillis(storageGlobalCleanupTimeoutSecs), false);

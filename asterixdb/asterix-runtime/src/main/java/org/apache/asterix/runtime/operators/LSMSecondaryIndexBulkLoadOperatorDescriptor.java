@@ -41,11 +41,12 @@ public class LSMSecondaryIndexBulkLoadOperatorDescriptor extends AbstractSingleA
     private final int numPrimaryKeys;
 
     private final boolean hasBuddyBTree;
+    private final boolean completesIndexCreation;
 
     public LSMSecondaryIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             IIndexDataflowHelperFactory primaryIndexHelperFactory,
             IIndexDataflowHelperFactory secondaryIndexHelperFactory, int[] fieldPermutation, int numTagFields,
-            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree) {
+            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree, boolean completesIndexCreation) {
         super(spec, 1, 1);
         //TODO(partitioning) correlated
         this.outRecDescs[0] = outRecDesc;
@@ -56,7 +57,7 @@ public class LSMSecondaryIndexBulkLoadOperatorDescriptor extends AbstractSingleA
         this.numSecondaryKeys = numSecondaryKeys;
         this.numPrimaryKeys = numPrimaryKeys;
         this.hasBuddyBTree = hasBuddyBTree;
-
+        this.completesIndexCreation = completesIndexCreation;
     }
 
     @Override
@@ -65,6 +66,6 @@ public class LSMSecondaryIndexBulkLoadOperatorDescriptor extends AbstractSingleA
         return new LSMSecondaryIndexBulkLoadNodePushable(ctx, partition,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), primaryIndexHelperFactory,
                 secondaryIndexHelperFactory, fieldPermutation, numTagFields, numSecondaryKeys, numPrimaryKeys,
-                hasBuddyBTree);
+                hasBuddyBTree, completesIndexCreation);
     }
 }

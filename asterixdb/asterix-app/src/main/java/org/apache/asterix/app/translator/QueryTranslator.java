@@ -114,6 +114,7 @@ import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.metadata.Namespace;
+import org.apache.asterix.common.storage.IndexCompletionMode;
 import org.apache.asterix.common.utils.AsterixJobProperty;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
@@ -2235,7 +2236,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // VECTOR INDEX: Multi-job pattern (creation -> static structure -> loading)
             if (index.getIndexType() == IndexType.VTREE) {
                 // JOB 1: Create empty index files
-                spec = IndexUtil.buildSecondaryIndexCreationJobSpec(ds, index, metadataProvider, sourceLoc);
+                spec = IndexUtil.buildSecondaryIndexCreationJobSpec(ds, index, metadataProvider, sourceLoc,
+                        IndexCompletionMode.ON_LOAD);
                 if (spec == null) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                             "Failed to create job spec for creating index '" + ds.getDatasetName() + "."
@@ -2285,7 +2287,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             // #. prepare to create the index artifact in NC.
-            spec = IndexUtil.buildSecondaryIndexCreationJobSpec(ds, index, metadataProvider, sourceLoc);
+            spec = IndexUtil.buildSecondaryIndexCreationJobSpec(ds, index, metadataProvider, sourceLoc,
+                    IndexCompletionMode.ON_LOAD);
             if (spec == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                         "Failed to create job spec for creating index '" + ds.getDatasetName() + "."
@@ -5563,8 +5566,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // #. add a new index with PendingAddOp
             MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), newIndexPendingAdd);
             // #. prepare to create the index artifact in NC.
-            JobSpecification spec =
-                    IndexUtil.buildSecondaryIndexCreationJobSpec(ds, newIndexPendingAdd, metadataProvider, sourceLoc);
+            JobSpecification spec = IndexUtil.buildSecondaryIndexCreationJobSpec(ds, newIndexPendingAdd,
+                    metadataProvider, sourceLoc, IndexCompletionMode.ON_LOAD);
             if (spec == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                         "Failed to create job spec for creating index '" + ds.getDatasetName() + "."
@@ -5917,8 +5920,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             String datasetName, SourceLocation sourceLoc, String indexName, List<JobSpecification> jobsToExecute,
             MetadataTransactionContext mdTxnCtx, Dataset ds, Index index) throws AlgebricksException {
         if (index != null) {
-            // #. prepare a job to drop the index in NC.
-            jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, ds, sourceLoc));
+            // #. prepare a job to drop the index in NC. An index whose create or drop never completed may have no
+            // files on some or all nodes, because the interrupted job never reached them (ASTERIXDB-3839). Dropping it is
+            // how the stuck metadata entry gets cleared, so that must not fail on a node that has nothing to drop.
+            Set<DropOption> dropOptions = index.getPendingOp() == MetadataUtil.PENDING_NO_OP
+                    ? EnumSet.noneOf(DropOption.class) : EnumSet.of(DropOption.IF_EXISTS);
+            jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, ds, dropOptions, sourceLoc));
 
             // #. mark PendingDropOp on the existing index
             MetadataManager.INSTANCE.dropIndex(mdTxnCtx, databaseName, dataverseName, datasetName, indexName);
