@@ -88,11 +88,14 @@ public class AzBlobStorageBufferedWriter implements ICloudBufferedWriter {
         BufferedInputStream bufferedInputStream = IOUtils.buffer(stream, length);
         String blockID =
                 Base64.getEncoder().encodeToString(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
-        initBlockBlobUploads(blockID);
-        blockIDArrayList.add(blockID);
         // deliberately uncaught: CloudRetryableRequestUtil retries AzureException, so re-wrapping the SDK failure
         // here would hide it from the retry loop and abort the upload on the first, possibly transient, failure
         blockBlobClient.stageBlock(blockID, bufferedInputStream, length);
+        // recorded only once staged: a retry stages the same bytes under a fresh id, so an id recorded before a
+        // failed attempt would be committed as well, failing the commit if the block never arrived, or writing
+        // the bytes twice if it did and only the reply was lost
+        initBlockBlobUploads(blockID);
+        blockIDArrayList.add(blockID);
     }
 
     private void initBlockBlobUploads(String blockID) {
