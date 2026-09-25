@@ -876,9 +876,9 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                 pathContext(subTree.getRecordType(), dataRecordVar == null ? Set.of() : Set.of(dataRecordVar)),
                 pathContext(subTree.getMetaRecordType(), metaRecordVar == null ? Set.of() : Set.of(metaRecordVar)));
 
-        // Collect ASSIGN bindings throughout the entire subtree.
-        Map<LogicalVariable, ILogicalExpression> bindings =
-                VectorIncludeFilterPushdown.collectAssignBindings(subTree.getRoot());
+        // With a variable sort key, PushSortDownRule leaves the projection's ASSIGN between the LIMIT and the
+        // ORDER, above the subtree root.
+        Map<LogicalVariable, ILogicalExpression> bindings = VectorIncludeFilterPushdown.collectAssignBindings(limitOp);
 
         // Gather variables used above the LIMIT.
         Set<LogicalVariable> liveOut = new HashSet<>();
