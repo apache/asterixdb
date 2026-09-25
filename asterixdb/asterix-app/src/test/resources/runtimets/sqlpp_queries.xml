@@ -6811,6 +6811,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-redundant-range">
+        <output-dir compare="Text">btree-index-redundant-range</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="heterogeneous-index-complex-types">
         <output-dir compare="Text">heterogeneous-index-complex-types</output-dir>
       </compilation-unit>

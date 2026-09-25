@@ -1180,83 +1180,31 @@ public class BTreeAccessMethod implements IAccessMethod {
                     }
                     break;
                 }
-                case HIGH_EXCLUSIVE: {
-                    if (highKeyLimits[keyPos] == null || (highKeyLimits[keyPos] != null && highKeyInclusive[keyPos])) {
-                        highKeyLimits[keyPos] = limit;
-                        highKeyExprs[keyPos] = searchKeyExpr;
-                        highKeyInclusive[keyPos] = false;
-                    } else {
-                        // Has already been set to the identical values. When optimizing join we may encounter the
-                        // same optimizable expression twice
-                        // (once from analyzing each side of the join)
-                        if (highKeyLimits[keyPos] == limit && highKeyInclusive[keyPos] == false
-                                && highKeyExprs[keyPos].equals(searchKeyExpr)) {
-                            break;
-                        }
-                        if (!rangeMerging(searchKeyExpr, highKeyExprs, highKeyLimits, limit, keyPos, true)) {
-                            couldntFigureOut = true;
-                            doneWithExprs = true;
-                        }
-                    }
-                    break;
-                }
+                case HIGH_EXCLUSIVE:
                 case HIGH_INCLUSIVE: {
+                    boolean inclusive = limit == LimitType.HIGH_INCLUSIVE;
                     if (highKeyLimits[keyPos] == null) {
                         highKeyLimits[keyPos] = limit;
                         highKeyExprs[keyPos] = searchKeyExpr;
-                        highKeyInclusive[keyPos] = true;
-                    } else {
-                        // Has already been set to the identical values. When optimizing join we may encounter the
-                        // same optimizable expression twice
-                        // (once from analyzing each side of the join)
-                        if (highKeyLimits[keyPos] == limit && highKeyInclusive[keyPos] == true
-                                && highKeyExprs[keyPos].equals(searchKeyExpr)) {
-                            break;
-                        }
-                        if (!rangeMerging(searchKeyExpr, highKeyExprs, highKeyLimits, limit, keyPos, true)) {
-                            couldntFigureOut = true;
-                            doneWithExprs = true;
-                        }
+                        highKeyInclusive[keyPos] = inclusive;
+                    } else if (!mergeBound(searchKeyExpr, limit, inclusive, highKeyExprs, highKeyLimits,
+                            highKeyInclusive, keyPos, true)) {
+                        couldntFigureOut = true;
+                        doneWithExprs = true;
                     }
                     break;
                 }
-                case LOW_EXCLUSIVE: {
-                    if (lowKeyLimits[keyPos] == null || (lowKeyLimits[keyPos] != null && lowKeyInclusive[keyPos])) {
-                        lowKeyLimits[keyPos] = limit;
-                        lowKeyExprs[keyPos] = searchKeyExpr;
-                        lowKeyInclusive[keyPos] = false;
-                    } else {
-                        // Has already been set to the identical values. When optimizing join we may encounter the
-                        // same optimizable expression twice
-                        // (once from analyzing each side of the join)
-                        if (lowKeyLimits[keyPos] == limit && lowKeyInclusive[keyPos] == false
-                                && lowKeyExprs[keyPos].equals(searchKeyExpr)) {
-                            break;
-                        }
-                        if (!rangeMerging(searchKeyExpr, lowKeyExprs, lowKeyLimits, limit, keyPos, false)) {
-                            couldntFigureOut = true;
-                            doneWithExprs = true;
-                        }
-                    }
-                    break;
-                }
+                case LOW_EXCLUSIVE:
                 case LOW_INCLUSIVE: {
+                    boolean inclusive = limit == LimitType.LOW_INCLUSIVE;
                     if (lowKeyLimits[keyPos] == null) {
                         lowKeyLimits[keyPos] = limit;
                         lowKeyExprs[keyPos] = searchKeyExpr;
-                        lowKeyInclusive[keyPos] = true;
-                    } else {
-                        // Has already been set to the identical values. When optimizing join we may encounter the
-                        // same optimizable expression twice
-                        // (once from analyzing each side of the join)
-                        if (lowKeyLimits[keyPos] == limit && lowKeyInclusive[keyPos] == true
-                                && lowKeyExprs[keyPos].equals(searchKeyExpr)) {
-                            break;
-                        }
-                        if (!rangeMerging(searchKeyExpr, lowKeyExprs, lowKeyLimits, limit, keyPos, false)) {
-                            couldntFigureOut = true;
-                            doneWithExprs = true;
-                        }
+                        lowKeyInclusive[keyPos] = inclusive;
+                    } else if (!mergeBound(searchKeyExpr, limit, inclusive, lowKeyExprs, lowKeyLimits, lowKeyInclusive,
+                            keyPos, false)) {
+                        couldntFigureOut = true;
+                        doneWithExprs = true;
                     }
                     break;
                 }
@@ -1866,34 +1814,44 @@ public class BTreeAccessMethod implements IAccessMethod {
         return this.getName().compareTo(o.getName());
     }
 
-    private boolean rangeMerging(ILogicalExpression searchKeyExpr, ILogicalExpression[] keyExprs, LimitType[] keyLimits,
-            LimitType limit, int keyPos, boolean highkey) {
-        int cmp = compareConstants(searchKeyExpr, keyExprs[keyPos]);
-        if (cmp != 0) {
-            if (highkey && cmp < 0) {
-                keyLimits[keyPos] = limit;
-                keyExprs[keyPos] = searchKeyExpr;
-            }
-            if (!highkey && cmp > 0) {
-                keyLimits[keyPos] = limit;
-                keyExprs[keyPos] = searchKeyExpr;
-            }
-            return true;
+    /**
+     * Merges a range predicate into the bound already set at {@code keyPos}, which then keeps the tighter of the two
+     * together with its own inclusiveness.
+     *
+     * @return false if the two bounds cannot be compared, in which case the bound is left as it was
+     */
+    private static boolean mergeBound(ILogicalExpression searchKeyExpr, LimitType limit, boolean inclusive,
+            ILogicalExpression[] keyExprs, LimitType[] keyLimits, boolean[] keyInclusive, int keyPos, boolean highKey) {
+        Integer cmp = searchKeyExpr.equals(keyExprs[keyPos]) ? Integer.valueOf(0)
+                : compareConstants(searchKeyExpr, keyExprs[keyPos]);
+        if (cmp == null) {
+            return false;
         }
-        return false;
+        // On the same value, an exclusive bound is the tighter one.
+        // Otherwise, the new search key is tighter if it is below the existing high bound or above the existing low bound.
+        boolean newSearchKeyTighter = cmp == 0 ? !inclusive : highKey ? cmp < 0 : cmp > 0;
+        if (newSearchKeyTighter) {
+            keyLimits[keyPos] = limit;
+            keyExprs[keyPos] = searchKeyExpr;
+            keyInclusive[keyPos] = inclusive;
+        }
+        return true;
     }
 
-    private static int compareConstants(ILogicalExpression expr1, ILogicalExpression expr2) {
+    /**
+     * @return the sign of {@code expr1} compared with {@code expr2}, or null if they are not constants that compare
+     */
+    private static Integer compareConstants(ILogicalExpression expr1, ILogicalExpression expr2) {
         if (expr1.getExpressionTag() != LogicalExpressionTag.CONSTANT
                 || expr2.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return 0;
+            return null;
         }
         IAObject val1 = ((AsterixConstantValue) ((ConstantExpression) expr1).getValue()).getObject();
         IAObject val2 = ((AsterixConstantValue) ((ConstantExpression) expr2).getValue()).getObject();
         ATypeTag tag1 = val1.getType().getTypeTag();
         ATypeTag tag2 = val2.getType().getTypeTag();
         if (!ATypeHierarchy.isCompatible(tag1, tag2)) {
-            return 0;
+            return null;
         }
         try {
             byte[] bytes1 = serializeObject(val1);
@@ -1908,13 +1866,15 @@ public class BTreeAccessMethod implements IAccessMethod {
             switch (result) {
                 case LT:
                     return -1;
+                case EQ:
+                    return 0;
                 case GT:
                     return 1;
                 default:
-                    return 0;
+                    return null;
             }
         } catch (HyracksDataException e) {
-            return 0;
+            return null;
         }
     }
 
