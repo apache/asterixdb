@@ -85,10 +85,10 @@ limitations under the License.
     <button class="clear-btn" mat-raised-button (click)="clearSelections()">CLEAR</button>
   </div>
   <div class="divider">
-    <div *ngIf="!jsonVisible" class="plan">
+    <div *ngIf="!jsonVisible" class="plan" #graphHost>
       <ngx-graph
         layout="dagre"
-        [view]="[850,800]"
+        [view]="viewDims"
         [showMiniMap]="true"
         [zoomToFit$]="zoomToFit$"
         [center$]="center$"
