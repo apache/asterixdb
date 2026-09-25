@@ -22,7 +22,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERR
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SCHEMA_ID_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY;
 import static org.apache.asterix.external.util.iceberg.IcebergSnapshotUtils.snapshotIdExists;
-import static org.apache.asterix.external.util.iceberg.IcebergUtils.getProjectedFields;
+import static org.apache.asterix.external.util.iceberg.IcebergUtils.selectRequestedColumns;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -46,6 +46,7 @@ import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IIcebergRecordReaderFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.input.filter.IcebergTableFilterEvaluatorFactory;
+import org.apache.asterix.external.parser.IcebergParquetDataParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
@@ -148,6 +149,22 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
                         Boolean.toString(ExternalDataConstants.IcebergOptions.DEFAULT_VARIANT_STATS_PUSHDOWN)));
     }
 
+    /**
+     * Rejects the scan when a column it reads, at any depth, has a type that cannot be read.
+     *
+     * @param schema         the columns the scan reads
+     * @param variantEnabled whether VARIANT columns can be read
+     * @throws CompilationException naming the type and the column, if {@code schema} has such a column
+     * @see IcebergParquetDataParser#findUnsupportedColumn(Schema, boolean)
+     */
+    static void ensureTypesSupported(Schema schema, boolean variantEnabled) throws CompilationException {
+        Integer id = IcebergParquetDataParser.findUnsupportedColumn(schema, variantEnabled);
+        if (id != null) {
+            throw CompilationException.create(ErrorCode.UNSUPPORTED_ICEBERG_TYPE, schema.findType(id).toString(),
+                    schema.findColumnName(id));
+        }
+    }
+
     private boolean isTimestampAsLong() {
         return Boolean.parseBoolean(originalConfiguration
                 .getOrDefault(ExternalDataConstants.IcebergOptions.TIMESTAMP_AS_LONG, ExternalDataConstants.FALSE));
@@ -226,8 +243,8 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
             IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         this.originalConfiguration = new HashMap<>(configuration);
-        this.partitionConstraint = ((ICcApplicationContext) ctx.getApplicationContext()).getDataPartitioningProvider()
-                .getClusterLocations();
+        ICcApplicationContext appCtx = (ICcApplicationContext) ctx.getApplicationContext();
+        this.partitionConstraint = appCtx.getDataPartitioningProvider().getClusterLocations();
 
         Catalog catalog = null;
         Throwable throwable = null;
@@ -249,11 +266,8 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             long snapshotId = Long.parseLong(originalConfiguration.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY));
             Schema schemaAtSnapshot = table.schemas().get(table.snapshot(snapshotId).schemaId());
 
-            String[] projectedFields = getProjectedFields(configuration);
-            projectedSchema = schemaAtSnapshot;
-            if (projectedFields != null && projectedFields.length > 0) {
-                projectedSchema = projectedSchema.select(projectedFields);
-            }
+            projectedSchema = selectRequestedColumns(schemaAtSnapshot, configuration);
+            ensureTypesSupported(projectedSchema, appCtx.getExternalProperties().isIcebergVariantEnabled());
             scan = scan.project(projectedSchema);
             Expression filterExpression =
                     ((IcebergTableFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();

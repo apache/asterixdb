@@ -81,7 +81,8 @@ public class ExternalProperties extends AbstractProperties {
                 getRangedIntegerType(60, 3600),
                 900,
                 "GCS impersonating service account duration in seconds. "
-                        + "Range from 60 seconds (1 min) to 3600 seconds (1 hour)");
+                        + "Range from 60 seconds (1 min) to 3600 seconds (1 hour)"),
+        ICEBERG_VARIANT_ENABLED(BOOLEAN, true, "Enable or disable Iceberg VARIANT column support");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -114,6 +115,7 @@ public class ExternalProperties extends AbstractProperties {
                 case AWS_ASSUME_ROLE_PREFETCH_TIME:
                 case AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED:
                 case GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION:
+                case ICEBERG_VARIANT_ENABLED:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -209,6 +211,10 @@ public class ExternalProperties extends AbstractProperties {
 
     public boolean getAwsAssumeRoleAsyncRefreshEnabled() {
         return accessor.getBoolean(Option.AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED);
+    }
+
+    public boolean isIcebergVariantEnabled() {
+        return accessor.getBoolean(Option.ICEBERG_VARIANT_ENABLED);
     }
 
     public int getGcpImpersonateServiceAccountDuration() {

@@ -20,12 +20,16 @@ package org.apache.asterix.external.parser.factory;
 
 import java.util.List;
 
+import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.parser.IcebergParquetDataParser;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.iceberg.data.Record;
 
 public class IcebergTableParquetDataParserFactory extends IcebergParserFactory<Record> {
@@ -49,7 +53,8 @@ public class IcebergTableParquetDataParserFactory extends IcebergParserFactory<R
     }
 
     @Override
-    public IRecordDataParser<Record> createRecordParser(IExternalDataRuntimeContext context) {
+    public IRecordDataParser<Record> createRecordParser(IExternalDataRuntimeContext context)
+            throws HyracksDataException {
         return createParser(context);
     }
 
@@ -58,7 +63,19 @@ public class IcebergTableParquetDataParserFactory extends IcebergParserFactory<R
         return Record.class;
     }
 
-    private IcebergParquetDataParser createParser(IExternalDataRuntimeContext context) {
+    /**
+     * @throws HyracksDataException if the projected schema has a column the parser cannot read, the same check the
+     *                              reader factory makes at compile time
+     */
+    private IcebergParquetDataParser createParser(IExternalDataRuntimeContext context) throws HyracksDataException {
+        IApplicationContext appCtx = (IApplicationContext) context.getTaskContext().getJobletContext()
+                .getServiceContext().getApplicationContext();
+        Integer id = IcebergParquetDataParser.findUnsupportedColumn(projectedSchema,
+                appCtx.getExternalProperties().isIcebergVariantEnabled());
+        if (id != null) {
+            throw RuntimeDataException.create(ErrorCode.UNSUPPORTED_ICEBERG_TYPE,
+                    projectedSchema.findType(id).toString(), projectedSchema.findColumnName(id));
+        }
         return new IcebergParquetDataParser(context, configuration, projectedSchema);
     }
 }

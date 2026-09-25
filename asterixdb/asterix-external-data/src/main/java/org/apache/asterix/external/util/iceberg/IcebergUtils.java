@@ -31,6 +31,7 @@ import static org.apache.asterix.external.util.iceberg.IcebergConstants.ICEBERG_
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,8 +55,10 @@ import org.apache.asterix.external.util.google.iceberg.biglake_metastore.Biglake
 import org.apache.asterix.external.util.iceberg.nessie.NessieUtils;
 import org.apache.asterix.external.util.iceberg.rest.RestUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.iceberg.CatalogProperties;
+import org.apache.iceberg.Schema;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.aws.AwsProperties;
 import org.apache.iceberg.aws.glue.GlueCatalog;
@@ -483,10 +486,23 @@ public class IcebergUtils {
         }
     }
 
-    public static String[] getProjectedFields(Map<String, String> configuration) throws IOException {
+    /**
+     * The columns a scan reads: the top-level columns the query requested, none when it requested no fields, and all
+     * of them when it requested every field.
+     *
+     * @param schema        the table's schema at the scan's snapshot
+     * @param configuration the collection's configuration, carrying the encoded requested fields
+     * @return the schema to project the scan to
+     */
+    public static Schema selectRequestedColumns(Schema schema, Map<String, String> configuration) throws IOException {
         String encoded = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS);
-        ARecordType projectedRecordType = ExternalDataUtils.getExpectedType(encoded);
-        return projectedRecordType.getFieldNames();
+        ARecordType requested = ExternalDataUtils.getExpectedType(encoded);
+        // An empty request (e.g. COUNT(*)) and a request for every field both have no field names
+        if (requested == ProjectionFiltrationTypeUtil.EMPTY_TYPE) {
+            return schema.select(Collections.emptyList());
+        }
+        String[] fields = requested.getFieldNames();
+        return fields.length == 0 ? schema : schema.select(fields);
     }
 
     public static void setDefaults(Map<String, String> configuration) {

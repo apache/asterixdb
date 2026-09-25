@@ -58,6 +58,7 @@ import org.apache.iceberg.Schema;
 import org.apache.iceberg.StructLike;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.types.Type;
+import org.apache.iceberg.types.TypeUtil;
 import org.apache.iceberg.types.Types;
 import org.apache.iceberg.types.Types.NestedField;
 import org.apache.iceberg.types.Types.StructType;
@@ -79,6 +80,26 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         valueEmbedder = context.getValueEmbedder();
         this.projectedSchema = projectedSchema;
         timestampZoneProjector = new TimestampZoneProjector(parserContext.getTimeZoneId());
+    }
+
+    /**
+     * Finds the first column, at any depth, that a scan of {@code schema} cannot read: GEOMETRY and GEOGRAPHY, and
+     * VARIANT unless {@code variantEnabled}. An UNKNOWN column holds only nulls and is readable.
+     *
+     * @param schema         the columns a scan reads
+     * @param variantEnabled whether VARIANT columns can be read
+     * @return the column's field id, or {@code null} if every column can be read; its type is
+     *         {@link Schema#findType(int)} and its full name, such as {@code st.v}, {@link Schema#findColumnName(int)}
+     */
+    public static Integer findUnsupportedColumn(Schema schema, boolean variantEnabled) {
+        Map<Integer, Types.NestedField> fields = TypeUtil.indexById(schema.asStruct());
+        return fields.keySet().stream().sorted()
+                .filter(id -> isUnsupported(fields.get(id).type().typeId(), variantEnabled)).findFirst().orElse(null);
+    }
+
+    private static boolean isUnsupported(Type.TypeID typeId, boolean variantEnabled) {
+        return typeId == Type.TypeID.GEOMETRY || typeId == Type.TypeID.GEOGRAPHY
+                || (typeId == Type.TypeID.VARIANT && !variantEnabled);
     }
 
     @Override
