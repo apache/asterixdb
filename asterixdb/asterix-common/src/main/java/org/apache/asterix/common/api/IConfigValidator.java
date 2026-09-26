@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.common.api;
 
+import java.util.function.Function;
+
+import org.apache.asterix.common.config.ConfigConstraints;
 import org.apache.hyracks.api.config.IOption;
 
 public interface IConfigValidator {
@@ -29,4 +32,17 @@ public interface IConfigValidator {
      * @param value
      */
     void validate(IOption option, Object value);
+
+    /**
+     * Validates the constraints that span several options, which {@link #validate(IOption, Object)} cannot see,
+     * for a change from {@code current} to {@code proposed}. Only violations the change introduces are rejected, so
+     * a configuration that is already inconsistent can still be corrected one option at a time.
+     *
+     * @param current the value each option takes now
+     * @param proposed the value each option would take after the change
+     * @throws IllegalArgumentException naming every violated constraint that {@code current} does not violate
+     */
+    default void validateChange(Function<IOption, Object> current, Function<IOption, Object> proposed) {
+        ConfigConstraints.validateChange(current, proposed);
+    }
 }

@@ -69,6 +69,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.api.IReceptionistFactory;
 import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.config.ConfigConstraints;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -199,6 +200,7 @@ public class NCApplication extends BaseNCApplication {
             }
             updateOnNodeJoin();
         }
+        checkConfigConstraints();
         runtimeContext.initialize(getRecoveryManagerFactory(), getReceptionistFactory(), getConfigValidatorFactory(),
                 getReplicationStrategyFactory(), runtimeContext.getNodeProperties().isInitialRun());
         MessagingProperties messagingProperties = runtimeContext.getMessagingProperties();
@@ -245,6 +247,26 @@ public class NCApplication extends BaseNCApplication {
 
     protected IReplicationStrategyFactory getReplicationStrategyFactory() {
         return new ReplicationStrategyFactory();
+    }
+
+    /**
+     * Fails startup with the reason when the configuration cannot work, rather than letting the first component
+     * to use it fail with an arithmetic error. Violations that only affect queries are logged instead, since a node
+     * that cannot run queries can still recover and be reconfigured.
+     */
+    private void checkConfigConstraints() {
+        List<ConfigConstraints.Violation> violations = ConfigConstraints.check(ncServiceCtx.getAppConfig()::get);
+        List<ConfigConstraints.Violation> fatal = new ArrayList<>();
+        for (ConfigConstraints.Violation violation : violations) {
+            if (violation.isFatalAtStartup()) {
+                fatal.add(violation);
+            } else {
+                LOGGER.warn("invalid configuration: {}", violation.getMessage());
+            }
+        }
+        if (!fatal.isEmpty()) {
+            throw new IllegalStateException("Invalid configuration: " + ConfigConstraints.describe(fatal));
+        }
     }
 
     protected IConfigValidatorFactory getConfigValidatorFactory() {

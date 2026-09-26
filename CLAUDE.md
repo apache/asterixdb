@@ -75,24 +75,25 @@ change with **no topic**, or a different one — not added to the coordinated ch
 
 ## Commit Messages
 
-**Every commit message must end with the trailer:**
+**Every AI-assisted commit message must end with the trailer:**
 
 ```
-Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Generated-by: Claude Opus 5 <noreply@anthropic.com>
 ```
 
-(naming whichever model actually did the work). This has repeatedly been missed and caught only
-after the change was pushed for review, which costs a message-only patchset.
+(naming whichever model actually did the work). This repo records AI contributions with
+`Generated-by:`, **not** `Co-Authored-By:` — a downstream extension may use the other form in its
+own repository, but not here. This has repeatedly been missed and caught only after the change was
+pushed for review, which costs a message-only patchset.
 
 **Write it at commit time, not as a follow-up amend.** The footer must be one contiguous run of
-trailers, with the `Co-Authored-By` line adjacent to `Change-Id`:
+trailers — `Ext-ref:` included, with no blank line anywhere inside it:
 
 ```
 <body>
                                                         <- exactly one blank line
 Ext-ref: <downstream-issue>
-
-Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Generated-by: Claude Opus 5 <noreply@anthropic.com>
 Change-Id: I...
 ```
 
@@ -112,15 +113,17 @@ of it.
 Two ways the footer gets destroyed, both of which make the `commit-msg` hook mint a **second**
 `Change-Id` and silently orphan the change:
 
-- **A blank line between `Change-Id:` and `Co-Authored-By:`** splits the footer, so the last
-  paragraph is read as body text.
+- **A blank line anywhere in the trailer block** — between `Ext-ref:` and `Generated-by:`, or
+  between `Generated-by:` and `Change-Id:` — splits the footer, so the last paragraph is read as
+  body text.
 - **Ending the message with a non-trailer line** — most often
   `(cherry picked from commit <sha>)` on a backport. Put that line in its own paragraph *above* the
   trailer block so the message still ends with a trailer.
 
 If the trailer must be added after the fact, rebuild the whole message rather than appending a line:
-capture the `Change-Id` first, strip every `Change-Id:`/`Co-Authored-By:` line, then re-append both
-contiguously. Verify before pushing — this must print exactly `1`, matching the original:
+capture the `Change-Id` first, strip every `Ext-ref:`/`Generated-by:`/`Change-Id:` line, then
+re-append them contiguously. Verify before pushing — this must print exactly `1`, matching the
+original:
 
 ```bash
 git log -1 --format=%B | grep -c '^Change-Id:'
