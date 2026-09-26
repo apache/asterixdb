@@ -192,7 +192,8 @@ public class OptimizationConfUtil {
 
     private static int getExternalScanBufferSize(String externalScanMemorySizeParameter,
             int compilerExternalScanMemorySize, SourceLocation sourceLoc) throws AsterixException {
-        IOptionType<Integer> intByteParser = OptionTypes.INTEGER_BYTE_UNIT;
+        @SuppressWarnings("unchecked")
+        IOptionType<Integer> intByteParser = CompilerProperties.Option.COMPILER_EXTERNALSCANMEMORY.type();
         try {
             return externalScanMemorySizeParameter != null ? intByteParser.parse(externalScanMemorySizeParameter)
                     : compilerExternalScanMemorySize;

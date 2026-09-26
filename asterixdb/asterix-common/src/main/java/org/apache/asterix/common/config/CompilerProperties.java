@@ -24,11 +24,11 @@ import static org.apache.asterix.common.config.OptimizationConfUtil.MIN_FRAME_LI
 import static org.apache.asterix.common.config.OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_WINDOW;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
@@ -44,35 +44,35 @@ public class CompilerProperties extends AbstractProperties {
 
     public enum Option implements IOption {
         COMPILER_SORTMEMORY(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a sort operator instance in a partition"),
         COMPILER_JOINMEMORY(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a join operator instance in a partition"),
         COMPILER_GROUPMEMORY(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a group by operator instance in a partition"),
         COMPILER_WINDOWMEMORY(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a window operator instance in a partition"),
         COMPILER_TEXTSEARCHMEMORY(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for an inverted-index-search operator instance in a partition"),
         COMPILER_CLUSTERBYMEMORY(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a CLUSTER BY k-means operator instance in a partition"),
         COMPILER_AGGREGATE_DISTINCT_HASH_MEMORY(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a hash-based distinct aggregate instance in a partition"),
         COMPILER_EXTERNALSCANMEMORY(
-                INTEGER_BYTE_UNIT,
+                POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(8, KILOBYTE),
                 "The memory budget (in bytes) for an external scan operator instance in a partition"),
         COMPILER_FRAMESIZE(

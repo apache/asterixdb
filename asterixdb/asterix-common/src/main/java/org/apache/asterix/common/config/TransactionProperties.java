@@ -21,10 +21,10 @@ package org.apache.asterix.common.config;
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.SINGULAR;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
-import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG_BYTE_UNIT;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 import java.util.Map;
@@ -47,15 +47,15 @@ public class TransactionProperties extends AbstractProperties {
                         + "disk"),
         TXN_LOG_BUFFER_NUMPAGES(POSITIVE_INTEGER, 8, "The number of pages in the transaction log tail"),
         TXN_LOG_BUFFER_PAGESIZE(
-                INTEGER_BYTE_UNIT,
+                POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(4, MEGABYTE),
                 "The page size (in bytes) for transaction log buffer"),
         TXN_LOG_PARTITIONSIZE(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(256L, MEGABYTE),
                 "The maximum size (in bytes) of each transaction log file"),
         TXN_LOG_CHECKPOINT_LSNTHRESHOLD(
-                INTEGER_BYTE_UNIT,
+                POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(64, MEGABYTE),
                 "The checkpoint threshold (in terms of LSNs (log sequence numbers) that have been written to the "
                         + "transaction log, i.e., the length of the transaction log) for transaction logs"),
@@ -88,7 +88,7 @@ public class TransactionProperties extends AbstractProperties {
         TXN_COMMITPROFILER_ENABLED(BOOLEAN, false, "Enable output of commit profiler logs"),
         TXN_COMMITPROFILER_REPORTINTERVAL(POSITIVE_INTEGER, 5, "Interval (in seconds) to report commit profiler logs"),
         TXN_JOB_RECOVERY_MEMORYSIZE(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(64L, MEGABYTE),
                 "The memory budget for each job (in bytes) used for recovery");
 

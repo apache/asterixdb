@@ -19,10 +19,10 @@
 package org.apache.asterix.common.config;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
-import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 
 import java.util.concurrent.TimeUnit;
@@ -38,16 +38,16 @@ public class ReplicationProperties extends AbstractProperties {
 
     public enum Option implements IOption {
         REPLICATION_LOG_BUFFER_PAGESIZE(
-                INTEGER_BYTE_UNIT,
+                POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(128, StorageUnit.KILOBYTE),
                 "The size in bytes of each log buffer page"),
         REPLICATION_LOG_BUFFER_NUMPAGES(POSITIVE_INTEGER, 8, "The number of log buffer pages"),
         REPLICATION_LOG_BATCHSIZE(
-                INTEGER_BYTE_UNIT,
+                POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(4, StorageUnit.KILOBYTE),
                 "The size in bytes to replicate in each batch"),
         REPLICATION_TIMEOUT(
-                LONG,
+                POSITIVE_LONG,
                 TimeUnit.SECONDS.toSeconds(120),
                 "The time in seconds to timeout waiting for master or replica to ack"),
         REPLICATION_ENABLED(BOOLEAN, false, "Whether or not data replication is enabled"),

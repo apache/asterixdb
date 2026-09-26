@@ -21,12 +21,13 @@ package org.apache.hyracks.control.common.controllers;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
-import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
+import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.control.common.utils.ConfigurationUtil.JAVA_IO_TMPDIR;
 
 import java.net.InetAddress;
@@ -52,7 +53,7 @@ public class NCConfig extends ControllerConfig {
         CLUSTER_LISTEN_ADDRESS(STRING, ADDRESS),
         CLUSTER_LISTEN_PORT(NONNEGATIVE_INTEGER, 0),
         NCSERVICE_ADDRESS(STRING, PUBLIC_ADDRESS),
-        NCSERVICE_PORT(INTEGER, 9090),
+        NCSERVICE_PORT(getRangedIntegerType(-1, 65535), 9090),
         CLUSTER_ADDRESS(STRING, (String) null),
         CLUSTER_PORT(NONNEGATIVE_INTEGER, 1099),
         CLUSTER_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
@@ -83,8 +84,8 @@ public class NCConfig extends ControllerConfig {
                 "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/iodevice"),
         NET_THREAD_COUNT(POSITIVE_INTEGER, 1),
         NET_BUFFER_COUNT(POSITIVE_INTEGER, 1),
-        RESULT_TTL(LONG, 3600000L),
-        RESULT_SWEEP_THRESHOLD(LONG, 60000L),
+        RESULT_TTL(POSITIVE_LONG, 3600000L),
+        RESULT_SWEEP_THRESHOLD(POSITIVE_LONG, 60000L),
         RESULT_MANAGER_MEMORY(INTEGER_BYTE_UNIT, -1),
         @SuppressWarnings("RedundantCast") // not redundant- false positive from IDEA
         APP_CLASS(STRING, (String) null),

@@ -22,6 +22,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.SHORT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 
@@ -61,13 +62,13 @@ public class CCConfig extends ControllerConfig {
         CONSOLE_LISTEN_PORT(NONNEGATIVE_INTEGER, 16001),
         CONSOLE_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
         CONSOLE_PUBLIC_PORT(NONNEGATIVE_INTEGER, CONSOLE_LISTEN_PORT),
-        HEARTBEAT_PERIOD(LONG, 10000L), // TODO (mblow): add time unit
+        HEARTBEAT_PERIOD(POSITIVE_LONG, 10000L), // TODO (mblow): add time unit
         HEARTBEAT_MAX_MISSES(NONNEGATIVE_INTEGER, 5),
-        DEAD_NODE_SWEEP_THRESHOLD(LONG, HEARTBEAT_PERIOD),
+        DEAD_NODE_SWEEP_THRESHOLD(POSITIVE_LONG, HEARTBEAT_PERIOD),
         PROFILE_DUMP_PERIOD(NONNEGATIVE_INTEGER, 0),
         JOB_HISTORY_SIZE(NONNEGATIVE_INTEGER, 10),
-        RESULT_TTL(LONG, 3600000L), // TODO(mblow): add time unit
-        RESULT_SWEEP_THRESHOLD(LONG, 60000L), // TODO(mblow): add time unit
+        RESULT_TTL(POSITIVE_LONG, 3600000L), // TODO(mblow): add time unit
+        RESULT_SWEEP_THRESHOLD(POSITIVE_LONG, 60000L), // TODO(mblow): add time unit
         @SuppressWarnings("RedundantCast") // not redundant- false positive from IDEA
         ROOT_DIR(STRING, (Function<IApplicationConfig, String>) appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "ClusterControllerService"), "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/ClusterControllerService"),
         CLUSTER_TOPOLOGY(STRING),

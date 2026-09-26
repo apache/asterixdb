@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.common.config;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 
 import org.apache.hyracks.api.config.IOption;
@@ -31,7 +31,7 @@ public class MessagingProperties extends AbstractProperties {
 
     public enum Option implements IOption {
         MESSAGING_FRAME_SIZE(
-                INTEGER_BYTE_UNIT,
+                POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(4, KILOBYTE),
                 "The frame size to be used for NC to NC messaging"),
         MESSAGING_FRAME_COUNT(POSITIVE_INTEGER, 512, "Number of reusable frames for NC to NC messaging");

@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.common.config;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG_BYTE_UNIT;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 import org.apache.hyracks.api.config.IOption;
@@ -31,7 +31,7 @@ public class ActiveProperties extends AbstractProperties {
 
     public enum Option implements IOption {
         ACTIVE_MEMORY_GLOBAL_BUDGET(
-                LONG_BYTE_UNIT,
+                POSITIVE_LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(64L, MEGABYTE),
                 "The memory budget (in bytes) for the active runtime"),
         ACTIVE_STOP_TIMEOUT(

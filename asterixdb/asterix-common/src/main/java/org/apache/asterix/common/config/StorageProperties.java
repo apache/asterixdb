@@ -26,7 +26,10 @@ import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.getRangedDoubleType;
 import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.control.common.config.OptionTypes.getRangedLongByteUnit;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
@@ -48,17 +51,17 @@ import org.apache.hyracks.util.StorageUtil;
 public class StorageProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        STORAGE_BUFFERCACHE_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
+        STORAGE_BUFFERCACHE_PAGESIZE(POSITIVE_INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         // By default, uses 1/4 of the maximum heap size for read cache, i.e., disk buffer cache.
-        STORAGE_BUFFERCACHE_SIZE(LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
+        STORAGE_BUFFERCACHE_SIZE(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
         STORAGE_BUFFERCACHE_MAXOPENFILES(NONNEGATIVE_INTEGER, Integer.MAX_VALUE),
-        STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
-        STORAGE_MEMORYCOMPONENT_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
+        STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
+        STORAGE_MEMORYCOMPONENT_PAGESIZE(POSITIVE_INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
-        STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD(DOUBLE, 0.9d),
+        STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.9d),
         STORAGE_MEMORYCOMPONENT_MAX_SCHEDULED_FLUSHES(NONNEGATIVE_INTEGER, 0),
         STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE(LONG_BYTE_UNIT, 0L),
-        STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
+        STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.01d),
         STORAGE_COMPRESSION_BLOCK(STRING, "snappy"),
         STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE)),
         STORAGE_IO_SCHEDULER(STRING, "greedy"),

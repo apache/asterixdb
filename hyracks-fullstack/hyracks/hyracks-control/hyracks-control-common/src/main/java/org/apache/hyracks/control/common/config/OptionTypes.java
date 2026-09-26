@@ -109,6 +109,8 @@ public class OptionTypes {
 
     public static final IOptionType<Long> LONG = new LongOptionType();
 
+    public static final IOptionType<Long> POSITIVE_LONG = new RangedLongOptionType(1, Long.MAX_VALUE);
+
     public static final IOptionType<Boolean> BOOLEAN = new IOptionType<Boolean>() {
         @Override
         public Boolean parse(String s) {
