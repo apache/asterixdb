@@ -154,7 +154,7 @@ public class StorageUtil {
             return bytes + " B";
         }
         final int baseValue = (63 - Long.numberOfLeadingZeros(bytes)) / 10;
-        final String bytePrefix = new String[] { " ", "Ki", "Mi", "Gi", "Ti", "Pi" }[baseValue];
+        final String bytePrefix = new String[] { " ", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei" }[baseValue];
         final long divisor = 1L << (baseValue * 10);
         if (bytes % divisor == 0) {
             return String.format("%d %sB", bytes / divisor, bytePrefix);

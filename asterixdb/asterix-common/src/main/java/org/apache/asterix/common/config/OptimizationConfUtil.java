@@ -74,50 +74,54 @@ public class OptimizationConfUtil {
                 compilerProperties.getClusterByMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_CLUSTER_BY, sourceLoc);
         int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig, sourceLoc);
         boolean fullParallelSort = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_SORT_PARALLEL_KEY,
-                compilerProperties.getSortParallel());
+                compilerProperties.getSortParallel(), sourceLoc);
         boolean indexOnly = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_INDEXONLY_KEY,
-                compilerProperties.isIndexOnly());
+                compilerProperties.isIndexOnly(), sourceLoc);
         boolean rewriteOrToJoin = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_REWRITE_DISJUNCTION_KEY,
-                compilerProperties.rewriteDisjunctionToJoin());
-        boolean countDistinctToHash = getBoolean(querySpecificConfig,
-                CompilerProperties.COMPILER_AGGREGATE_DISTINCT_HASH_KEY, compilerProperties.isAggregateDistinctHash());
+                compilerProperties.rewriteDisjunctionToJoin(), sourceLoc);
+        boolean countDistinctToHash =
+                getBoolean(querySpecificConfig, CompilerProperties.COMPILER_AGGREGATE_DISTINCT_HASH_KEY,
+                        compilerProperties.isAggregateDistinctHash(), sourceLoc);
         boolean sanityCheck = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_INTERNAL_SANITYCHECK_KEY,
-                compilerProperties.isSanityCheck());
-        boolean externalFieldPushdown = getBoolean(querySpecificConfig,
-                CompilerProperties.COMPILER_EXTERNAL_FIELD_PUSHDOWN_KEY, compilerProperties.isFieldAccessPushdown());
+                compilerProperties.isSanityCheck(), sourceLoc);
+        boolean externalFieldPushdown =
+                getBoolean(querySpecificConfig, CompilerProperties.COMPILER_EXTERNAL_FIELD_PUSHDOWN_KEY,
+                        compilerProperties.isFieldAccessPushdown(), sourceLoc);
         boolean subplanMerge = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_SUBPLAN_MERGE_KEY,
-                compilerProperties.getSubplanMerge());
-        boolean subplanNestedPushdown = getBoolean(querySpecificConfig,
-                CompilerProperties.COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY, compilerProperties.getSubplanNestedPushdown());
-        boolean minMemoryAllocation = getBoolean(querySpecificConfig,
-                CompilerProperties.COMPILER_MIN_MEMORY_ALLOCATION_KEY, compilerProperties.getMinMemoryAllocation());
+                compilerProperties.getSubplanMerge(), sourceLoc);
+        boolean subplanNestedPushdown =
+                getBoolean(querySpecificConfig, CompilerProperties.COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY,
+                        compilerProperties.getSubplanNestedPushdown(), sourceLoc);
+        boolean minMemoryAllocation =
+                getBoolean(querySpecificConfig, CompilerProperties.COMPILER_MIN_MEMORY_ALLOCATION_KEY,
+                        compilerProperties.getMinMemoryAllocation(), sourceLoc);
         boolean arrayIndex = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ARRAYINDEX_KEY,
-                compilerProperties.isArrayIndex());
+                compilerProperties.isArrayIndex(), sourceLoc);
         int externalScanBufferSize = getExternalScanBufferSize(
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_EXTERNALSCANMEMORY_KEY),
                 compilerProperties.getExternalScanMemorySize(), sourceLoc);
         boolean batchLookup = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_BATCH_LOOKUP_KEY,
-                compilerProperties.isBatchLookup());
-        boolean cbo =
-                getBoolean(querySpecificConfig, CompilerProperties.COMPILER_CBO_KEY, compilerProperties.getCBOMode());
+                compilerProperties.isBatchLookup(), sourceLoc);
+        boolean cbo = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_CBO_KEY,
+                compilerProperties.getCBOMode(), sourceLoc);
         boolean cboTest = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_CBO_TEST_KEY,
-                compilerProperties.getCBOTestMode());
+                compilerProperties.getCBOTestMode(), sourceLoc);
         int cboMaxJoins = getCBOMaxJoins(compilerProperties, querySpecificConfig, sourceLoc);
         boolean forceJoinOrder = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_FORCE_JOIN_ORDER_KEY,
-                compilerProperties.getForceJoinOrderMode());
+                compilerProperties.getForceJoinOrderMode(), sourceLoc);
         String queryPlanShape = getString(querySpecificConfig, CompilerProperties.COMPILER_QUERY_PLAN_SHAPE_KEY,
                 compilerProperties.getQueryPlanShapeMode());
         boolean columnFilter = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_COLUMN_FILTER_KEY,
-                compilerProperties.isColumnFilter());
+                compilerProperties.isColumnFilter(), sourceLoc);
         int maxVariableOccurrencesForInlining =
                 getMaxVariableOccurrencesForInlining(compilerProperties, querySpecificConfig, sourceLoc);
         int maxExpressionTreeSize = getMaxExpressionTreeSize(compilerProperties, querySpecificConfig, sourceLoc);
         int commonExpressionLimitSize =
                 getCommonExpressionLimitSize(compilerProperties, querySpecificConfig, sourceLoc);
         boolean orderFields = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ORDERED_FIELDS_KEY,
-                compilerProperties.isOrderedFields());
+                compilerProperties.isOrderedFields(), sourceLoc);
         boolean useFileSplits = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_PARQUET_FILESPLITS_KEY,
-                compilerProperties.isParquetFileSplitsEnabled());
+                compilerProperties.isParquetFileSplitsEnabled(), sourceLoc);
         int hdfsSplitParallelism = getHdfsSplitParellelism(compilerProperties, querySpecificConfig, sourceLoc);
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
@@ -251,10 +255,15 @@ public class OptimizationConfUtil {
         }
     }
 
-    private static boolean getBoolean(Map<String, Object> queryConfig, String queryConfigKey, boolean defaultValue) {
+    private static boolean getBoolean(Map<String, Object> queryConfig, String queryConfigKey, boolean defaultValue,
+            SourceLocation sourceLoc) throws AsterixException {
         String valueInQuery = (String) queryConfig.get(queryConfigKey);
         if (valueInQuery != null) {
-            return OptionTypes.BOOLEAN.parse(valueInQuery);
+            try {
+                return OptionTypes.BOOLEAN.parse(valueInQuery);
+            } catch (IllegalArgumentException e) {
+                throw AsterixException.create(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
+            }
         }
         return defaultValue;
     }

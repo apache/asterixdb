@@ -29,7 +29,6 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
@@ -65,7 +64,10 @@ public class OptionTypes {
 
         @Override
         public Short parse(JsonNode node) {
-            return node.isNull() ? null : validateShort(node.asInt());
+            if (node.isNull()) {
+                return null;
+            }
+            return node.isTextual() ? parse(node.asText()) : validateShort((int) integralValue(node, Integer.class));
         }
 
         @Override
@@ -110,12 +112,28 @@ public class OptionTypes {
     public static final IOptionType<Boolean> BOOLEAN = new IOptionType<Boolean>() {
         @Override
         public Boolean parse(String s) {
-            return Boolean.parseBoolean(s);
+            // Boolean.parseBoolean would read any typo as false, silently disabling an option that defaults to true
+            String value = s == null ? null : s.trim();
+            if ("true".equalsIgnoreCase(value)) {
+                return true;
+            } else if ("false".equalsIgnoreCase(value)) {
+                return false;
+            }
+            throw new IllegalArgumentException("boolean value must be true or false, but was " + s);
         }
 
         @Override
         public Boolean parse(JsonNode node) {
-            return node.isNull() ? null : node.asBoolean();
+            if (node.isNull()) {
+                return null;
+            }
+            if (node.isBoolean()) {
+                return node.booleanValue();
+            }
+            if (node.isTextual()) {
+                return parse(node.asText());
+            }
+            throw new IllegalArgumentException("boolean value must be true or false, but was " + node);
         }
 
         @Override
@@ -216,7 +234,7 @@ public class OptionTypes {
                 return null;
             }
             return Stream.of(StringUtils.splitByWholeSeparator(s, ","))
-                    .mapToInt(token -> NumberUtils.toInt(token.trim())).toArray();
+                    .mapToInt(token -> Integer.parseInt(token.trim())).toArray();
         }
 
         @Override
@@ -226,7 +244,8 @@ public class OptionTypes {
             }
             IntList strings = new IntArrayList();
             if (node instanceof ArrayNode) {
-                node.elements().forEachRemaining(n -> strings.add(n.asInt()));
+                node.elements().forEachRemaining(n -> strings.add(
+                        n.isTextual() ? Integer.parseInt(n.asText().trim()) : (int) integralValue(n, Integer.class)));
                 return strings.toIntArray();
             } else {
                 return parse(node.asText());
@@ -273,7 +292,7 @@ public class OptionTypes {
                 long[] result = new long[node.size()];
                 int i = 0;
                 for (JsonNode n : node) {
-                    result[i++] = n.isTextual() ? StorageUtil.getByteValue(n.asText()) : n.asLong();
+                    result[i++] = n.isTextual() ? StorageUtil.getByteValue(n.asText()) : integralValue(n, Long.class);
                 }
                 return result;
             } else {
@@ -348,6 +367,29 @@ public class OptionTypes {
         return new RangedDoubleOptionType(minValueInclusive, maxValueInclusive);
     }
 
+    public static IOptionType<Long> getRangedLongType(final long minValueInclusive, final long maxValueInclusive) {
+        return new RangedLongOptionType(minValueInclusive, maxValueInclusive);
+    }
+
+    public static IOptionType<Integer> getRangedIntegerByteUnit(final int minValueInclusive,
+            final int maxValueInclusive) {
+        return new IntegerByteUnit(minValueInclusive, maxValueInclusive);
+    }
+
+    /**
+     * Reads an integral JSON number exactly. Jackson's asInt()/asLong() would coerce text to 0, truncate
+     * fractions and wrap values outside the target range, so a stored value could come back as something that
+     * was never written.
+     */
+    private static long integralValue(JsonNode node, Class<? extends Number> target) {
+        if (!node.isIntegralNumber()
+                || (target == Integer.class ? !node.canConvertToInt() : !node.canConvertToLong())) {
+            throw new IllegalArgumentException("expected an integral value fitting a "
+                    + target.getSimpleName().toLowerCase() + ", but was " + node);
+        }
+        return node.longValue();
+    }
+
     public static class IntegerOptionType implements IOptionType<Integer> {
         @Override
         public Integer parse(String s) {
@@ -356,7 +398,10 @@ public class OptionTypes {
 
         @Override
         public Integer parse(JsonNode node) {
-            return node.isNull() ? null : node.asInt();
+            if (node.isNull()) {
+                return null;
+            }
+            return node.isTextual() ? parse(node.asText()) : (int) integralValue(node, Integer.class);
         }
 
         @Override
@@ -383,6 +428,15 @@ public class OptionTypes {
         public Integer parse(String value) {
             int intValue = super.parse(value);
             rangeCheck(intValue);
+            return intValue;
+        }
+
+        @Override
+        public Integer parse(JsonNode node) {
+            Integer intValue = super.parse(node);
+            if (intValue != null) {
+                rangeCheck(intValue);
+            }
             return intValue;
         }
 
@@ -450,6 +504,15 @@ public class OptionTypes {
             return longValue;
         }
 
+        @Override
+        public Long parse(JsonNode node) {
+            Long longValue = super.parse(node);
+            if (longValue != null) {
+                rangeCheck(longValue);
+            }
+            return longValue;
+        }
+
         void rangeCheck(long longValue) {
             if (longValue < minValue || longValue > maxValue) {
                 if (maxValue == Long.MAX_VALUE) {
@@ -506,7 +569,10 @@ public class OptionTypes {
 
         @Override
         public Long parse(JsonNode node) {
-            return node.isNull() ? null : node.asLong();
+            if (node.isNull()) {
+                return null;
+            }
+            return node.isTextual() ? parse(node.asText()) : integralValue(node, Long.class);
         }
 
         @Override
@@ -523,12 +589,28 @@ public class OptionTypes {
     private static class DoubleOptionType implements IOptionType<Double> {
         @Override
         public Double parse(String s) {
-            return Double.parseDouble(s);
+            return requireFinite(Double.parseDouble(s));
         }
 
         @Override
         public Double parse(JsonNode node) {
-            return node.isNull() ? null : node.asDouble();
+            if (node.isNull()) {
+                return null;
+            }
+            if (node.isTextual()) {
+                return parse(node.asText());
+            }
+            if (!node.isNumber()) {
+                throw new IllegalArgumentException("expected a numeric value, but was " + node);
+            }
+            return requireFinite(node.doubleValue());
+        }
+
+        private static double requireFinite(double value) {
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException("double value must be finite, but was " + value);
+            }
+            return value;
         }
 
         @Override
@@ -560,11 +642,10 @@ public class OptionTypes {
 
         @Override
         public Double parse(JsonNode node) {
-            if (node.isNull()) {
-                return null;
+            Double doubleValue = super.parse(node);
+            if (doubleValue != null) {
+                rangeCheck(doubleValue);
             }
-            double doubleValue = node.asDouble();
-            rangeCheck(doubleValue);
             return doubleValue;
         }
 
