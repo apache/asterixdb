@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.delta;
+package org.apache.asterix.external.input.record.reader.delta;
 
 import static io.delta.kernel.defaults.internal.parquet.ParquetFilterUtils.toParquetFilter;
 import static java.util.Objects.requireNonNull;

@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.external.input.record.reader.aws.iceberg.converter.IcebergConverterContext;
+import org.apache.asterix.external.input.record.reader.iceberg.converter.IcebergConverterContext;
 import org.apache.asterix.external.input.record.reader.stream.AvroConverterContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;

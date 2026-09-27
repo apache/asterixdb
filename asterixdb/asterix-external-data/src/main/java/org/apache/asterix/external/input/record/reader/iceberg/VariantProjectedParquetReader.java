@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.iceberg;
+package org.apache.asterix.external.input.record.reader.iceberg;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

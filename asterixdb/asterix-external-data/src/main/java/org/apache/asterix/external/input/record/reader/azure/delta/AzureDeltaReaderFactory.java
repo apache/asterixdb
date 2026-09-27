@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.external.input.record.reader.aws.delta.DeltaReaderFactory;
+import org.apache.asterix.external.input.record.reader.delta.DeltaReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.external.util.azure.AzureUtils;

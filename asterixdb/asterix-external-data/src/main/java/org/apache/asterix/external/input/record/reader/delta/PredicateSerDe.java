@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.delta;
+package org.apache.asterix.external.input.record.reader.delta;
 
 import java.util.HashMap;
 import java.util.Map;

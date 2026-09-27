@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.iceberg;
+package org.apache.asterix.external.input.record.reader.iceberg;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +38,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.apache.asterix.external.input.record.reader.aws.iceberg.IcebergParquetRecordReaderFactory.PartitionWorkLoadBasedOnSize;
+import org.apache.asterix.external.input.record.reader.iceberg.IcebergParquetRecordReaderFactory.PartitionWorkLoadBasedOnSize;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.iceberg.VariantProjectionPlan;
 import org.apache.asterix.om.types.ARecordType;

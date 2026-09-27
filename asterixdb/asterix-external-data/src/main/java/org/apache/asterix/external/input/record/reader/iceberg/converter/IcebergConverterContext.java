@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.iceberg.converter;
+package org.apache.asterix.external.input.record.reader.iceberg.converter;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.FALSE;
 import static org.apache.asterix.external.util.ExternalDataConstants.IcebergOptions.DATE_AS_INT;

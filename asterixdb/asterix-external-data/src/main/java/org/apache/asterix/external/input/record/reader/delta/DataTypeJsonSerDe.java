@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.delta;
+package org.apache.asterix.external.input.record.reader.delta;
 
 import static io.delta.kernel.internal.util.Preconditions.checkArgument;
 import static java.lang.String.format;

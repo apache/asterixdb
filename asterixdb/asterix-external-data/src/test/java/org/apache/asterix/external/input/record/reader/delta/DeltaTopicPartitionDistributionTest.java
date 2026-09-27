@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.awss3;
+package org.apache.asterix.external.input.record.reader.delta;
 
 import static io.delta.kernel.internal.InternalScanFileUtils.ADD_FILE_ORDINAL;
 
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.external.input.record.reader.aws.delta.DeltaReaderFactory;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.junit.Assert;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.delta.converter;
+package org.apache.asterix.external.input.record.reader.delta.converter;
 
 import java.io.DataOutput;
 import java.util.List;

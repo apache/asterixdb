@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.delta;
+package org.apache.asterix.external.input.record.reader.delta;
 
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
@@ -42,7 +42,7 @@ import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.filter.DeltaTableFilterEvaluatorFactory;
-import org.apache.asterix.external.input.record.reader.aws.delta.converter.DeltaConverterContext;
+import org.apache.asterix.external.input.record.reader.delta.converter.DeltaConverterContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.om.types.ARecordType;

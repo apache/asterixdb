@@ -32,7 +32,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.external.input.record.reader.aws.delta.DeltaFileRecordReader;
+import org.apache.asterix.external.input.record.reader.delta.DeltaFileRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.AvroRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.util.ExternalDataConstants;

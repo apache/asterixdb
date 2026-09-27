@@ -42,7 +42,7 @@ import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
-import org.apache.asterix.external.input.record.reader.aws.iceberg.converter.IcebergConverterContext;
+import org.apache.asterix.external.input.record.reader.iceberg.converter.IcebergConverterContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.MillisecondChronon;
 import org.apache.asterix.external.util.TimestampZoneProjector;

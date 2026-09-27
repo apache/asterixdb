@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.delta;
+package org.apache.asterix.external.input.record.reader.delta;
 
 import java.io.IOException;
 import java.util.Optional;

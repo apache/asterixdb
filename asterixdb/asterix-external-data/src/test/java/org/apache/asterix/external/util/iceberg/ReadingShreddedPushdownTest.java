@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.asterix.external.input.record.reader.aws.iceberg.VariantProjectedParquetReader;
+import org.apache.asterix.external.input.record.reader.iceberg.VariantProjectedParquetReader;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
