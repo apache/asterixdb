@@ -66,6 +66,7 @@ import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.catalog.Namespace;
 import org.apache.iceberg.catalog.SupportsNamespaces;
 import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.exceptions.NoSuchTableException;
 import org.apache.iceberg.gcp.gcs.GCSFileIO;
 import org.apache.iceberg.nessie.NessieCatalog;
 import org.apache.iceberg.rest.RESTCatalog;
@@ -261,6 +262,8 @@ public class IcebergUtils {
         validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN);
         validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_STATS_PUSHDOWN);
         validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES);
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.USE_DELETE_CACHE);
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.USE_MANIFEST_FILE_SIZES);
 
         // validate snapshot
         IcebergSnapshotUtils.validateAndGetSnapshot(properties);
@@ -403,7 +406,7 @@ public class IcebergUtils {
         IcebergCatalogSource catalogSource = validateAndGetCatalogSource(source);
 
         // remove null values to avoid failures in internal checks
-        Catalog catalog;
+        Catalog catalog = null;
         catalogProperties.values().removeIf(Objects::isNull);
 
         try {
@@ -418,11 +421,24 @@ public class IcebergUtils {
                 validateNamespacePresence((SupportsNamespaces) catalog, namespace);
             }
         } catch (CompilationException ex) {
-            throw ex;
+            throw closeOnFailure(catalog, catalogProperties, ex);
         } catch (Throwable ex) {
-            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
+            throw closeOnFailure(catalog, catalogProperties,
+                    CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, ex.getMessage()));
         }
         return catalog;
+    }
+
+    // The caller never receives a catalog that failed here, so it cannot close it: initCatalog has already registered
+    // the catalog's clients, and nothing else would release them.
+    private static CompilationException closeOnFailure(Catalog catalog, Map<String, String> catalogProperties,
+            CompilationException failure) {
+        try {
+            closeAndCleanup(catalog, catalogProperties);
+        } catch (Exception ex) {
+            failure.addSuppressed(ex);
+        }
+        return failure;
     }
 
     private static Catalog createAndSetCatalogProperties(Map<String, String> properties, IcebergCatalogSource source)
@@ -470,19 +486,40 @@ public class IcebergUtils {
         }
     }
 
+    /**
+     * Closes the catalog and releases the clients registered under the factory id its properties carry. The clients are
+     * released even when the catalog fails to close.
+     *
+     * @throws CompilationException if the catalog fails to close or its clients fail to be released; when both fail,
+     *                              the release failure is suppressed into it. No other exception escapes, so a caller
+     *                              closing from a {@code finally} block can catch this one and suppress it into the
+     *                              failure it is already propagating.
+     */
     public static void closeAndCleanup(Catalog catalog, Map<String, String> catalogProperties)
             throws CompilationException {
+        Exception failure = null;
         try {
             if (catalog instanceof AutoCloseable) {
                 ((AutoCloseable) catalog).close();
             }
         } catch (Exception ex) {
-            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
+            failure = ex;
         } finally {
             if (catalogProperties != null) {
                 String awsClientsFactoryId = catalogProperties.get(FACTORY_INSTANCE_ID_KEY);
-                EnsureCloseClientsFactoryRegistry.closeAll(awsClientsFactoryId);
+                try {
+                    EnsureCloseClientsFactoryRegistry.closeAll(awsClientsFactoryId);
+                } catch (RuntimeException ex) {
+                    if (failure == null) {
+                        failure = ex;
+                    } else {
+                        failure.addSuppressed(ex);
+                    }
+                }
             }
+        }
+        if (failure != null) {
+            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, failure, failure.getMessage());
         }
     }
 
@@ -652,6 +689,21 @@ public class IcebergUtils {
                 yield nessieCatalog.listTables(namespace);
             }
         };
+    }
+
+    /**
+     * Loads the table, reporting one the catalog does not have as {@link ErrorCode#ICEBERG_TABLE_DOES_NOT_EXIST}.
+     * <p>
+     * Asking {@code tableExists} first is not a cheaper probe: for the metastore catalogs it is a full load itself, so
+     * the table would be fetched and its metadata file read twice.
+     */
+    public static Table loadExistingTable(Catalog catalog, TableIdentifier tableIdentifier, String tableName)
+            throws CompilationException {
+        try {
+            return catalog.loadTable(tableIdentifier);
+        } catch (NoSuchTableException e) {
+            throw CompilationException.create(ErrorCode.ICEBERG_TABLE_DOES_NOT_EXIST, e, tableName);
+        }
     }
 
     public static Table loadTable(Catalog catalog, TableIdentifier tableIdentifier, CatalogConfig.IcebergCatalogSource source) {

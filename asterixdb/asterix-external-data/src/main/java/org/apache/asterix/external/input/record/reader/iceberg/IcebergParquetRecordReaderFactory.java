@@ -91,10 +91,15 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
     private final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
 
     private Schema projectedSchema;
+    // Shipped to the readers so that they read the planned files without loading the table from the catalog again
+    private Schema schemaAtSnapshot;
+    private IcebergFileIoDescriptor fileIoDescriptor;
     private Map<String, String> originalConfiguration;
     private Map<String, String> catalogProperties;
 
     private transient AlgebricksAbsolutePartitionConstraint partitionConstraint;
+    // Every reader of this scan on a node is created from this one deserialized factory, so they share it
+    private transient IcebergDeleteCache deleteCache;
 
     public IcebergParquetRecordReaderFactory() {
     }
@@ -114,6 +119,25 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
         return partitionConstraint;
     }
 
+    static boolean isDeleteCacheEnabled(Map<String, String> configuration) {
+        return Boolean.parseBoolean(configuration.getOrDefault(ExternalDataConstants.IcebergOptions.USE_DELETE_CACHE,
+                Boolean.toString(ExternalDataConstants.IcebergOptions.DEFAULT_USE_DELETE_CACHE)));
+    }
+
+    /**
+     * @return the delete cache the scan's readers on this node share, or {@code null} when the cache is disabled, in
+     *         which case each reader loads the delete files of every data file itself
+     */
+    synchronized IcebergDeleteCache deleteCache() {
+        if (!isDeleteCacheEnabled(originalConfiguration)) {
+            return null;
+        }
+        if (deleteCache == null) {
+            deleteCache = new IcebergDeleteCache();
+        }
+        return deleteCache;
+    }
+
     private int getPartitionsCount() {
         return getPartitionConstraint().getLocations().length;
     }
@@ -123,8 +147,8 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
         try {
             int partition = context.getPartition();
             return new IcebergFileRecordReader(partitionWorkLoadsBasedOnSize.get(partition).getFileScanTasks(),
-                    projectedSchema, new HashMap<>(originalConfiguration),
-                    context.getTaskContext().getWarningCollector());
+                    projectedSchema, schemaAtSnapshot, fileIoDescriptor, deleteCache(),
+                    new HashMap<>(originalConfiguration), context.getTaskContext().getWarningCollector());
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -256,15 +280,12 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             catalog = IcebergUtils.initializeCatalog(catalogProperties, namespace);
             Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
             TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);
-            if (!catalog.tableExists(tableIdentifier)) {
-                throw CompilationException.create(ErrorCode.ICEBERG_TABLE_DOES_NOT_EXIST, tableName);
-            }
-
-            Table table = catalog.loadTable(tableIdentifier);
+            Table table = IcebergUtils.loadExistingTable(catalog, tableIdentifier, tableName);
             TableScan scan = table.newScan();
             scan = setAndPinScanSnapshot(originalConfiguration, table, scan);
             long snapshotId = Long.parseLong(originalConfiguration.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY));
-            Schema schemaAtSnapshot = table.schemas().get(table.snapshot(snapshotId).schemaId());
+            schemaAtSnapshot = table.schemas().get(table.snapshot(snapshotId).schemaId());
+            fileIoDescriptor = IcebergFileIoDescriptor.capture(table.io());
 
             projectedSchema = selectRequestedColumns(schemaAtSnapshot, configuration);
             ensureTypesSupported(projectedSchema, appCtx.getExternalProperties().isIcebergVariantEnabled());

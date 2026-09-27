@@ -49,6 +49,7 @@ import org.apache.iceberg.Table;
 import org.apache.iceberg.catalog.Catalog;
 import org.apache.iceberg.catalog.Namespace;
 import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.data.DeleteLoader;
 import org.apache.iceberg.data.GenericDeleteFilter;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.data.parquet.GenericParquetReaders;
@@ -74,9 +75,16 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
     private final IRawRecord<Record> record;
 
     private Map<String, String> catalogProperties;
+    private final IcebergFileIoDescriptor fileIoDescriptor;
+    private final IcebergDeleteCache deleteCache;
+    private Map<String, String> fileIoProperties;
+    private boolean tableInitialized;
     private int nextTaskIndex = 0;
     private Catalog catalog;
     private FileIO tableFileIo;
+    // tableFileIo, or a view of it that asks storage for each file's length when the collection says not to trust the
+    // manifest's
+    private FileIO readFileIo;
     private Schema schemaAtSnapshot;
     private CloseableIterable<Record> iterable;
     private Iterator<Record> recordsIterator;
@@ -90,19 +98,24 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
     private final boolean variantProjectionPushdownWithDeletes;
     private final IWarningCollector warningCollector;
 
-    public IcebergFileRecordReader(List<FileScanTask> fileScanTasks, Schema projectedSchema,
-            Map<String, String> configuration, IWarningCollector warningCollector) throws HyracksDataException {
+    /**
+     * @param schemaAtSnapshot the table schema at the pinned snapshot, and {@code fileIoDescriptor} the table's FileIO,
+     *        both as the compiler loaded them. When both are given the reader opens the data files directly and never
+     *        contacts the catalog; when either is {@code null} it loads the table from the catalog itself.
+     * @param deleteCache the scan's delete files already loaded on this node, shared with the scan's other readers;
+     *        {@code null} loads every delete file for each data file it applies to
+     */
+    public IcebergFileRecordReader(List<FileScanTask> fileScanTasks, Schema projectedSchema, Schema schemaAtSnapshot,
+            IcebergFileIoDescriptor fileIoDescriptor, IcebergDeleteCache deleteCache, Map<String, String> configuration,
+            IWarningCollector warningCollector) throws HyracksDataException {
         this.fileScanTasks = fileScanTasks;
         this.projectedSchema = projectedSchema;
+        this.schemaAtSnapshot = schemaAtSnapshot;
+        this.fileIoDescriptor = fileIoDescriptor;
+        this.deleteCache = deleteCache;
         this.originalConfiguration = configuration;
         this.warningCollector = warningCollector;
         this.record = new GenericRecord<>();
-        try {
-            initializeTable();
-        } catch (CompilationException e) {
-            Throwable throwable = closeResources(e);
-            throw HyracksDataException.create(throwable);
-        }
         this.variantProjectionPlan = buildVariantProjectionPlan();
         this.variantProjectionPushdownWithDeletes = Boolean.parseBoolean(configuration.getOrDefault(
                 ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES, Boolean.toString(
@@ -153,6 +166,11 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         if (fileScanTasks.isEmpty()) {
             return;
         }
+        if (fileIoDescriptor != null && schemaAtSnapshot != null) {
+            fileIoProperties = fileIoDescriptor.newProperties();
+            tableFileIo = fileIoDescriptor.open(fileIoProperties);
+            return;
+        }
 
         String namespace = IcebergUtils.getNamespace(originalConfiguration);
         String tableName = originalConfiguration.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
@@ -160,10 +178,7 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         catalog = IcebergUtils.initializeCatalog(catalogProperties, namespace);
         Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
         TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);
-        if (!catalog.tableExists(tableIdentifier)) {
-            throw CompilationException.create(ErrorCode.ICEBERG_TABLE_DOES_NOT_EXIST, tableName);
-        }
-        Table table = catalog.loadTable(tableIdentifier);
+        Table table = IcebergUtils.loadExistingTable(catalog, tableIdentifier, tableName);
         tableFileIo = table.io();
 
         // we always have a snapshot id since we pin it at compile time
@@ -183,6 +198,17 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
 
     @Override
     public boolean hasNext() throws Exception {
+        // Loaded here rather than in the constructor: readers are constructed inside GenericAdapterFactory's
+        // synchronized createAdapter, which every partition on a node shares, so loading the table there (catalog
+        // clients, namespace check, metadata reads) would run each partition's remote calls one after another.
+        if (!tableInitialized) {
+            tableInitialized = true;
+            initializeTable();
+            if (tableFileIo != null) {
+                readFileIo = readFileIo(tableFileIo, originalConfiguration);
+            }
+        }
+
         // iterator has more records
         if (recordsIterator != null && recordsIterator.hasNext()) {
             return true;
@@ -233,6 +259,9 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
             if (catalog != null) {
                 IcebergUtils.closeAndCleanup(catalog, catalogProperties);
             }
+            if (fileIoProperties != null) {
+                IcebergUtils.closeAndCleanup(null, fileIoProperties);
+            }
         } catch (Exception ex) {
             throwable = ExceptionUtils.suppress(throwable, ex);
         }
@@ -258,12 +287,13 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
 
     private void setNextRecordsIterator() {
         FileScanTask task = fileScanTasks.get(nextTaskIndex++);
-        InputFile inFile = tableFileIo.newInputFile(task.file().location());
+        // the manifest records the length, and not passing it costs a storage request per file to find it out
+        InputFile inFile = readFileIo.newInputFile(task.file().location(), task.file().fileSizeInBytes());
 
         CloseableIterable<Record> prunedRead = null;
         try {
-            prunedRead = openPrunedReadIfEligible(tableFileIo, inFile, task, schemaAtSnapshot, projectedSchema,
-                    variantProjectionPlan, variantProjectionPushdownWithDeletes);
+            prunedRead = openPrunedReadIfEligible(readFileIo, inFile, task, schemaAtSnapshot, projectedSchema,
+                    variantProjectionPlan, variantProjectionPushdownWithDeletes, deleteCache);
             if (prunedRead != null) {
                 iterable = prunedRead;
                 recordsIterator = prunedRead.iterator();
@@ -277,7 +307,7 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
             warnProjectionNotPushed(e);
         }
 
-        iterable = openStandardRead(tableFileIo, inFile, task, schemaAtSnapshot, projectedSchema);
+        iterable = openStandardRead(readFileIo, inFile, task, schemaAtSnapshot, projectedSchema, deleteCache);
         recordsIterator = iterable.iterator();
     }
 
@@ -295,6 +325,11 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
      */
     static CloseableIterable<Record> openStandardRead(FileIO io, InputFile inFile, FileScanTask task,
             Schema schemaAtSnapshot, Schema projectedSchema) {
+        return openStandardRead(io, inFile, task, schemaAtSnapshot, projectedSchema, null);
+    }
+
+    static CloseableIterable<Record> openStandardRead(FileIO io, InputFile inFile, FileScanTask task,
+            Schema schemaAtSnapshot, Schema projectedSchema, IcebergDeleteCache deleteCache) {
         int deletesCount = (task.deletes() == null) ? 0 : task.deletes().size();
         if (deletesCount == 0) {
             // No deletes: read only projected schema
@@ -304,7 +339,7 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         }
 
         // Has deletes: read required schema, then apply delete filter
-        GenericDeleteFilter deleteFilter = new GenericDeleteFilter(io, task, schemaAtSnapshot, projectedSchema);
+        GenericDeleteFilter deleteFilter = newDeleteFilter(io, task, schemaAtSnapshot, projectedSchema, deleteCache);
 
         Schema requiredSchema = deleteFilter.requiredSchema();
         CloseableIterable<Record> rows =
@@ -356,12 +391,19 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
     static CloseableIterable<Record> openPrunedReadIfEligible(FileIO io, InputFile inFile, FileScanTask task,
             Schema tableSchema, Schema projectedSchema, VariantProjectionPlan plan, boolean pushdownWithDeletes)
             throws IOException {
+        return openPrunedReadIfEligible(io, inFile, task, tableSchema, projectedSchema, plan, pushdownWithDeletes,
+                null);
+    }
+
+    static CloseableIterable<Record> openPrunedReadIfEligible(FileIO io, InputFile inFile, FileScanTask task,
+            Schema tableSchema, Schema projectedSchema, VariantProjectionPlan plan, boolean pushdownWithDeletes,
+            IcebergDeleteCache deleteCache) throws IOException {
         if (!shouldTryPrunedVariantRead(plan, task.deletes(), pushdownWithDeletes)) {
             return null;
         }
         boolean hasDeletes = task.deletes() != null && !task.deletes().isEmpty();
         if (hasDeletes) {
-            return openPrunedDeleteAwareRead(io, inFile, task, tableSchema, projectedSchema, plan);
+            return openPrunedDeleteAwareRead(io, inFile, task, tableSchema, projectedSchema, plan, deleteCache);
         }
         VariantProjectedParquetReader prunedReader = VariantProjectedParquetReader.open(inFile, projectedSchema,
                 task.residual(), task.start(), task.length(), true, plan);
@@ -386,8 +428,14 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
      */
     static CloseableIterable<Record> openPrunedDeleteAwareRead(FileIO io, InputFile inFile, FileScanTask task,
             Schema tableSchema, Schema projectedSchema, VariantProjectionPlan plan) throws IOException {
+        return openPrunedDeleteAwareRead(io, inFile, task, tableSchema, projectedSchema, plan, null);
+    }
+
+    static CloseableIterable<Record> openPrunedDeleteAwareRead(FileIO io, InputFile inFile, FileScanTask task,
+            Schema tableSchema, Schema projectedSchema, VariantProjectionPlan plan, IcebergDeleteCache deleteCache)
+            throws IOException {
         PositionlessGenericDeleteFilter deleteFilter =
-                new PositionlessGenericDeleteFilter(io, task, tableSchema, projectedSchema);
+                new PositionlessGenericDeleteFilter(io, task, tableSchema, projectedSchema, deleteCache);
 
         // Open first, load deletes second. Both the clip being a no-op and a missing row-index offset are decided at
         // open time, and either sends this task to the standard delete path, which loads its own copy of every
@@ -424,25 +472,44 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         }
     }
 
+    /**
+     * Iceberg's delete filter, opening delete files with the length their manifest records and loading them through
+     * {@code deleteCache} when one is given.
+     */
+    static GenericDeleteFilter newDeleteFilter(FileIO io, FileScanTask task, Schema tableSchema, Schema requestedSchema,
+            IcebergDeleteCache deleteCache) {
+        return new GenericDeleteFilter(io, task, tableSchema, requestedSchema) {
+            @Override
+            protected InputFile loadInputFile(DeleteFile deleteFile) {
+                return io.newInputFile(deleteFile.location(), deleteFile.fileSizeInBytes());
+            }
+
+            @Override
+            protected DeleteLoader newDeleteLoader() {
+                return deleteCache != null ? deleteCache.newLoader(this::loadInputFile) : super.newDeleteLoader();
+            }
+        };
+    }
+
+    /**
+     * @return {@code io}, or a view of it that opens every data and delete file without the length its manifest
+     *         records when the collection's {@code useManifestFileSizes} is off
+     */
+    static FileIO readFileIo(FileIO io, Map<String, String> configuration) {
+        return useManifestFileSizes(configuration) ? io : new StorageLengthFileIO(io);
+    }
+
+    static boolean useManifestFileSizes(Map<String, String> configuration) {
+        return Boolean
+                .parseBoolean(configuration.getOrDefault(ExternalDataConstants.IcebergOptions.USE_MANIFEST_FILE_SIZES,
+                        Boolean.toString(ExternalDataConstants.IcebergOptions.DEFAULT_USE_MANIFEST_FILE_SIZES)));
+    }
+
     private long getSnapshotId(Map<String, String> configuration) {
         String snapshotStr = configuration.get(IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
         if (snapshotStr != null) {
             return Long.parseLong(snapshotStr);
         }
         throw new IllegalStateException("Snapshot must've been pinned during compilation phase");
-    }
-
-    private Throwable closeResources(Throwable throwable) {
-        if (tableFileIo != null) {
-            throwable = CleanupUtils.closeSilently(tableFileIo, throwable);
-        }
-        if (catalog != null) {
-            try {
-                IcebergUtils.closeAndCleanup(catalog, catalogProperties);
-            } catch (Exception ex) {
-                throwable = ExceptionUtils.suppress(throwable, ex);
-            }
-        }
-        return throwable;
     }
 }

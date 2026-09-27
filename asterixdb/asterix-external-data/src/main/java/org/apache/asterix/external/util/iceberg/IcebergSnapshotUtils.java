@@ -134,16 +134,32 @@ public class IcebergSnapshotUtils {
             String tableName = catalogAndCollectionProperties.get(IcebergConstants.ICEBERG_TABLE_NAME_PROPERTY_KEY);
             Map<String, String> catalogProperties =
                     IcebergUtils.filterCatalogProperties(catalogAndCollectionProperties);
-            Catalog icebergCatalog = IcebergUtils.initializeCatalog(catalogProperties, namespace, true);
+            Catalog icebergCatalog = null;
+            Throwable throwable = null;
+            try {
+                icebergCatalog = IcebergUtils.initializeCatalog(catalogProperties, namespace, true);
 
-            Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
-            TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);
-            Table table = icebergCatalog.loadTable(tableIdentifier);
+                Namespace parsedNamespace = IcebergUtils.parseNamespace(namespace);
+                TableIdentifier tableIdentifier = TableIdentifier.of(parsedNamespace, tableName);
+                Table table = icebergCatalog.loadTable(tableIdentifier);
 
-            Optional<Long> snapshotIdOptional = getSnapshotId(catalogAndCollectionProperties, table);
-            if (snapshotIdOptional.isPresent() && !snapshotIdExists(table, snapshotIdOptional.get())) {
-                throw CompilationException.create(ErrorCode.ICEBERG_SNAPSHOT_ID_NOT_FOUND, snapshotIdOptional.get(),
-                        tableIdentifier.toString());
+                Optional<Long> snapshotIdOptional = getSnapshotId(catalogAndCollectionProperties, table);
+                if (snapshotIdOptional.isPresent() && !snapshotIdExists(table, snapshotIdOptional.get())) {
+                    throw CompilationException.create(ErrorCode.ICEBERG_SNAPSHOT_ID_NOT_FOUND, snapshotIdOptional.get(),
+                            tableIdentifier.toString());
+                }
+            } catch (Throwable th) {
+                throwable = th;
+                throw th;
+            } finally {
+                try {
+                    IcebergUtils.closeAndCleanup(icebergCatalog, catalogProperties);
+                } catch (CompilationException ex) {
+                    if (throwable == null) {
+                        throw ex;
+                    }
+                    throwable.addSuppressed(ex);
+                }
             }
         }
     }

@@ -251,7 +251,7 @@ public class IcebergVariantReadRoutingTest {
     public void projectionFallback_raisesOneConstantWarning() throws Exception {
         WarningCollector warnings = new WarningCollector();
         IcebergFileRecordReader reader =
-                new IcebergFileRecordReader(List.of(), filterSchema(), new HashMap<>(), warnings);
+                new IcebergFileRecordReader(List.of(), filterSchema(), null, null, null, new HashMap<>(), warnings);
 
         reader.warnProjectionNotPushed(new RuntimeException("first file blew up"));
         reader.warnProjectionNotPushed(new IllegalStateException("a completely different failure"));

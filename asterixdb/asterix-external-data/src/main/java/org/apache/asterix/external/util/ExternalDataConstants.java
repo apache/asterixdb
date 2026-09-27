@@ -479,6 +479,18 @@ public class ExternalDataConstants {
         public static final String VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES = "variantProjectionPushdownWithDeletes";
         public static final boolean DEFAULT_VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES = true;
 
+        // The readers of a scan on a node share the delete files they load rather than each loading every delete file
+        // of every data file it reads. Sharing makes one reader's loaded rows visible to the others, which is where a
+        // defect would turn into wrong answers, so it gets a break-glass off-switch that returns to per-file loading.
+        public static final String USE_DELETE_CACHE = "useDeleteCache";
+        public static final boolean DEFAULT_USE_DELETE_CACHE = true;
+
+        // Data and delete files are opened with the length their manifest records, sparing a storage request per file.
+        // A manifest that records a wrong length makes the read fail rather than return wrong rows, so this switch is
+        // for availability: it lets a table written that way be read again, asking storage for the length.
+        public static final String USE_MANIFEST_FILE_SIZES = "useManifestFileSizes";
+        public static final boolean DEFAULT_USE_MANIFEST_FILE_SIZES = true;
+
         static {
             if (DEFAULT_VARIANT_DEPTH < 1 || DEFAULT_VARIANT_DEPTH > MAX_VARIANT_DEPTH) {
                 throw new IllegalStateException(

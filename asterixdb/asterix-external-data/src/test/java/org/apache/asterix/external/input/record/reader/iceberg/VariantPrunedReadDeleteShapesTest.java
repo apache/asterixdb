@@ -27,6 +27,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -480,6 +484,111 @@ public class VariantPrunedReadDeleteShapesTest {
         }
         for (int id : survivors) {
             Assert.assertNotEquals("bucket 1 must be gone: " + id, 1, id % 5);
+        }
+    }
+
+    /**
+     * The pruned read shares delete files through {@link IcebergDeleteCache} exactly as the standard read does, so the
+     * same keys must stay correct under concurrent readers: one equality delete keyed on a top-level column, one keyed
+     * on a field inside a struct, whose loaded rows are the ones that are not safe to share. Every reader of every round
+     * must agree with Iceberg's standard read row for row.
+     */
+    @Test
+    public void concurrentReadersSharingOneCache_topLevelAndStructKeys() throws Exception {
+        Types.StructType st = Types.StructType.of(Types.NestedField.required(10, "tag", Types.StringType.get()),
+                Types.NestedField.optional(11, "v", Types.VariantType.get()));
+        Schema schema = new Schema(Types.NestedField.required(1, "id", Types.IntegerType.get()),
+                Types.NestedField.required(2, "bucket", Types.IntegerType.get()),
+                Types.NestedField.optional(3, "st", st));
+        Table table = newTable(warehouse(), schema, PartitionSpec.unpartitioned());
+        VariantMetadata meta = Variants.metadata("x", "big");
+        Type typed = shreddedType(variant(meta, "x", 0).value());
+        GenericRecord template = GenericRecord.create(table.schema());
+        GenericRecord stTemplate = GenericRecord.create(st);
+        for (int f = 0; f < 4; f++) {
+            List<Record> rows = new ArrayList<>();
+            for (int i = 0; i < ROWS_PER_FILE; i++) {
+                int id = f * ROWS_PER_FILE + i;
+                Record inner = stTemplate.copy();
+                inner.setField("tag", "t" + (id % 30));
+                inner.setField("v", variant(meta, "x", id));
+                Record r = template.copy();
+                r.setField("id", id);
+                r.setField("bucket", id % 5);
+                r.setField("st", inner);
+                rows.add(r);
+            }
+            writeDataFile(table, "part-" + f, rows, null, (fid, name) -> typed);
+        }
+
+        Schema tagSchema = table.schema().select("st.tag");
+        Types.StructType tagStruct = tagSchema.findField("st").type().asStructType();
+        File tagFile = new File(new File(table.location(), "deletes"), "eq-tag.parquet");
+        Assert.assertTrue(tagFile.getParentFile().mkdirs() || tagFile.getParentFile().exists());
+        EqualityDeleteWriter<Record> tagWriter = Parquet.writeDeletes(org.apache.iceberg.Files.localOutput(tagFile))
+                .forTable(table).rowSchema(tagSchema).createWriterFunc(GenericParquetWriter::create)
+                .equalityFieldIds(List.of(table.schema().findField("st.tag").fieldId())).overwrite()
+                .buildEqualityWriter();
+        try (EqualityDeleteWriter<Record> w = tagWriter) {
+            for (int t = 0; t < 12; t++) {
+                GenericRecord inner = GenericRecord.create(tagStruct);
+                inner.setField("tag", "t" + t);
+                GenericRecord row = GenericRecord.create(tagSchema);
+                row.setField("st", inner);
+                w.write(row);
+            }
+        }
+        table.newRowDelta()
+                .addDeletes(
+                        writeEqualityDelete(table, "eq-bucket", List.of("bucket"), List.of(Map.of("bucket", 4)), null))
+                .addDeletes(tagWriter.toDeleteFile()).commit();
+        List<FileScanTask> planned = tasks(table);
+        for (FileScanTask task : planned) {
+            Assert.assertEquals("both deletes must apply to every data file", 2, task.deletes().size());
+        }
+
+        Schema projection = table.schema().select("id", "st");
+        VariantProjectionPlan plan = plan(projection, List.of(List.of("st", "v", "x")));
+        List<List<Integer>> expected = new ArrayList<>();
+        for (FileScanTask task : planned) {
+            List<Integer> ids = oracle(table, task, projection);
+            Assert.assertTrue("the deletes must remove some rows", ids.size() < ROWS_PER_FILE);
+            expected.add(ids);
+        }
+
+        int readers = 16;
+        ExecutorService pool = Executors.newFixedThreadPool(readers);
+        try {
+            for (int round = 0; round < 10; round++) {
+                IcebergDeleteCache cache = new IcebergDeleteCache();
+                CountDownLatch start = new CountDownLatch(1);
+                List<Future<List<List<Integer>>>> results = new ArrayList<>();
+                for (int r = 0; r < readers; r++) {
+                    results.add(pool.submit(() -> {
+                        start.await();
+                        List<List<Integer>> perTask = new ArrayList<>();
+                        for (FileScanTask task : planned) {
+                            List<Integer> ids = new ArrayList<>();
+                            try (CloseableIterable<Record> live = IcebergFileRecordReader.openPrunedDeleteAwareRead(
+                                    table.io(), table.io().newInputFile(task.file().location()), task, table.schema(),
+                                    projection, plan, cache)) {
+                                Assert.assertNotNull("the shipped code must have taken the pruned path", live);
+                                for (Record row : live) {
+                                    ids.add((Integer) row.getField("id"));
+                                }
+                            }
+                            perTask.add(ids);
+                        }
+                        return perTask;
+                    }));
+                }
+                start.countDown();
+                for (Future<List<List<Integer>>> result : results) {
+                    Assert.assertEquals("round " + round, expected, result.get());
+                }
+            }
+        } finally {
+            pool.shutdownNow();
         }
     }
 

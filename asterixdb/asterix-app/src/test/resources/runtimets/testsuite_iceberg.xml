@@ -72,6 +72,14 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg">
+      <compilation-unit name="read-fallback-options">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">read-fallback-options</output-dir>
+        <expected-error>ASX0047: Invalid value for parameter 'useDeleteCache': ture</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'useManifestFileSizes': ture</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
       <compilation-unit name="variant-deletion-vectors">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">variant-deletion-vectors</output-dir>

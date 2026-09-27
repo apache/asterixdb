@@ -18,9 +18,11 @@
  */
 package org.apache.asterix.external.input.record.reader.iceberg;
 
+import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.StructLike;
+import org.apache.iceberg.data.DeleteLoader;
 import org.apache.iceberg.data.InternalRecordWrapper;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.deletes.DeleteCounter;
@@ -51,11 +53,21 @@ final class PositionlessGenericDeleteFilter extends org.apache.iceberg.data.Dele
 
     private final FileIO io;
     private final InternalRecordWrapper asStructLike;
+    private final IcebergDeleteCache deleteCache;
 
     PositionlessGenericDeleteFilter(FileIO io, FileScanTask task, Schema tableSchema, Schema requestedSchema) {
+        this(io, task, tableSchema, requestedSchema, null);
+    }
+
+    /**
+     * @param deleteCache the scan's delete files already loaded on this node; {@code null} loads them afresh
+     */
+    PositionlessGenericDeleteFilter(FileIO io, FileScanTask task, Schema tableSchema, Schema requestedSchema,
+            IcebergDeleteCache deleteCache) {
         super(task.file().location(), task.deletes(), tableSchema, requestedSchema, new DeleteCounter(), false);
         this.io = io;
         this.asStructLike = new InternalRecordWrapper(requiredSchema().asStruct());
+        this.deleteCache = deleteCache;
     }
 
     @Override
@@ -72,5 +84,15 @@ final class PositionlessGenericDeleteFilter extends org.apache.iceberg.data.Dele
     @Override
     protected InputFile getInputFile(String location) {
         return io.newInputFile(location);
+    }
+
+    @Override
+    protected InputFile loadInputFile(DeleteFile deleteFile) {
+        return io.newInputFile(deleteFile.location(), deleteFile.fileSizeInBytes());
+    }
+
+    @Override
+    protected DeleteLoader newDeleteLoader() {
+        return deleteCache != null ? deleteCache.newLoader(this::loadInputFile) : super.newDeleteLoader();
     }
 }
