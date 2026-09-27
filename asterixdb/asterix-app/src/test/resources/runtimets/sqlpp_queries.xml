@@ -2178,6 +2178,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_median">
+        <output-dir compare="Text">scalar_median</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_min">
         <output-dir compare="Text">scalar_min</output-dir>
       </compilation-unit>
