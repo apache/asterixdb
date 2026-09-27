@@ -20,17 +20,15 @@ distribute result [$$45] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                   -- STABLE_SORT [$$51(ASC)]  |PARTITIONED|
                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      select (or(eq($$37, "pending"), eq($$37, "shipped"))) project: [$$51] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      select (eq($$37, $$49)) project: [$$51] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_SELECT  |PARTITIONED|
-                        project ([$$37, $$51]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- STREAM_PROJECT  |PARTITIONED|
-                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            unnest-map [$$37, $$51] <- index-search("idx_order_status_het", 0, "Default", "test", "orders", true, true, 1, $$49, 1, $$49, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- BTREE_SEARCH  |PARTITIONED|
-                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                unnest $$49 <- scan-collection(array: [ "pending", "shipped" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- UNNEST  |PARTITIONED|
-                                  empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          unnest-map [$$37, $$51] <- index-search("idx_order_status_het", 0, "Default", "test", "orders", true, true, 1, $$49, 1, $$49, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- BROADCAST_EXCHANGE  |PARTITIONED|
+                              unnest $$49 <- scan-collection(array: [ "pending", "shipped" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- UNNEST  |PARTITIONED|
+                                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

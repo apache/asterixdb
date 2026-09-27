@@ -6759,6 +6759,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="in-list-exact-search">
+        <output-dir compare="Text">in-list-exact-search</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-ngram-edit-distance-with-two-ngram-index">
         <output-dir compare="Text">inverted-index-ngram-edit-distance-with-two-ngram-index</output-dir>
       </compilation-unit>

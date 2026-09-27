@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description: IN lists searched on the primary index and in index-only plans. A search that returns exactly the
+ *              matching records needs no filter after it, and any other condition on the same key still does.
+ *              A field read before the filter of a primary-index search must not be compared with the list's
+ *              value, which that search does not keep.
+ * Expected Result: Success
+ */
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+CREATE TYPE T AS { id: bigint, a: bigint, b: bigint, c: bigint, d: bigint };
+CREATE TYPE T2 AS { k1: bigint, k2: bigint, v: bigint };
+CREATE TYPE T3 AS { id: bigint };
+CREATE DATASET ds(T) PRIMARY KEY id;
+CREATE DATASET ds2(T2) PRIMARY KEY k1, k2;
+CREATE DATASET ds3(T3) PRIMARY KEY id;
+CREATE INDEX idx_a ON ds(a);
+CREATE INDEX idx_cd ON ds(c, d);
+CREATE INDEX idx_name ON ds3(name: string);

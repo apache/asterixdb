@@ -1,0 +1,34 @@
+distribute result [$$27]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$27] <- [ordered-list-constructor($$19, $$28)] project: [$$27]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$19, $$28])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          distinct ([$$34])
+          -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$34)
+              -- STABLE_SORT [$$34(ASC)]  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  select (and(eq($$19, $$30), eq($$28, 5))) project: [$$19, $$28, $$34]
+                  -- STREAM_SELECT  |PARTITIONED|
+                    project ([$$30, $$19, $$28, $$34])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$19, $$28, $$34] <- index-search("idx_cd", 0, "Default", "test", "TestSet", true, true, 2, $$30, $$31, 2, $$30, $$31, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
+                          -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$31] <- [5]
+                            -- ASSIGN  |PARTITIONED|
+                              unnest $$30 <- scan-collection(array: [ 1, 2 ])
+                              -- UNNEST  |PARTITIONED|
+                                empty-tuple-source
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

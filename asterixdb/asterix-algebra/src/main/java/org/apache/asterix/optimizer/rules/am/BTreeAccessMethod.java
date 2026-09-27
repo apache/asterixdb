@@ -388,6 +388,28 @@ public class BTreeAccessMethod implements IAccessMethod {
                 chosenIndexKeyFieldTypes, chosenIndexKeyFieldSourceIndicators, optimizableDisjunctionConditions);
     }
 
+    /**
+     * Whether each key position holds exactly one equality or one disjunction of equalities, and nothing else. A
+     * primary-index search for such keys returns exactly the records that satisfy them. Another condition on a key
+     * does not make the search narrower: a second equality adds its value to the key's list, and a range is ignored.
+     */
+    private static boolean isEqualitySearch(int numConditions, LimitType[] lowKeyLimits, LimitType[] highKeyLimits,
+            boolean[] isDisjunctiveEqualityCondition, List<ILogicalExpression>[] disjunctiveEqualityConditionExprs) {
+        if (numConditions != lowKeyLimits.length) {
+            return false;
+        }
+        for (int i = 0; i < lowKeyLimits.length; i++) {
+            boolean disjunction = isDisjunctiveEqualityCondition[i] && lowKeyLimits[i] == null
+                    && highKeyLimits[i] == null && disjunctiveEqualityConditionExprs[i].size() == 1;
+            boolean equality = !isDisjunctiveEqualityCondition[i] && lowKeyLimits[i] == LimitType.EQUAL
+                    && highKeyLimits[i] == LimitType.EQUAL;
+            if (!disjunction && !equality) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static boolean hasDisjunctiveEquality(AccessMethodAnalysisContext analysisCtx, Index chosenIndex) {
         for (Pair<Integer, Integer> exprAndVar : analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex)) {
             if (analysisCtx.getMatchedFuncExpr(exprAndVar.getLeft()) instanceof DisjunctiveEqualityFuncExpr) {
@@ -736,8 +758,21 @@ public class BTreeAccessMethod implements IAccessMethod {
             return null;
         }
 
-        // Lets keep always false for now to be safe
-        boolean primaryIndexPostProccessingIsNeeded = true;
+        // Each value of an IN list is searched for on its own, and those searches find disjoint records only if every
+        // key before the list is an equality. After a range they overlap, so the list is left to the SELECT instead.
+        boolean equalityPrefix = true;
+        for (int i = 0; i < numSecondaryKeys; i++) {
+            if (!equalityPrefix && isDisjunctiveEqualityCondition[i] && disjunctiveEqualityKeyExprs[i].size() > 1) {
+                isDisjunctiveEqualityCondition[i] = false;
+                replacedFuncExprs.removeAll(disjunctiveEqualityConditionExprs[i]);
+            }
+            equalityPrefix &= isDisjunctiveEqualityCondition[i]
+                    || lowKeyLimits[i] == LimitType.EQUAL && highKeyLimits[i] == LimitType.EQUAL;
+        }
+
+        boolean primaryIndexPostProccessingIsNeeded = !chosenIndex.isPrimaryIndex() || probeSubTree != null
+                || anyRealTypeConvertedToIntegerType || !isEqualitySearch(exprAndVarList.size(), lowKeyLimits,
+                        highKeyLimits, isDisjunctiveEqualityCondition, disjunctiveEqualityConditionExprs);
 
         if (!chosenIndex.isPrimaryIndex() && primaryIndexPostProccessingIsNeeded) {
             for (boolean isDisjEq : isDisjunctiveEqualityCondition) {
@@ -837,8 +872,11 @@ public class BTreeAccessMethod implements IAccessMethod {
 
                     currOp = new UnnestOperator(assignKeyVarList.get(i), new MutableObject<>(scanCollectionExpr));
                     jobGenParams.requiresBroadcast = true;
-                    optimizableDisjunctionConditions
-                            .add(Pair.of(assignKeyVarList.get(i), disjunctiveEqualityConditionExprSet.get(i)));
+                    // Only a secondary-index search keeps the value that found each record.
+                    if (!chosenIndex.isPrimaryIndex()) {
+                        optimizableDisjunctionConditions
+                                .add(Pair.of(assignKeyVarList.get(i), disjunctiveEqualityConditionExprSet.get(i)));
+                    }
 
                 }
 

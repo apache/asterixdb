@@ -1,0 +1,55 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description: An index-only plan on a composite index tests each entry against the value that found it rather than
+ *              the whole IN list.
+ * Expected Result: Success
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+create type test.TestType as
+{
+  id : bigint,
+  a : bigint,
+  b : bigint,
+  c : bigint,
+  d : bigint
+};
+
+create type test.CompositeKeyType as
+{
+  k1 : bigint,
+  k2 : bigint,
+  v : bigint
+};
+
+create  dataset TestSet(TestType) primary key id;
+create  dataset CompositeKeySet(CompositeKeyType) primary key k1, k2;
+
+create  index idx_a  on TestSet (a) type btree;
+create  index idx_cd  on TestSet (c, d) type btree;
+
+select value [x.c, x.d]
+from  TestSet as x
+where x.c in [1, 2] and x.d = 5
+;

@@ -1,0 +1,22 @@
+distribute result [$$x] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$x]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        unnest-map [$$24, $$25, $$x] <- index-search("CompositeKeySet", 0, "Default", "test", "CompositeKeySet", false, true, 2, $$27, $$28, 2, $$27, $$28, true, true, true) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+        -- BTREE_SEARCH  |PARTITIONED|
+          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$27) (ASC, $$28) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 499992.37, total-cost: 499992.37]
+            -- STABLE_SORT [$$27(ASC), $$28(ASC)]  |PARTITIONED|
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- HASH_PARTITION_EXCHANGE [$$27, $$28]  |PARTITIONED|
+                assign [$$28] <- [3] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ASSIGN  |PARTITIONED|
+                  unnest $$27 <- scan-collection(array: [ 1, 2 ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- UNNEST  |PARTITIONED|
+                    empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

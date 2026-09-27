@@ -1,0 +1,22 @@
+distribute result [$$x]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$x])
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        unnest-map [$$24, $$25, $$x] <- index-search("CompositeKeySet", 0, "Default", "test", "CompositeKeySet", false, true, 2, $$27, $$28, 2, $$27, $$28, true, true, true)
+        -- BTREE_SEARCH  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$27) (ASC, $$28)
+            -- STABLE_SORT [$$27(ASC), $$28(ASC)]  |PARTITIONED|
+              exchange
+              -- HASH_PARTITION_EXCHANGE [$$27, $$28]  |PARTITIONED|
+                assign [$$28] <- [3]
+                -- ASSIGN  |PARTITIONED|
+                  unnest $$27 <- scan-collection(array: [ 1, 2 ])
+                  -- UNNEST  |PARTITIONED|
+                    empty-tuple-source
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

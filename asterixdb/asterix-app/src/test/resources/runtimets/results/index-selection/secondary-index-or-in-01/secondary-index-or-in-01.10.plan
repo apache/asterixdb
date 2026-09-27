@@ -20,17 +20,15 @@ distribute result [$$46] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                   -- STABLE_SORT [$$53(ASC)]  |PARTITIONED|
                     exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      select (or(eq($$47, "New York"), eq($$47, "Chicago"), eq($$47, "Houston"))) project: [$$53] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      select (eq($$47, $$51)) project: [$$53] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_SELECT  |PARTITIONED|
-                        project ([$$47, $$53]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- STREAM_PROJECT  |PARTITIONED|
-                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            unnest-map [$$47, $$53] <- index-search("idx_cust_city_het", 0, "Default", "test", "customers", true, true, 1, $$51, 1, $$51, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- BTREE_SEARCH  |PARTITIONED|
-                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                unnest $$51 <- scan-collection(array: [ "New York", "Chicago", "Houston" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- UNNEST  |PARTITIONED|
-                                  empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          unnest-map [$$47, $$53] <- index-search("idx_cust_city_het", 0, "Default", "test", "customers", true, true, 1, $$51, 1, $$51, true, true, true) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- BROADCAST_EXCHANGE  |PARTITIONED|
+                              unnest $$51 <- scan-collection(array: [ "New York", "Chicago", "Houston" ]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- UNNEST  |PARTITIONED|
+                                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

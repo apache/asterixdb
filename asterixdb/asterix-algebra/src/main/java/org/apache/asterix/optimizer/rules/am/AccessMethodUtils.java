@@ -1193,7 +1193,9 @@ public class AccessMethodUtils {
             AccessMethodAnalysisContext analysisCtx, OptimizableOperatorSubTree subTree,
             LogicalVariable newMissingPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
             List<LogicalVariable> pkVarsFromSIdxUnnestMapOp, List<LogicalVariable> primaryIndexUnnestVars,
-            boolean anyRealTypeConvertedToIntegerType) throws AlgebricksException {
+            boolean anyRealTypeConvertedToIntegerType,
+            List<Pair<LogicalVariable, List<ILogicalExpression>>> optimizableDisjunctionConditions)
+            throws AlgebricksException {
         SourceLocation sourceLoc = inputOp.getSourceLocation();
         Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo = analysisCtx.getIndexOnlyPlanInfo();
         // From now on, we deal with the index-only plan.
@@ -1485,7 +1487,12 @@ public class AccessMethodUtils {
             // Creates a new SELECT operator by deep-copying the SELECT operator in the left path
             // since we need to change the variable reference in the SELECT operator.
             // For the index-nested-loop join case, we copy the condition of the join operator.
-            ILogicalExpression conditionRefExpr2 = conditionRef.getValue().cloneExpression();
+            Mutable<ILogicalExpression> conditionCopyRef =
+                    new MutableObject<>(conditionRef.getValue().cloneExpression());
+            if (optimizableDisjunctionConditions != null) {
+                BTreeAccessMethod.optimizeSelectCondition(conditionCopyRef, optimizableDisjunctionConditions);
+            }
+            ILogicalExpression conditionRefExpr2 = conditionCopyRef.getValue();
             newSelectOp =
                     retainMissing
                             ? new SelectOperator(new MutableObject<>(conditionRefExpr2), leftOuterMissingValue,
@@ -1715,7 +1722,7 @@ public class AccessMethodUtils {
                     dataset, recordType, metaRecordType, inputOp, context, retainInput, retainMissing,
                     requiresBroadcast, secondaryIndex, analysisCtx, indexSubTree, newMissingPlaceHolderForLOJ,
                     leftOuterMissingValue, pkVarsFromSIdxUnnestMapOp, primaryIndexUnnestVars,
-                    anyRealTypeConvertedToIntegerType);
+                    anyRealTypeConvertedToIntegerType, optimizableDisjunctionConditions);
         } else {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, inputOp.getSourceLocation(),
                     "Cannot use index-only plan with array indexes.");
