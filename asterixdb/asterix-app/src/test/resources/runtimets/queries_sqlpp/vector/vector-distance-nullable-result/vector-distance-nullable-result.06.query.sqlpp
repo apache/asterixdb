@@ -18,9 +18,18 @@
  */
 USE test;
 
-// An empty vector read from a field warns and yields NULL for that row; every other row computes
-// normally. A schemaless collection may hold a malformed embedding in any row. One such row does not
-// fail the query.
-SELECT m.id, vector_distance(m.embedding, [0.1, 0.2, 0.3, 0.4], "euclidean") AS dist
-FROM MovieSmall m
-ORDER BY m.id;
+// A NULL element does not make the list NULL, so it is not caught as a NULL argument: it decodes to NaN
+// and the distance is NULL, whichever side holds it.
+SELECT p.id,
+  euclidean_distance(p.a, p.b) AS euclidean,
+  euclidean_squared_distance(p.a, p.b) AS euclidean_squared,
+  cosine_similarity(p.a, p.b) AS cosine_similarity,
+  dot_product(p.a, p.b) AS dot_product,
+  vector_distance(p.a, p.b, "cosine") AS cosine,
+  vector_distance(p.a, p.b, "dot") AS dot,
+  ann_distance(p.a, p.b, "cosine") AS ann_cosine
+FROM [
+  {"id": 1, "a": [1, 2, 3, null], "b": [1, 2, 3, 4]},
+  {"id": 2, "a": [1, 2, 3, 4], "b": [1, 2, 3, null]}
+] AS p
+ORDER BY p.id;

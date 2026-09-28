@@ -16,11 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+// A closed, non-optional vector field makes the distance builtins' inputs non-nullable, so their result
+// type must itself admit NULL: a SELECT over them builds a closed record, which reads a NULL slot typed as
+// a plain double back as 0.0.
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 USE test;
 
-// An empty vector read from a field warns and yields NULL for that row; every other row computes
-// normally. A schemaless collection may hold a malformed embedding in any row. One such row does not
-// fail the query.
-SELECT m.id, vector_distance(m.embedding, [0.1, 0.2, 0.3, 0.4], "euclidean") AS dist
-FROM MovieSmall m
-ORDER BY m.id;
+CREATE TYPE VectorType AS CLOSED {
+  id: int,
+  embedding: [double]
+};
+
+CREATE DATASET Vectors(VectorType) PRIMARY KEY id;

@@ -1,0 +1,4 @@
+{ "id": 1, "euclidean": 2.23606797749979, "euclidean_squared": 5.0, "cosine_similarity": 0.9258200997725515, "dot_product": 6.0, "cosine": 0.07417990022744847, "dot": -6.0, "ann_cosine": 0.07417990022744847 }
+{ "id": 2, "euclidean": 1.7320508075688772, "euclidean_squared": 3.0, "cosine_similarity": null, "dot_product": 0.0, "cosine": null, "dot": -0.0, "ann_cosine": null }
+{ "id": 3, "euclidean": null, "euclidean_squared": null, "cosine_similarity": null, "dot_product": null, "cosine": null, "dot": null, "ann_cosine": null }
+{ "id": 4, "euclidean": null, "euclidean_squared": null, "cosine_similarity": null, "dot_product": null, "cosine": null, "dot": null, "ann_cosine": null }

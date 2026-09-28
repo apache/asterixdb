@@ -18,9 +18,10 @@
  */
 USE test;
 
-// An empty vector read from a field warns and yields NULL for that row; every other row computes
-// normally. A schemaless collection may hold a malformed embedding in any row. One such row does not
-// fail the query.
-SELECT m.id, vector_distance(m.embedding, [0.1, 0.2, 0.3, 0.4], "euclidean") AS dist
-FROM MovieSmall m
-ORDER BY m.id;
+// 2 is a zero vector (cosine is NaN), 3 has the wrong length, 4 is empty.
+INSERT INTO Vectors ([
+  {"id": 1, "embedding": [1.0, 2.0, 3.0]},
+  {"id": 2, "embedding": [0.0, 0.0, 0.0]},
+  {"id": 3, "embedding": [1.0, 2.0]},
+  {"id": 4, "embedding": []}
+]);
