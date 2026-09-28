@@ -37,6 +37,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
@@ -315,16 +316,14 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     /**
-     * Checks if ORDER BY pattern exists (has at least one ordering expression).
+     * Checks if ORDER BY has the shape of a top-K search: one key, or two for {@code ASC NULLS LAST}, which the
+     * translator lowers to {@code is-unknown(d), d}.
      * We don't resolve the actual ANN_DISTANCE function here - that happens later
      * after subtree initialization in analyzeAnnDistanceFunction().
      */
     protected boolean matchesAnnDistancePattern() {
-        List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = orderOp.getOrderExpressions();
-
-        // Just check that ORDER BY has exactly one expression
-        // We'll verify it's ANN_DISTANCE later after subtree init
-        return orderExprs.size() == 1;
+        int numKeys = orderOp.getOrderExpressions().size();
+        return numKeys == 1 || numKeys == 2;
     }
 
     /**
@@ -460,7 +459,8 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
 
         // Get ORDER BY expression
         List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = orderOp.getOrderExpressions();
-        ILogicalExpression orderExpr = orderExprs.get(0).getRight().getValue();
+        Pair<IOrder, Mutable<ILogicalExpression>> distanceKey = orderExprs.get(orderExprs.size() - 1);
+        ILogicalExpression orderExpr = distanceKey.getRight().getValue();
 
         // Resolve to actual ANN_DISTANCE function (handle both direct and variable reference cases)
         annDistanceExpr = resolveAnnDistanceExpr(orderExpr, subTree.getAssignsAndUnnests());
@@ -473,7 +473,10 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         // The top-K cursor returns the nearest K candidates (ascending distance). A DESC order-by asks
         // for the farthest K, which this plan cannot produce, so only match ASC and let DESC fall back
         // to the non-index (full-scan + sort) plan.
-        if (orderExprs.get(0).getLeft().getKind() != IOrder.OrderKind.ASC) {
+        if (distanceKey.getLeft().getKind() != IOrder.OrderKind.ASC) {
+            return false;
+        }
+        if (orderExprs.size() == 2 && !isNullsLastKey(orderExprs.get(0))) {
             return false;
         }
 
@@ -540,6 +543,32 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         }
 
         return null;
+    }
+
+    /**
+     * Whether {@code key} is the {@code is-unknown(d)} key the translator puts ahead of {@code d} for
+     * {@code ASC NULLS LAST}, where {@code d} is the distance already resolved into {@link #annDistanceExpr}.
+     * The index returns only rows that have a vector, so this key is false on every row it returns.
+     */
+    private boolean isNullsLastKey(Pair<IOrder, Mutable<ILogicalExpression>> key) {
+        if (key.getLeft().getKind() != IOrder.OrderKind.ASC) {
+            return false;
+        }
+        ILogicalExpression keyExpr = key.getRight().getValue();
+        if (keyExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            Map<LogicalVariable, ILogicalExpression> bindings =
+                    VectorIncludeFilterPushdown.collectAssignBindings(orderOp);
+            keyExpr = bindings.getOrDefault(((VariableReferenceExpression) keyExpr).getVariableReference(), keyExpr);
+        }
+        if (keyExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        AbstractFunctionCallExpression isUnknown = (AbstractFunctionCallExpression) keyExpr;
+        if (!BuiltinFunctions.IS_UNKNOWN.equals(isUnknown.getFunctionIdentifier())) {
+            return false;
+        }
+        ILogicalExpression arg = isUnknown.getArguments().get(0).getValue();
+        return annDistanceExpr.equals(resolveAnnDistanceExpr(arg, subTree.getAssignsAndUnnests()));
     }
 
     /** Returns {@code expr} as an ann-distance function call, or {@code null} if it is not one. */
@@ -781,12 +810,23 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         // the plan skips the lookup + rerank entirely.
         boolean indexOnly = isProjectionCoveredByIndex(vectorIndex, context);
 
+        // Every candidate the index returns has a vector, so the NULLS LAST key is false on all of them. Dropping
+        // it leaves the single distance key that the plan builders expect.
+        List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = orderOp.getOrderExpressions();
+        Pair<IOrder, Mutable<ILogicalExpression>> nullsLastKey = null;
+        if (orderExprs.size() == 2) {
+            nullsLastKey = orderExprs.remove(0);
+        }
+
         // Build the index-search subplan (UNNEST-MAP over vector index). selectOp is passed so the
         // access method can attach a selectCondition for filter pushdown when applicable.
         ILogicalOperator indexSearchOp = VectorIndexAccessMethod.INSTANCE.createIndexSearchPlan(limitRef, orderRef,
                 annDistanceExpr, subTree, vectorIndex, analysisCtx, context, selectOp, indexOnly, aboveLimitOps);
 
         if (indexSearchOp == null) {
+            if (nullsLastKey != null) {
+                orderExprs.add(0, nullsLastKey);
+            }
             return false;
         }
 
@@ -809,8 +849,8 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
      *       {@code DataSourceScan}: the dataset record and, if present, the meta record).</li>
      *   <li>Collect bindings from every {@code ASSIGN} in the subtree below {@code limitOp}
      *       (variable → defining expression).</li>
-     *   <li>Compute the live-out set of {@code limitOp} by collecting variables used by every operator
-     *       in {@link #aboveLimitOps}.</li>
+     *   <li>Compute the live-out set of {@code limitOp}: the variables used by the operators in
+     *       {@link #aboveLimitOps} that {@code limitOp} emits.</li>
      *   <li>For each live-out variable, trace through the bindings: it is covered iff it resolves to a
      *       PK variable, a constant, or a field access whose full path — reassembled through the ASSIGN
      *       chain when the compiler split it — is a primary key of the record it is read from (the dataset
@@ -890,6 +930,16 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
                 return false;
             }
         }
+        // Only what the LIMIT emits comes from the search: a variable of a joined branch, or one an ASSIGN
+        // above the LIMIT defines, is not the search's to cover, while that ASSIGN's inputs are still traced.
+        Set<LogicalVariable> limitOutput = new HashSet<>();
+        try {
+            VariableUtilities.getLiveVariables(limitOp, limitOutput);
+        } catch (AlgebricksException e) {
+            LOGGER.trace("isProjectionCoveredByIndex: failed to collect the variables of the LIMIT", e);
+            return false;
+        }
+        liveOut.retainAll(limitOutput);
         // Trace each live-out variable; fail on the first that the index does not cover.
         Set<LogicalVariable> visiting = new HashSet<>();
         for (LogicalVariable v : liveOut) {

@@ -1,0 +1,54 @@
+distribute result [$$56]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$56] <- [{"label": $$67, "year": $$76}] project: [$$56]
+    -- ASSIGN  |PARTITIONED|
+      exchange
+      -- SORT_MERGE_EXCHANGE [$$76(ASC) ]  |PARTITIONED|
+        order (ASC, $$76)
+        -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$67, $$76])
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (eq($$74, $$60))
+                -- HYBRID_HASH_JOIN [$$74][$$60]  |PARTITIONED|
+                  exchange
+                  -- HASH_PARTITION_EXCHANGE [$$74]  |PARTITIONED|
+                    limit 3
+                    -- STREAM_LIMIT  |UNPARTITIONED|
+                      project ([$$74, $$76])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
+                        -- SORT_MERGE_EXCHANGE [$$75(ASC) ]  |PARTITIONED|
+                          limit 3
+                          -- STREAM_LIMIT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              order (topK: 3) (ASC, $$75)
+                              -- STABLE_SORT [topK: 3] [$$75(ASC)]  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  unnest-map [$$74, $$75, $$76] <- index-search("idx_emb", 8, "Default", "test", "Docs", false, false, true, 5, $$69, $$70, $$71, $$72, $$73)
+                                  -- VECTOR_SEARCH  |PARTITIONED|
+                                    exchange
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      assign [$$69, $$70, $$71, $$72, $$73] <- [array: [ 0.0, 0.0, 0.0, 0.0 ], 3, "euclidean", 1.0, 1]
+                                      -- ASSIGN  |PARTITIONED|
+                                        empty-tuple-source
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    assign [$$67] <- [$$l.getField(1)] project: [$$67, $$60]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$60, $$l] <- test.Labels
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
