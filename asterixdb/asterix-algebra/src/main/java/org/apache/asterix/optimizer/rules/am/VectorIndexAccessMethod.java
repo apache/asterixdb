@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules.am;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,20 +36,30 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
+import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMissing;
+import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IACollection;
+import org.apache.asterix.om.base.IACursor;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.optimizer.rules.VectorIncludeFilterPushdown;
+import org.apache.asterix.runtime.evaluators.common.VectorValidator;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
@@ -74,6 +86,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 
 /**
  * Access method for vector indexes.
@@ -595,7 +610,7 @@ public class VectorIndexAccessMethod implements IAccessMethod {
      * @return the query vector expression
      * @throws CompilationException if the call has no matched function expression in {@code analysisCtx}
      */
-    private static ILogicalExpression getQueryVectorExpr(AbstractFunctionCallExpression annDistanceExpr,
+    static ILogicalExpression getQueryVectorExpr(AbstractFunctionCallExpression annDistanceExpr,
             AccessMethodAnalysisContext analysisCtx) throws CompilationException {
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.getMatchedFuncExprs()) {
             if (optFuncExpr.getFuncExpr() == annDistanceExpr) {
@@ -693,6 +708,129 @@ public class VectorIndexAccessMethod implements IAccessMethod {
             return null;
         }
         return VectorSimilarityMetric.fromAlias(metric);
+    }
+
+    /** A query vector known at compile time, and whether {@code isvector} accepts it. */
+    record CompileTimeQueryVector(IAObject value, boolean isVector) {
+
+        /**
+         * Why {@code index} cannot search with this query vector.
+         *
+         * @param index a vector index on the queried field
+         * @param loc where the {@code ann_distance} call is
+         * @return the warning that names the reason, or {@code null} when the index can search with it
+         */
+        Warning unusableWith(Index index, SourceLocation loc) {
+            int indexDimension = getIndexDimension(index);
+            if (isVector && length(value) == indexDimension) {
+                return null;
+            }
+            return queryVectorWarning(loc, value, indexDimension);
+        }
+    }
+
+    /**
+     * The query vector as far as the compiler can see it, checked as {@code isvector} checks an embedding: a
+     * non-empty list of numbers. Its length is checked against each index separately.
+     *
+     * @param queryVector the query-vector argument of an {@code ann_distance} call
+     * @return the query vector, or {@code null} when it is not a compile-time value
+     * @throws CompilationException if the value cannot be serialized
+     */
+    static CompileTimeQueryVector compileTimeQueryVector(ILogicalExpression queryVector) throws CompilationException {
+        IAObject value = compileTimeValue(queryVector);
+        if (value == null) {
+            return null;
+        }
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try {
+            AObjectSerializerDeserializer.INSTANCE.serialize(value, new DataOutputStream(bytes));
+        } catch (HyracksDataException e) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, e, queryVector.getSourceLocation(),
+                    "cannot serialize the query vector");
+        }
+        boolean isVector = new VectorValidator().isVector(bytes.toByteArray(), 0, bytes.size(), -1);
+        return new CompileTimeQueryVector(value, isVector);
+    }
+
+    /**
+     * A constant, or a list constructor over constants: an array literal whose elements differ in type keeps
+     * that form, since constant folding does not fold a list of item type ANY.
+     */
+    private static IAObject compileTimeValue(ILogicalExpression expr) {
+        if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+            IAlgebricksConstantValue value = ((ConstantExpression) expr).getValue();
+            if (value instanceof AsterixConstantValue asterixValue) {
+                return asterixValue.getObject();
+            }
+            if (value.isNull()) {
+                return ANull.NULL;
+            }
+            if (value.isMissing()) {
+                return AMissing.MISSING;
+            }
+            if (value.isTrue()) {
+                return ABoolean.TRUE;
+            }
+            if (value.isFalse()) {
+                return ABoolean.FALSE;
+            }
+            return null;
+        }
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return null;
+        }
+        AbstractFunctionCallExpression call = (AbstractFunctionCallExpression) expr;
+        if (!BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR.equals(call.getFunctionIdentifier())) {
+            return null;
+        }
+        List<IAObject> items = new ArrayList<>();
+        for (Mutable<ILogicalExpression> arg : call.getArguments()) {
+            IAObject item = compileTimeValue(arg.getValue());
+            if (item == null) {
+                return null;
+            }
+            items.add(item);
+        }
+        return new AOrderedList(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE, items);
+    }
+
+    /**
+     * The warning for a query vector an index cannot search with: a type mismatch on the argument when it is not a
+     * list, an unsupported element type when an element is not a number, and otherwise a dimension mismatch.
+     */
+    private static Warning queryVectorWarning(SourceLocation loc, IAObject queryVector, int indexDimension) {
+        if (!(queryVector instanceof IACollection list)) {
+            return Warning.of(loc, ErrorCode.TYPE_MISMATCH_FUNCTION, BuiltinFunctions.ANN_DISTANCE.getName(),
+                    "query vector", "numeric-value vector", queryVector.getType().getTypeTag());
+        }
+        ATypeTag nonNumericType = firstNonNumericElementType(list);
+        if (nonNumericType != null) {
+            return Warning.of(loc, ErrorCode.UNSUPPORTED_VECTOR_ELEMENT_TYPE, nonNumericType);
+        }
+        return Warning.of(loc, ErrorCode.VECTOR_DIMENSION_MISMATCH, indexDimension, list.size());
+    }
+
+    /** The type of the first element of {@code list} that is not a number, or {@code null} when all are. */
+    private static ATypeTag firstNonNumericElementType(IACollection list) {
+        IACursor items = list.getCursor();
+        while (items.next()) {
+            ATypeTag itemType = items.get().getType().getTypeTag();
+            if (ATypeHierarchy.getTypeDomain(itemType) != ATypeHierarchy.Domain.NUMERIC) {
+                return itemType;
+            }
+        }
+        return null;
+    }
+
+    /** The number of elements of a list value. */
+    private static int length(IAObject list) {
+        return ((IACollection) list).size();
+    }
+
+    /** The dimension a vector index was built for. */
+    static int getIndexDimension(Index index) {
+        return ((Index.VectorIndexDetails) index.getIndexDetails()).getVectorParameters().getDimension();
     }
 
     /**

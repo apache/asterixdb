@@ -269,6 +269,25 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <compilation-unit name="vtree-query-vector-validation">
+            <output-dir compare="Text">vtree-query-vector-validation</output-dir>
+        </compilation-unit>
+    </test-case>
+    <!-- The warnings of vtree-query-vector-validation, from queries that compile only: warnings are not checked
+         on plan steps. -->
+    <test-case FilePath="vector" check-warnings="true">
+        <compilation-unit name="vtree-query-vector-validation-warnings">
+            <output-dir compare="Text">vtree-query-vector-validation-warnings</output-dir>
+            <expected-warn>ASX0002: Type mismatch: function ann-distance expects its query vector input parameter to be of type numeric-value vector, but the actual input type is null</expected-warn>
+            <expected-warn>ASX0002: Type mismatch: function ann-distance expects its query vector input parameter to be of type numeric-value vector, but the actual input type is missing</expected-warn>
+            <expected-warn>ASX0002: Type mismatch: function ann-distance expects its query vector input parameter to be of type numeric-value vector, but the actual input type is string</expected-warn>
+            <expected-warn>ASX1260: Unsupported type null in the vector value; vector elements must be numeric values</expected-warn>
+            <expected-warn>ASX0002: Type mismatch: function ann-distance expects its query vector input parameter to be of type numeric-value vector, but the actual input type is null</expected-warn>
+            <expected-warn>ASX1261: Vector dimension mismatch: expected 4 dimensions, but got 3</expected-warn>
+            <expected-warn>ASX1261: Vector dimension mismatch: expected 4 dimensions, but got 3</expected-warn>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="vtree-unnest-not-indexable">
             <output-dir compare="Clean-JSON">vtree-unnest-not-indexable</output-dir>
         </compilation-unit>

@@ -65,6 +65,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -133,6 +135,10 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
     // than have one of them left above the search; see chooseVectorIndex.
     protected SelectOperator selectOp = null;
     protected int numSelectOps = 0;
+
+    // Why the query vector rules out a vector index, kept from chooseVectorIndex so that the same decision both
+    // excludes the index and is reported when no index is left; null when the query vector rules out none.
+    protected Warning queryVectorUnusable = null;
 
     /**
      * Master switch for the index-only ANN plan optimization. Enabled by default: when everything the plan
@@ -337,8 +343,13 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         }
 
         if (chosenIndexes.isEmpty()) {
-            // No vector index left: either none exists, none has the required INCLUDE fields, or the
-            // cost-based optimizer priced them all above the scan. Fall back to data scan + sort.
+            // No vector index left: none exists, none has the required INCLUDE fields, the query vector rules
+            // them out, or the cost-based optimizer priced them above the scan. Fall back to data scan + sort.
+            // shouldWarn() counts the warning against the limit, so it is asked only once there is one.
+            IWarningCollector warningCollector = context.getWarningCollector();
+            if (queryVectorUnusable != null && warningCollector.shouldWarn()) {
+                warningCollector.warn(queryVectorUnusable);
+            }
             context.addToDontApplySet(this, limitOp);
             return false;
         }
@@ -604,9 +615,11 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
      * 1. INCLUDE fields: If query has filter (WHERE clause), index must have all filter fields in INCLUDE
      * 2. Distance metric: Prefers indexes with matching distance metrics.
      * If the query specifies a constant distance metric that does not match the index metadata, compilation fails.
+     * Records in {@link #queryVectorUnusable} why the query vector rules out a vector index, if it does.
      */
     protected void chooseVectorIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
             List<Pair<IAccessMethod, Index>> result, IOptimizationContext context) throws AlgebricksException {
+        queryVectorUnusable = null;
 
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(VectorIndexAccessMethod.INSTANCE);
         if (analysisCtx == null) {
@@ -644,6 +657,11 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             }
         }
 
+        // A query vector an index cannot search with is left to the plan without the index, where ann_distance
+        // is evaluated per row.
+        VectorIndexAccessMethod.CompileTimeQueryVector queryVector = VectorIndexAccessMethod
+                .compileTimeQueryVector(VectorIndexAccessMethod.getQueryVectorExpr(annDistanceExpr, analysisCtx));
+
         // Iterate over candidate vector indexes
         Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt =
                 analysisCtx.getIteratorForIndexExprsAndVars();
@@ -658,6 +676,17 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
             Index index = indexEntry.getKey();
 
             if (index.getIndexType() == IndexType.VTREE) {
+                // The query vector is checked before the cost: an index it rules out cannot answer at all, and
+                // the reason must be kept even when the cost would have ruled the index out too.
+                if (queryVector != null) {
+                    Warning unusable = queryVector.unusableWith(index, annDistanceExpr.getSourceLocation());
+                    if (unusable != null) {
+                        if (queryVectorUnusable == null) {
+                            queryVectorUnusable = unusable;
+                        }
+                        continue;
+                    }
+                }
                 if (isRuledOutByCost(index)) {
                     continue;
                 }
@@ -1197,6 +1226,7 @@ public class IntroduceTopKAccessMethodRule extends AbstractIntroduceAccessMethod
         queryKMultiplier = 0;
         selectOp = null;
         numSelectOps = 0;
+        queryVectorUnusable = null;
         aboveLimitOps.clear();
         subTree.reset();
     }
