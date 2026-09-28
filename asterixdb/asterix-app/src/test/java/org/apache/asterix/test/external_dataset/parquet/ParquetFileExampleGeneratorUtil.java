@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -68,6 +69,7 @@ public class ParquetFileExampleGeneratorUtil {
     private static final int JULIAN_DAY_OF_EPOCH = 2440588;
 
     private static final String FILE_NAME = "parquetTypes.parquet";
+    private static final String DECIMALS_FILE_NAME = "parquetDecimals.parquet";
 
     private static final String SCHEMA = "message test { \n" + "   required boolean boolean_field;\n"
             + "   required int32 int8_field (INTEGER(8,true));\n"
@@ -98,6 +100,15 @@ public class ParquetFileExampleGeneratorUtil {
             + "   required int96 timestamp96_field;\n" + "   required fixed_len_byte_array(16) uuid_field (UUID);"
             + "     required group mapField (MAP) {\n" + "   repeated group key_value {\n"
             + "     required int32 key;\n" + "     required int32 value;\n" + "   }\n" + " }" + "}";
+
+    // An unscaled value of precision 19 or 20 needs 9 bytes, and d10_wide is wider than its precision needs
+    private static final String DECIMALS_SCHEMA = "message decimals {\n" + "   required int32 id;\n"
+            + "   required fixed_len_byte_array(4) d9 (DECIMAL(9,2));\n"
+            + "   required fixed_len_byte_array(8) d18 (DECIMAL(18,5));\n"
+            + "   required fixed_len_byte_array(9) d19 (DECIMAL(19,4));\n"
+            + "   required fixed_len_byte_array(9) d20 (DECIMAL(20,5));\n"
+            + "   required fixed_len_byte_array(16) d38 (DECIMAL(38,10));\n"
+            + "   required fixed_len_byte_array(12) d10_wide (DECIMAL(10,2));\n" + "}";
 
     private ParquetFileExampleGeneratorUtil() {
     }
@@ -142,6 +153,41 @@ public class ParquetFileExampleGeneratorUtil {
         mapField.addGroup("key_value").append("key", 1).append("value", 1);
         writer.write(message);
         writer.close();
+        writeDecimalsExample(conf, root);
+    }
+
+    private static void writeDecimalsExample(Configuration conf, Path root) throws IOException {
+        MessageType schema = parseMessageType(DECIMALS_SCHEMA);
+        try (ParquetWriter<Group> writer =
+                ExampleParquetWriter.builder(new TestOutputFile(new Path(root, DECIMALS_FILE_NAME), conf))
+                        .withType(schema).withCompressionCodec(UNCOMPRESSED).withConf(conf).build()) {
+            SimpleGroupFactory groupFactory = new SimpleGroupFactory(schema);
+            writer.write(decimalsRow(groupFactory, schema, 1, "1234567.89", "123.45600", "123.4560", "123.45600",
+                    "123.4560000000", "99999999.99"));
+            writer.write(decimalsRow(groupFactory, schema, 2, "-1234567.89", "-9876543210.12345", "-123.4560",
+                    "-123.45600", "-1.5000000000", "-99999999.99"));
+            writer.write(
+                    decimalsRow(groupFactory, schema, 3, "9999999.99", "9999999999999.99999", "999999999999999.9999",
+                            "-92233720368547.75809", "9999999999999999999999999999.9999999999", "0.01"));
+        }
+    }
+
+    private static Group decimalsRow(SimpleGroupFactory groupFactory, MessageType schema, int id, String... decimals) {
+        Group row = groupFactory.newGroup().append("id", id);
+        for (int i = 0; i < decimals.length; i++) {
+            int field = i + 1;
+            int width = schema.getType(field).asPrimitiveType().getTypeLength();
+            row.append(schema.getFieldName(field), toFixedLengthDecimal(new BigDecimal(decimals[i]), width));
+        }
+        return row;
+    }
+
+    private static Binary toFixedLengthDecimal(BigDecimal decimal, int width) {
+        byte[] minimal = decimal.unscaledValue().toByteArray();
+        byte[] bytes = new byte[width];
+        Arrays.fill(bytes, decimal.signum() < 0 ? (byte) 0xFF : 0);
+        System.arraycopy(minimal, 0, bytes, width - minimal.length, minimal.length);
+        return Binary.fromConstantByteArray(bytes);
     }
 
     private static int getSecondsSinceMidnight() {

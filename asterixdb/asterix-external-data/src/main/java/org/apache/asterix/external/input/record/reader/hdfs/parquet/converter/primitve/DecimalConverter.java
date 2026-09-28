@@ -55,10 +55,11 @@ public class DecimalConverter extends GenericPrimitiveConverter {
 
     @Override
     public void addBinary(Binary value) {
-        if (precision <= LONG_MAX_PRECISION) {
+        // Decide by the stored width, not the precision: a precision of 19 or 20 needs 9 bytes, and a writer may
+        // use a FIXED_LEN_BYTE_ARRAY wider than the precision requires
+        if (value.length() <= Long.BYTES) {
             addLong(getUnscaledLong(value.toByteBuffer()));
         } else {
-            //Unlimited precision
             addConvertedDouble(new BigDecimal(new BigInteger(value.getBytes()), scale).doubleValue());
         }
     }

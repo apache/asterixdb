@@ -205,6 +205,14 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/decimal-fixed-len-byte-array">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/parquet-types/decimal-fixed-len-byte-array</output-dir>
+        <source-location>false</source-location>
+        <expected-warn>Parquet decimal precision loss: precision '38' is greater than the maximum supported precision '20'</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
       <compilation-unit name="common/parquet/parquet-types/temporal">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">common/parquet/parquet-types/temporal</output-dir>
