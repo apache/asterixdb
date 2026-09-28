@@ -1,0 +1,38 @@
+distribute result [$$50]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$50] <- [agg-global-sql-sum($$53)]
+    -- AGGREGATE  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$53] <- [agg-local-sql-sum($$46)]
+        -- AGGREGATE  |PARTITIONED|
+          select (and(gt($$x.getField("c"), 1), or(eq($$38, 3), eq($$38, 4)))) project: [$$46]
+          -- STREAM_SELECT  |PARTITIONED|
+            assign [$$38, $$46] <- [$$x.getField("d"), $$x.getField("b")]
+            -- ASSIGN  |PARTITIONED|
+              project ([$$x])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  unnest-map [$$49, $$x] <- index-search("TestSet", 0, "Default", "test", "TestSet", false, false, 1, $$57, 1, $$57, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$57)
+                      -- STABLE_SORT [$$57(ASC)]  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          select (and(gt($$55, 1), or(eq($$56, 3), eq($$56, 4)))) project: [$$57]
+                          -- STREAM_SELECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              unnest-map [$$55, $$56, $$57] <- index-search("idx_cd", 0, "Default", "test", "TestSet", false, false, 1, $$54, 0, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$54] <- [1]
+                                  -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

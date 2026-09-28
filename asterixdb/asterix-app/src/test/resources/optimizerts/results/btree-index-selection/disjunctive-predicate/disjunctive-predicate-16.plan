@@ -1,0 +1,32 @@
+distribute result [$$45]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$45] <- [agg-sql-sum($$46)]
+    -- AGGREGATE  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$46] <- [agg-sql-count(1)]
+        -- AGGREGATE  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            distinct ([$$49])
+            -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$49)
+                -- STABLE_SORT [$$49(ASC)]  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    select (eq($$36, $$47)) project: [$$49]
+                    -- STREAM_SELECT  |PARTITIONED|
+                      exchange
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        unnest-map [$$36, $$49] <- index-search("idx_a", 0, "Default", "test", "TestSet", true, true, 1, $$47, 1, $$47, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
+                          -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            unnest $$47 <- scan-collection(array: [ 1, 2, 3 ])
+                            -- UNNEST  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

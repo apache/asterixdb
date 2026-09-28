@@ -1,0 +1,42 @@
+distribute result [$$50]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$50] <- [agg-global-sql-sum($$53)]
+    -- AGGREGATE  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$53] <- [agg-local-sql-sum($$46)]
+        -- AGGREGATE  |PARTITIONED|
+          select (and(gt($$x.getField("d"), 5), eq($$x.getField("c"), $$54))) project: [$$46]
+          -- STREAM_SELECT  |PARTITIONED|
+            assign [$$46] <- [$$x.getField("b")]
+            -- ASSIGN  |PARTITIONED|
+              project ([$$54, $$x])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  unnest-map [$$49, $$x] <- index-search("TestSet", 0, "Default", "test", "TestSet", true, false, 1, $$58, 1, $$58, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$58)
+                      -- STABLE_SORT [$$58(ASC)]  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          select (and(gt($$57, 5), eq($$56, $$54))) project: [$$54, $$58]
+                          -- STREAM_SELECT  |PARTITIONED|
+                            project ([$$54, $$56, $$57, $$58])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                unnest-map [$$56, $$57, $$58] <- index-search("idx_cd", 0, "Default", "test", "TestSet", true, true, 2, $$54, $$55, 1, $$54, true, true, true)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
+                                  -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                    assign [$$55] <- [5]
+                                    -- ASSIGN  |PARTITIONED|
+                                      unnest $$54 <- scan-collection(array: [ 1, 2 ])
+                                      -- UNNEST  |PARTITIONED|
+                                        empty-tuple-source
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

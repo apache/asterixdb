@@ -1,0 +1,24 @@
+distribute result [$$49] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$49] <- [agg-sql-sum($$51)] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+    -- AGGREGATE  |UNPARTITIONED|
+      exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$51] <- [agg-sql-count(1)] [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+        -- AGGREGATE  |PARTITIONED|
+          select (and(gt($$47, 1), or(eq($$48, 3), eq($$48, 4)))) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+          -- STREAM_SELECT  |PARTITIONED|
+            project ([$$47, $$48]) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                unnest-map [$$47, $$48, $$x] <- index-search("CompositeKeySet", 0, "Default", "test", "CompositeKeySet", false, false, 1, $$52, 0, true, true, true) [cardinality: 1000000.0, doc-size: -1.0, op-cost: 0.0, total-cost: 499992.37]
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    assign [$$52] <- [1] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ASSIGN  |PARTITIONED|
+                      empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

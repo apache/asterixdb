@@ -6491,6 +6491,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-composite-prefix-range-untyped">
+        <output-dir compare="Text">btree-index-composite-prefix-range-untyped</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="secondary-index-or-in-01">
         <output-dir compare="Text">secondary-index-or-in-01</output-dir>
       </compilation-unit>
@@ -6759,8 +6764,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="in-list-duplicate-keys-untyped">
+        <output-dir compare="Text">in-list-duplicate-keys-untyped</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="in-list-exact-search">
         <output-dir compare="Text">in-list-exact-search</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="in-list-exact-search-untyped">
+        <output-dir compare="Text">in-list-exact-search-untyped</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -6823,6 +6838,11 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-redundant-range">
         <output-dir compare="Text">btree-index-redundant-range</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-index-redundant-range-untyped">
+        <output-dir compare="Text">btree-index-redundant-range-untyped</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
