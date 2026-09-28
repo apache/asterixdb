@@ -756,8 +756,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         List<Warning> warningsNow = requestWarnings();
         statementInfo.addWarnings(
                 warningsNow.subList(Math.min(warningsBeforeStatement.size(), warningsNow.size()), warningsNow.size()));
-        statementStats
-                .updateTotalWarningsCount(warningCollector.getTotalWarningsCount() - warningsRaisedBeforeStatement);
         statementInfo.setStats(statementStats);
     }
 
@@ -4754,8 +4752,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 final JobSpecification jobSpec = apiFramework.compileQuery(hcc, metadataProvider, copyTo.getQuery(),
                         rewrittenResult.getRight(), null, sessionOutput, compiledCopyToStatement, externalVars,
                         responsePrinter, warningCollector, requestParameters, jobFlags, null);
-                // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
-                stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
+                stats.updateTotalWarningsCount(
+                        warningCollector.getTotalWarningsCount() - warningsRaisedBeforeStatement);
                 afterCompile();
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 stats.setCompileTimeNanos(System.nanoTime() - compileStart);
@@ -6084,8 +6082,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                 }
 
-                // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
-                stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
+                stats.updateTotalWarningsCount(
+                        warningCollector.getTotalWarningsCount() - warningsRaisedBeforeStatement);
                 afterCompile();
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 stats.setCompileTimeNanos(System.nanoTime() - compileStart);

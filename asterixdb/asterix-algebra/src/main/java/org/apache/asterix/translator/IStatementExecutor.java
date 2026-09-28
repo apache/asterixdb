@@ -421,16 +421,15 @@ public interface IStatementExecutor {
         }
 
         /**
-         * What the statement that ran since {@code before} contributed. Only the row count and size accumulate over a
-         * request; every other figure describes one job, so it is already this statement's - or, where it has not
-         * changed, belongs to an earlier statement and this one produced none of its own.
+         * What the statement that ran since {@code before} contributed. Only the row count, size and warning count
+         * accumulate over a request; every other figure describes one job, so it is already this statement's - or,
+         * where it has not changed, belongs to an earlier statement and this one produced none of its own.
          */
         public Stats since(Stats before) {
             Stats delta = snapshot();
             delta.count -= before.count;
             delta.size -= before.size;
-            // set where the warnings are attributed: the request's total counts earlier statements more than once
-            delta.totalWarningsCount = 0;
+            delta.totalWarningsCount -= before.totalWarningsCount;
             delta.compileTime = ownOrNone(compileTime, before.compileTime);
             delta.queueWaitTime = ownOrNone(queueWaitTime, before.queueWaitTime);
             delta.processedObjects = ownOrNone(processedObjects, before.processedObjects);
