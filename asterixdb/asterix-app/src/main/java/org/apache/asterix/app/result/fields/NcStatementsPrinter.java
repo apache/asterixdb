@@ -58,7 +58,7 @@ import org.apache.hyracks.api.result.IResultSet;
 public class NcStatementsPrinter implements IResponseFieldPrinter {
 
     public static final String FIELD_NAME = "statements";
-    public static final String POSITION_FIELD_NAME = "statement";
+    public static final String POSITION_FIELD_NAME = "statementId";
     /**
      * What a statement reports for itself. The time the request took, and whether it failed, belong to the request: a
      * statement that failed says so with its status and its errors.

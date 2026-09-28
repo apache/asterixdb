@@ -324,8 +324,8 @@ public class ClientRequestTest {
         request.addJob(JOB_2);
 
         JsonNode jobs = request.asJson().get("jobs");
-        assertEquals(1, jobs.get(0).get("statement").asInt());
-        assertEquals(4, jobs.get(1).get("statement").asInt());
+        assertEquals(1, jobs.get(0).get("statementId").asInt());
+        assertEquals(4, jobs.get(1).get("statementId").asInt());
     }
 
     /** A job submitted by no statement of the client's - the request's own - says nothing of a statement. */
@@ -334,7 +334,7 @@ public class ClientRequestTest {
         ClientRequest request = newRequest();
         request.addJob(JOB_1);
 
-        assertNull(request.asJson().get("jobs").get(0).get("statement"));
+        assertNull(request.asJson().get("jobs").get(0).get("statementId"));
     }
 
     private static Set<String> fieldsOf(JsonNode node) {

@@ -365,7 +365,7 @@ public class ClientRequest extends BaseClientRequest {
                 // the statement that submitted the job, named as the response names it. Not every statement
                 // submits a job, so a job's position in this array does not identify the statement.
                 if (job.statementPosition > 0) {
-                    jobJson.put("statement", job.statementPosition);
+                    jobJson.put("statementId", job.statementPosition);
                 }
                 jobJson.put("jobId", job.jobId.toString());
                 putJobState(jobJson, job.state, queueTimeMillis(job.state), redact);

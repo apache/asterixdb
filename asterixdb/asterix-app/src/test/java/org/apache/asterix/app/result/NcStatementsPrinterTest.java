@@ -53,8 +53,8 @@ public class NcStatementsPrinterTest {
         JsonNode statements = print(List.of(first, second));
 
         Assert.assertEquals(statements.toString(), 2, statements.size());
-        Assert.assertEquals(statements.toString(), 1, statements.get(0).get("statement").asInt());
-        Assert.assertEquals(statements.toString(), 2, statements.get(1).get("statement").asInt());
+        Assert.assertEquals(statements.toString(), 1, statements.get(0).get("statementId").asInt());
+        Assert.assertEquals(statements.toString(), 2, statements.get(1).get("statementId").asInt());
         Assert.assertEquals(statements.toString(), "success", statements.get(0).get("status").asText());
         Assert.assertNotNull(statements.toString(), statements.get(0).get("metrics"));
     }
@@ -81,7 +81,7 @@ public class NcStatementsPrinterTest {
         JsonNode statements = print(List.of(synthetic, sent));
 
         Assert.assertEquals(statements.toString(), 1, statements.size());
-        Assert.assertEquals(statements.toString(), 1, statements.get(0).get("statement").asInt());
+        Assert.assertEquals(statements.toString(), 1, statements.get(0).get("statementId").asInt());
     }
 
     private static StatementInfo statement(int position, Statement.Kind kind) {
