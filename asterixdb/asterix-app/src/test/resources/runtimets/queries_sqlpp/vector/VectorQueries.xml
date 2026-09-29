@@ -176,6 +176,11 @@
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
+        <compilation-unit name="cosine-dot-distance-nullable">
+            <output-dir compare="Text">cosine-dot-distance-nullable</output-dir>
+        </compilation-unit>
+    </test-case>
+    <test-case FilePath="vector">
         <compilation-unit name="create-index-vtree-type-mismatch">
             <output-dir compare="Text">create-index-vtree-type-mismatch</output-dir>
             <expected-error>VECTOR field annotation is not supported for TYPE BTREE</expected-error>

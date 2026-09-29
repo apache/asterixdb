@@ -37,8 +37,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
  * {@code CREATE INDEX ... WITH {"similarity"}} resolves through: a metric the DDL accepts is one a
  * query accepts.
  * <p>
- * {@code COSINE} and {@code DOT} resolve to distance semantics ({@code cosine-distance} = 1 - similarity,
- * {@code dot-distance} = -dot product), not the public {@code cosine_similarity()} / {@code dot_product()} builtins.
+ * {@code COSINE} and {@code DOT} resolve to distance semantics ({@code cosine_distance()} = 1 - similarity,
+ * {@code dot_distance()} = -dot product), not {@code cosine_similarity()} / {@code dot_product()}.
  */
 public final class VectorMetricFunctionMapUtil {
 

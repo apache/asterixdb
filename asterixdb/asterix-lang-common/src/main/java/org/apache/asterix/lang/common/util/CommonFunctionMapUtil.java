@@ -168,14 +168,12 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("variance_pop", "var_pop");
 
         // Vector functions — canonical SQL++ names: euclidean_distance, euclidean_squared_distance,
-        // cosine_similarity, dot_product, vector_distance (compile-time rewrite to concrete metric),
-        // normalize_vector (underscore → hyphen),
+        // cosine_similarity, cosine_distance, dot_product, dot_distance, vector_distance (compile-time
+        // rewrite to concrete metric), normalize_vector (underscore → hyphen),
         addFunctionMapping("approx_vector_distance", "ann-distance");
         // Compatibility aliases
         addFunctionMapping("l2_distance", "euclidean-distance");
         addFunctionMapping("l2_squared_distance", "euclidean-squared-distance");
-        // cosine-distance is a private builtin (use vector_distance / ann_distance for cosine), so there
-        // is deliberately no public cosine_distance alias — mapping one resolves to a private function.
         addFunctionMapping("dot_product", "dot-product");
         addFunctionMapping("normalise_vector", "normalize-vector");
         addFunctionMapping("vector_normalize", "normalize-vector");

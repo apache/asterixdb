@@ -1979,8 +1979,8 @@ public class BuiltinFunctions {
         addFunction(EUCLIDEAN_SQUARED_DISTANCE, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(COSINE_SIMILARITY, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(DOT_PRODUCT, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(COSINE_DISTANCE, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(DOT_DISTANCE, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(COSINE_DISTANCE, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(DOT_DISTANCE, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(VECTOR_DISTANCE, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(NORMALIZE_VECTOR, NullableOrderedListOfADoubleTypeComputer.INSTANCE, true);
 
