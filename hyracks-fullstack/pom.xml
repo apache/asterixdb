@@ -81,7 +81,7 @@
     <netty.tcnative.version>2.0.84.Final</netty.tcnative.version>
     <asm.version>9.10.1</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
-    <awsjavasdk.version>2.55.5</awsjavasdk.version>
+    <awsjavasdk.version>2.55.7</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
     <google-cloud-storage.version>2.74.0</google-cloud-storage.version>
@@ -460,7 +460,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.20.0</version>
+        <version>3.21.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>

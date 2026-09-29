@@ -520,6 +520,7 @@ public class ExternalDatasetTestUtils {
         loadData(generatedDataBasePath, "", "heterogeneous_1.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "heterogeneous_2.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "parquetTypes.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "parquetDecimals.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "friends.parquet", definition, definitionSegment, false, false);
 
         loadData(PARQUET_BASEDIR, "", "array_of_primitives.parquet", PARQUET_NULL_TEST_DIRECTORY, definitionSegment,
