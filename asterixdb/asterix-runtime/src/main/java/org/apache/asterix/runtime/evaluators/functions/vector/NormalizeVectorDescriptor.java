@@ -133,7 +133,7 @@ public class NormalizeVectorDescriptor extends AbstractScalarFunctionDynamicDesc
                 vector = decoder.createArrayFromList(listAccessor, decoder.ensureDoubleCapacity(vector, size));
                 if (!VectorDistanceCalculation.normalizeInPlace(vector)) {
                     ExceptionUtil.warnFunctionEvalFailed(ctx, sourceLoc, funcId,
-                            "cannot normalize a zero-length or non-finite vector");
+                            "normalize vector expects equal-length non-empty arrays");
                     PointableHelper.setNull(result);
                     return;
                 }

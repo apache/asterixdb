@@ -30,20 +30,20 @@
             <!-- Non-list argument. -->
             <expected-warn>Type mismatch: function normalize-vector expects its 1st input parameter to be of type array or multiset, but the actual input type is string</expected-warn>
             <!-- Mixed, zero, NaN, INF, null element, nested, all-string: non-numeric → NaN → zero/non-finite path. -->
-            <expected-warn>Function 'normalize-vector' failed to evaluate because: cannot normalize a zero-length or non-finite vector</expected-warn>
-            <expected-warn>Function 'normalize-vector' failed to evaluate because: cannot normalize a zero-length or non-finite vector</expected-warn>
-            <expected-warn>Function 'normalize-vector' failed to evaluate because: cannot normalize a zero-length or non-finite vector</expected-warn>
-            <expected-warn>Function 'normalize-vector' failed to evaluate because: cannot normalize a zero-length or non-finite vector</expected-warn>
-            <expected-warn>Function 'normalize-vector' failed to evaluate because: cannot normalize a zero-length or non-finite vector</expected-warn>
-            <expected-warn>Function 'normalize-vector' failed to evaluate because: cannot normalize a zero-length or non-finite vector</expected-warn>
-            <expected-warn>Function 'normalize-vector' failed to evaluate because: cannot normalize a zero-length or non-finite vector</expected-warn>
+            <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
+            <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
+            <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
+            <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
+            <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
+            <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
+            <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector" check-warnings="true">
         <compilation-unit name="normalize-vector-dataset">
             <output-dir compare="Clean-JSON">normalize-vector-dataset</output-dir>
             <!-- ids 5 (zero vector) and 6 (string element) warn from one call site; identical warnings are collapsed. -->
-            <expected-warn>Function 'normalize-vector' failed to evaluate because: cannot normalize a zero-length or non-finite vector</expected-warn>
+            <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
         </compilation-unit>
     </test-case>
     <test-case FilePath="vector">
