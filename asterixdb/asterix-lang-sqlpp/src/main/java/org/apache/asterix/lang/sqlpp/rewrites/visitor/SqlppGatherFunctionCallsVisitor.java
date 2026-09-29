@@ -121,6 +121,9 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
         if (selectBlock.hasGroupbyClause()) {
             selectBlock.getGroupbyClause().accept(this, arg);
         }
+        if (selectBlock.hasClusterbyClause()) {
+            selectBlock.getClusterbyClause().accept(this, arg);
+        }
         if (selectBlock.hasLetHavingClausesAfterGroupby()) {
             for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
                 letHavingClause.accept(this, arg);

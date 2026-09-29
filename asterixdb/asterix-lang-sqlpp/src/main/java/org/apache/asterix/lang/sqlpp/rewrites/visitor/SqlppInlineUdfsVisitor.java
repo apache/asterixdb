@@ -167,6 +167,9 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
         if (selectBlock.hasGroupbyClause()) {
             changed |= selectBlock.getGroupbyClause().accept(this, arg);
         }
+        if (selectBlock.hasClusterbyClause()) {
+            changed |= selectBlock.getClusterbyClause().accept(this, arg);
+        }
         if (selectBlock.hasLetHavingClausesAfterGroupby()) {
             for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
                 changed |= letHavingClause.accept(this, arg);

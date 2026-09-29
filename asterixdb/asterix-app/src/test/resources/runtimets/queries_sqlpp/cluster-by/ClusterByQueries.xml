@@ -102,6 +102,11 @@
             <output-dir compare="Text">kmeans-udf-param</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="kmeans-udf-in-clause">
+            <output-dir compare="Text">kmeans-udf-in-clause</output-dir>
+        </compilation-unit>
+    </test-case>
     <test-case FilePath="cluster-by/negative">
         <compilation-unit name="udf-correlated-clusterby">
             <output-dir compare="Text">udf-correlated-clusterby</output-dir>
