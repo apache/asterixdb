@@ -34,8 +34,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -231,9 +231,9 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
 
         // Forgy seeds with k centres and refines them directly; k-means|| grows a pool from one.
         Pair<Mutable<ILogicalOperator>, LogicalVariable> seedInput = branchOf(shared, vectorVar, context, loc);
-        Mutable<ILogicalOperator> centroidsIn = seedOf(seedInput.first, seedInput.second,
+        Mutable<ILogicalOperator> centroidsIn = seedOf(seedInput.getLeft(), seedInput.getRight(),
                 forgy ? kmeans(cop).getNumClusters() : 1, options(cop).getDimension(), seed, context, loc);
-        LogicalVariable centroidsVar = seedInput.second;
+        LogicalVariable centroidsVar = seedInput.getRight();
         if (!forgy) {
             KMeansStageOperator recluster =
                     oversampleAndRecluster(cop, shared, centroidsIn, centroidsVar, seed, context, loc);
@@ -258,8 +258,8 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         Pair<Mutable<ILogicalOperator>, LogicalVariable> input =
                 branchOf(shared, cop.getVectorVariable(), context, loc);
         KMeansStageOperator oversample = stage(cop, KMeansStageOperator.Mode.OVERSAMPLE_LOOP, context,
-                ref(input.second), ref(seedVar), oversamplingWidth(cop), seedValue, OVERSAMPLING_ROUNDS);
-        oversample.getInputs().add(input.first);
+                ref(input.getRight()), ref(seedVar), oversamplingWidth(cop), seedValue, OVERSAMPLING_ROUNDS);
+        oversample.getInputs().add(input.getLeft());
         oversample.getInputs().add(seed);
         finish(oversample, context);
 
@@ -276,9 +276,9 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
             SourceLocation loc) throws AlgebricksException {
         Pair<Mutable<ILogicalOperator>, LogicalVariable> input =
                 branchOf(shared, cop.getVectorVariable(), context, loc);
-        KMeansStageOperator lloyd = stage(cop, KMeansStageOperator.Mode.LLOYD_LOOP, context, ref(input.second),
+        KMeansStageOperator lloyd = stage(cop, KMeansStageOperator.Mode.LLOYD_LOOP, context, ref(input.getRight()),
                 ref(centroidsVar), kmeans(cop).getNumClusters(), 0L, lloydIterations(cop));
-        lloyd.getInputs().add(input.first);
+        lloyd.getInputs().add(input.getLeft());
         lloyd.getInputs().add(centroidsIn);
         // The execution mode is derived from the input, as GROUP BY's is: a partitioned input gives one loop
         // instance per partition, an unpartitioned input a single instance. The physical operators read it
@@ -297,7 +297,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         LogicalVariable centroidVar = lloyd.getCandidateVariable();
         OrderOperator byValue = new OrderOperator();
         byValue.setSourceLocation(loc);
-        byValue.getOrderExpressions().add(new Pair<>(OrderOperator.ASC_ORDER, ref(centroidVar)));
+        byValue.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, ref(centroidVar)));
         byValue.getInputs().add(new MutableObject<>(lloyd));
         finish(byValue, context);
 
@@ -449,7 +449,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         gby.addGbyExpression(cop.getClusterIdVariable(), ref(rowCid).getValue());
         // The decorations ride on every labelled row; the GROUP BY carries them out as the operator promised.
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : cop.getDecorList()) {
-            gby.addDecorExpression(p.first, p.second.getValue().cloneExpression());
+            gby.addDecorExpression(p.getLeft(), p.getRight().getValue().cloneExpression());
         }
         gby.getInputs().add(new MutableObject<>(labelled));
 
@@ -562,7 +562,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         // A top-n sort: PushLimitIntoOrderByRule, which would fuse a sort and a limit, has already run.
         OrderOperator order = new OrderOperator(new ArrayList<>(), n);
         order.setSourceLocation(loc);
-        order.getOrderExpressions().add(new Pair<>(OrderOperator.ASC_ORDER, ref(keyVar)));
+        order.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, ref(keyVar)));
         order.getInputs().add(new MutableObject<>(assign));
         // The pass that fuses a LIMIT into a top-n sort ran before this rule, so the bound is set here
         // directly, the way the labelling join sets its broadcast NLJ. Property enforcement then derives a
@@ -629,6 +629,6 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         thin.setSourceLocation(loc);
         thin.getInputs().add(new MutableObject<>(rename));
         finish(thin, context);
-        return new Pair<>(new MutableObject<>(thin), branchVar);
+        return Pair.of(new MutableObject<>(thin), branchVar);
     }
 }
