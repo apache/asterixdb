@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.clustering.ClusterByOptions;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -559,19 +560,15 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         assign.getInputs().add(new MutableObject<>(guard));
         finish(assign, context);
 
-        // A top-n sort: PushLimitIntoOrderByRule, which would fuse a sort and a limit, has already run.
         OrderOperator order = new OrderOperator(new ArrayList<>(), n);
         order.setSourceLocation(loc);
         order.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, ref(keyVar)));
         order.getInputs().add(new MutableObject<>(assign));
-        // The pass that fuses a LIMIT into a top-n sort ran before this rule, so the bound is set here
-        // directly, the way the labelling join sets its broadcast NLJ. Property enforcement then derives a
-        // local sort from this one and inherits the bound onto it.
         order.setPhysicalOperator(new StableSortPOperator(n));
         finish(order, context);
 
-        // The top-n bounds the sort; the limit bounds the stream.
-        LimitOperator limit = new LimitOperator(constant((long) n).getValue());
+        // INTEGER: enforcement drops this sort's bound, and PushLimitIntoOrderByRule restores it only from one.
+        LimitOperator limit = new LimitOperator(new ConstantExpression(new AsterixConstantValue(new AInt32(n))));
         limit.setSourceLocation(loc);
         limit.getInputs().add(new MutableObject<>(order));
         finish(limit, context);

@@ -119,8 +119,8 @@ distribute result [$$73]
                                                   -- STREAM_LIMIT  |PARTITIONED|
                                                     exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      order (ASC, $$76)
-                                                      -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
+                                                      order (topK: 1) (ASC, $$76)
+                                                      -- STABLE_SORT [topK: 1] [$$76(ASC)]  |PARTITIONED|
                                                         exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           assign [$$76] <- [vector-shuffle-key($$75, 42)]

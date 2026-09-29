@@ -87,8 +87,8 @@ distribute result [$$73] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                         -- STREAM_LIMIT  |PARTITIONED|
                                           exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            order (ASC, $$76) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                            -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
+                                            order (topK: 3) (ASC, $$76) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- STABLE_SORT [topK: 3] [$$76(ASC)]  |PARTITIONED|
                                               exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 assign [$$76] <- [vector-shuffle-key($$75, 42)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
