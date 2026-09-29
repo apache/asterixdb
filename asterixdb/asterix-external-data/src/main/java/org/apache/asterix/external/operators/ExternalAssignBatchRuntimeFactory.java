@@ -259,19 +259,18 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                                 argHolders.get(argHolderIdx), numCalls[argHolderIdx]);
                         if (columnResult != null) {
                             MutablePair<ByteBuffer, Counter> resultholder = batchResults.get(argHolderIdx);
-                            if (resultholder.getLeft().capacity() < columnResult.remaining()) {
-                                ByteBuffer realloc =
-                                        ctx.reallocateFrame(resultholder.getLeft(),
-                                                ctx.getInitialFrameSize()
-                                                        * ((columnResult.remaining() / ctx.getInitialFrameSize()) + 1),
-                                                false);
-                                realloc.limit(columnResult.limit());
+                            int resultLen = columnResult.remaining();
+                            if (resultholder.getLeft().capacity() < resultLen) {
+                                ByteBuffer realloc = ctx.reallocateFrame(resultholder.getLeft(),
+                                        ctx.getInitialFrameSize() * ((resultLen / ctx.getInitialFrameSize()) + 1),
+                                        false);
                                 resultholder.setLeft(realloc);
                             }
                             ByteBuffer resultBuf = resultholder.getLeft();
-                            //offset 1 to skip message type
-                            System.arraycopy(columnResult.array(), 1, resultBuf.array(), 0,
-                                    columnResult.remaining() - 1);
+                            //the message type has already been consumed from columnResult by the IPC proto
+                            System.arraycopy(columnResult.array(), columnResult.arrayOffset() + columnResult.position(),
+                                    resultBuf.array(), resultBuf.arrayOffset(), resultLen);
+                            resultBuf.limit(resultLen);
                             //wrapper for results and warnings arrays. always length 2
                             consumeAndGetBatchLength(resultBuf);
                             int numResults = (int) consumeAndGetBatchLength(resultBuf);

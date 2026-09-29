@@ -61,6 +61,11 @@
       <expected-warn>ArithmeticError: oof</expected-warn>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="external-library" check-warnings="true">
+    <compilation-unit name="py_function_no_warnings">
+      <output-dir compare="Clean-JSON">py_function_no_warnings</output-dir>
+    </compilation-unit>
+  </test-case>
   <test-case FilePath="external-library">
     <compilation-unit name="mysentiment_twitter">
       <output-dir compare="Clean-JSON">mysentiment_twitter</output-dir>
