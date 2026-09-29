@@ -146,16 +146,26 @@ public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOpe
                 // no sort was ever opened; the end marker still has to go out so Release wakes Cost for the next
                 // round.
                 if (drawSort != null) {
-                    if (sortAppender.getTupleCount() > 0) {
-                        drawSort.nextFrame(sortFrame.getBuffer());
+                    try {
+                        if (sortAppender.getTupleCount() > 0) {
+                            drawSort.nextFrame(sortFrame.getBuffer());
+                        }
+                        drawSort.close();
+                        emitSorted(round);
+                    } finally {
+                        // The round's union is out (or failed): its runs have no further reader.
+                        discardSort();
                     }
-                    drawSort.close();
-                    emitSorted(round);
-                    drawSort = null; // next round gets a fresh sort
                 }
                 emitEnd(round);
                 appender.write(writer, true);
                 writer.flush();
+            }
+
+            /** Deletes the current round's sort runs and forgets the sort; the next round gets a fresh one. */
+            private void discardSort() {
+                KMeansLoopIO.discardRuns(drawSort);
+                drawSort = null;
             }
 
             private void ensureSort() throws HyracksDataException {
@@ -247,12 +257,20 @@ public class KMeansPoolMergeOperatorDescriptor extends AbstractSingleActivityOpe
 
             @Override
             public void fail() throws HyracksDataException {
-                writer.fail();
+                try {
+                    discardSort(); // a round cut short never emits, so its spilled draws have no reader
+                } finally {
+                    writer.fail();
+                }
             }
 
             @Override
             public void close() throws HyracksDataException {
-                writer.close();
+                try {
+                    discardSort(); // a round still open at close never emits either
+                } finally {
+                    writer.close();
+                }
             }
         };
     }

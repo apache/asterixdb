@@ -163,23 +163,33 @@ public class KMeansCentroidMergeOperatorDescriptor extends AbstractSingleActivit
                 }
             }
 
+            /** Deletes the current iteration's sort runs and forgets the sort. */
+            private void discardSort() {
+                KMeansLoopIO.discardRuns(partialSort);
+                partialSort = null;
+            }
+
             private void emitCentroids(int iter) throws HyracksDataException {
                 if (partialSort != null) {
-                    if (sortAppender.getTupleCount() > 0) {
-                        partialSort.nextFrame(sortFrame.getBuffer());
-                    }
-                    partialSort.close();
                     long[] weights = new long[maxSeq + 1];
                     double[][] sums = new double[maxSeq + 1][];
-                    foldSorted(weights, sums);
+                    try {
+                        if (sortAppender.getTupleCount() > 0) {
+                            partialSort.nextFrame(sortFrame.getBuffer());
+                        }
+                        partialSort.close();
+                        foldSorted(weights, sums);
+                    } finally {
+                        // Folded (or failed): the iteration's runs have no further reader.
+                        discardSort();
+                    }
                     int emittedSeq = 0;
                     for (int i = 0; i < weights.length; i++) {
                         if (weights[i] > 0) {
                             emitCentroid(iter, emittedSeq++, KMeansLoopIO.centroidOf(sums[i], weights[i], metric));
                         }
                     }
-                    partialSort = null; // next iteration gets a fresh sort
-                    maxSeq = -1;
+                    maxSeq = -1; // next iteration gets a fresh sort
                 }
                 emitEnd(iter);
                 appender.write(writer, true);
@@ -282,12 +292,20 @@ public class KMeansCentroidMergeOperatorDescriptor extends AbstractSingleActivit
 
             @Override
             public void fail() throws HyracksDataException {
-                writer.fail();
+                try {
+                    discardSort(); // an iteration cut short never folds, so its spilled partials have no reader
+                } finally {
+                    writer.fail();
+                }
             }
 
             @Override
             public void close() throws HyracksDataException {
-                writer.close();
+                try {
+                    discardSort(); // an iteration still open at close never folds either
+                } finally {
+                    writer.close();
+                }
             }
         };
     }

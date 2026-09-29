@@ -187,6 +187,9 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void close() throws HyracksDataException {
+                    if (state == null) {
+                        return; // open() threw, or fail() already deleted the run file: nothing to publish
+                    }
                     flushToState();
                     // Fully written; readers open their own independent handles via createReader.
                     state.close();
@@ -195,10 +198,10 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void fail() throws HyracksDataException {
-                    // Created in open(), registered only in close(): on this path nothing else will close it.
-                    if (state != null) {
-                        state.close();
-                    }
+                    // Created in open(), registered only in close(): on this path nothing else will close or
+                    // delete it, and the loop that would read it never runs.
+                    KMeansLoopIO.discard(state);
+                    state = null;
                 }
             };
         }
@@ -225,6 +228,7 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                 private final KMeansVectorCodec.ListVectorDecoder decoder =
                         new KMeansVectorCodec.ListVectorDecoder(dimension);
                 private boolean building;
+                private boolean failed;
                 private LoopControlState control;
 
                 @Override
@@ -268,8 +272,8 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                 public void close() throws HyracksDataException {
                     // No end marker here -- close IS the end of the seed set. An empty seed still publishes,
                     // as an empty set, which is what the loop's first iteration then reads.
-                    if (control == null) {
-                        return; // open() threw; no seed set to publish
+                    if (control == null || failed) {
+                        return; // open() threw, or fail() discarded the store: no seed set to publish
                     }
                     CentroidStore store = control.getCentroids();
                     if (!building) {
@@ -283,8 +287,12 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                 public void fail() throws HyracksDataException {
                     // The seed set never lands, so the loop body cannot run and the tail will never release.
                     // Guarded like close(): both still run after an open() that threw.
+                    failed = true;
                     if (control != null) {
                         control.abort();
+                        // Nothing will read the half-built set: the loop sits behind this activity's blocking
+                        // edge and the tail only receives what the loop emits. Delete it now.
+                        control.getCentroids().destroy();
                     }
                 }
             };
@@ -332,14 +340,18 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                     // Held outside the try so the finally can release the centroid handoff on every path. The
                     // loop is over by then either way, and nothing reads the store after this activity ends.
                     LoopControlState control = null;
+                    MaterializerTaskState vectorState = null;
                     try {
                         // Registered by the store activities, which addBlockingEdge (contributeActivities) joins
                         // ahead of this activity -- so these are already present; no wait is warranted.
                         control = (LoopControlState) LoopControlState.required(ctx,
                                 LoopControlState.controlStateId(loopKey, partition));
-                        MaterializerTaskState vectorState = (MaterializerTaskState) LoopControlState.required(ctx,
+                        vectorState = (MaterializerTaskState) LoopControlState.required(ctx,
                                 LoopControlState.vectorsStateId(loopKey, partition));
                         runLoop(control, vectorState, partialWriter);
+                        // The last iteration was the vectors' last reader; the final emit reads only the
+                        // centroid store, so the (input-sized) vector file can go before it.
+                        KMeansLoopIO.discard(vectorState);
                         emitFinalCentroids(control, centroidWriter, partition);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
@@ -351,11 +363,18 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                         partialWriter.fail();
                         throw HyracksDataException.create(e);
                     } finally {
-                        if (control != null) {
-                            control.getCentroids().destroy();
+                        try {
+                            try {
+                                KMeansLoopIO.discard(vectorState); // no-op when already deleted above
+                            } finally {
+                                if (control != null) {
+                                    control.getCentroids().destroy();
+                                }
+                            }
+                        } finally {
+                            centroidWriter.close();
+                            partialWriter.close();
                         }
-                        centroidWriter.close();
-                        partialWriter.close();
                     }
                 }
 
@@ -395,8 +414,7 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                                                 iter, index, count, sum));
                             }
                         } finally {
-                            column.close();
-                            column.deleteFile();
+                            KMeansLoopIO.discard(column);
                         }
                         emitEnd(partialWriter, appender, tb, it);
                         appender.write(partialWriter, true);

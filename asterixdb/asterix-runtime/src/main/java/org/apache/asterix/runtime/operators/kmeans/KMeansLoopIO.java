@@ -46,8 +46,10 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
+import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
 
 /**
@@ -379,6 +381,44 @@ public final class KMeansLoopIO {
     /** Adapts a materialized run file to {@link RawVectorSource}. */
     public static RawVectorSource source(MaterializerTaskState state, IHyracksTaskContext ctx) {
         return sink -> streamRawVectors(state, ctx, sink);
+    }
+
+    /**
+     * Deletes a run file the moment its last reader is done with it, instead of leaving it in the joblet
+     * workspace until the job ends. Closes the writer handle first. Null-safe and idempotent, so it can sit in
+     * both the success path and a {@code finally}.
+     */
+    public static void discard(MaterializerTaskState state) throws HyracksDataException {
+        if (state == null) {
+            return;
+        }
+        try {
+            state.close();
+        } finally {
+            state.deleteFile();
+        }
+    }
+
+    /**
+     * Deletes every run file a sort generated. The runs are delete-on-close readers, but a reader only deletes
+     * if it was opened, so runs a merge never reached -- because it failed part-way, or never ran -- would
+     * otherwise stay on disk until the job ends. Runs the merge already consumed are simply gone. Null-safe and
+     * idempotent; never throws, so it cannot mask the error that sent a caller to its {@code finally}.
+     */
+    public static void discardRuns(AbstractSortRunGenerator sort) {
+        if (sort == null) {
+            return;
+        }
+        List<GeneratedRunFileReader> runs = sort.getRuns();
+        for (GeneratedRunFileReader run : runs) {
+            try {
+                run.close();
+            } catch (HyracksDataException e) {
+                // Still delete below: a handle that would not close must not keep the file.
+            }
+            run.getFile().delete();
+        }
+        runs.clear();
     }
 
     /**

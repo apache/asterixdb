@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.operators.kmeans;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +40,7 @@ import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -253,20 +255,7 @@ public class KMeansReclusterOperatorTest {
      */
     @Test
     public void reclusterFoldIsIdenticalWhetherOrNotTheSortSpills() throws Exception {
-        // Enough partials to exceed a 4-frame budget (3 usable x 32 KB) but sit comfortably in a large one.
-        final int members = 600;
-        final int partitionsPerMember = 5;
-        double[][] rows = new double[members + members * partitionsPerMember][];
-        int r = 0;
-        for (int m = 0; m < members; m++) {
-            rows[r++] = new double[] { 0, 0, m, 0, m, m + 1 }; // pool member m
-        }
-        // Partials arrive scrambled across partitions, as a concurrent M-to-1 connector would deliver them.
-        for (int p = partitionsPerMember - 1; p >= 0; p--) {
-            for (int m = members - 1; m >= 0; m--) {
-                rows[r++] = new double[] { 2, p, m, 1, 0.1d * (p + 1), 1.0e8d * (p + 1) };
-            }
-        }
+        double[][] rows = spillingRows();
         List<double[]> spilled = runRecluster(rows, 4);
         List<double[]> inMemory = runRecluster(rows, 4096);
 
@@ -281,6 +270,101 @@ public class KMeansReclusterOperatorTest {
                         Double.doubleToLongBits(b[d]), Double.doubleToLongBits(a[d]));
             }
         }
+    }
+
+    /**
+     * Enough partials to exceed a 4-frame budget (3 usable x 32 KB) but sit comfortably in a large one. Partials
+     * arrive scrambled across partitions, as a concurrent M-to-1 connector would deliver them.
+     */
+    private static double[][] spillingRows() {
+        final int members = 600;
+        final int partitionsPerMember = 5;
+        double[][] rows = new double[members + members * partitionsPerMember][];
+        int r = 0;
+        for (int m = 0; m < members; m++) {
+            rows[r++] = new double[] { 0, 0, m, 0, m, m + 1 }; // pool member m
+        }
+        for (int p = partitionsPerMember - 1; p >= 0; p--) {
+            for (int m = members - 1; m >= 0; m--) {
+                rows[r++] = new double[] { 2, p, m, 1, 0.1d * (p + 1), 1.0e8d * (p + 1) };
+            }
+        }
+        return rows;
+    }
+
+    /** Workspace files RECLUSTER can create: its stored input, and the partial sort's runs and merge files. */
+    private static final String[] WORKSPACE_PREFIXES =
+            { "MaterializerTaskState", "ExternalSortRunGenerator", "ExternalSortRunMerger" };
+
+    /** Those files currently on disk; the test context keeps managed workspace files in the JVM temp dir. */
+    private static int liveFiles() {
+        File[] files = new File(System.getProperty("java.io.tmpdir")).listFiles();
+        int n = 0;
+        for (File f : files == null ? new File[0] : files) {
+            for (String prefix : WORKSPACE_PREFIXES) {
+                if (f.getName().startsWith(prefix)) {
+                    n++;
+                    break;
+                }
+            }
+        }
+        return n;
+    }
+
+    /**
+     * A spilling RECLUSTER deletes everything it wrote by the time it returns: the stored input after its
+     * single read, and every sort run once the fold is done with it -- not at job end.
+     */
+    @Test
+    public void aSpillingReclusterLeavesNoFilesBehind() throws Exception {
+        int before = liveFiles();
+        List<double[]> out = runRecluster(spillingRows(), 4);
+        Assert.assertFalse("fixture produced no centroids; the test would prove nothing", out.isEmpty());
+        Assert.assertEquals("RECLUSTER left workspace files behind", before, liveFiles());
+    }
+
+    /**
+     * Only partition 0 speaks, so any other partition's copy of the broadcast input is dead on arrival: it is
+     * deleted unread, and no sort runs are spilled for a fold that would never happen.
+     */
+    @Test
+    public void aNonSpeakingPartitionDeletesItsInputUnread() throws Exception {
+        IHyracksTaskContext ctx = TestUtils.create(32768);
+        KMeansReclusterOperatorDescriptor op = new KMeansReclusterOperatorDescriptor(new JobSpecification(),
+                VEC_REC_DESC, 8, 0, 4, DEFAULT_RECLUSTER_SEED, VectorSimilarityMetric.EUCLIDEAN_SQUARED);
+        List<IActivity> activities = collectActivities(op);
+        IRecordDescriptorProvider rdp = recordDescProvider();
+        int before = liveFiles();
+        IOperatorNodePushable poolStore = activities.get(0).createPushRuntime(ctx, rdp, 1, 2);
+        poolStore.getInputFrameWriter(0).open();
+        poolStore.getInputFrameWriter(0)
+                .nextFrame(envelopesFrame(ctx, new double[][] { { 0, 0, 0, 0, 1, 2 }, { 2, 1, 0, 1, 1, 2 } }));
+        poolStore.getInputFrameWriter(0).close();
+        Assert.assertEquals("the stored input is one file", before + 1, liveFiles());
+
+        List<double[]> out = collectOutput(activities.get(1).createPushRuntime(ctx, rdp, 1, 2), false);
+        Assert.assertTrue("only partition 0 emits", out.isEmpty());
+        Assert.assertEquals("the input must be deleted, not kept to job end", before, liveFiles());
+    }
+
+    /** An input store that failed part-way is never scored, so it deletes its file instead of publishing it. */
+    @Test
+    public void aFailedInputStoreLeavesNoFile() throws Exception {
+        IHyracksTaskContext ctx = TestUtils.create(32768);
+        KMeansReclusterOperatorDescriptor op =
+                new KMeansReclusterOperatorDescriptor(new JobSpecification(), VEC_REC_DESC, 2, 0, TEST_FRAMES_LIMIT,
+                        DEFAULT_RECLUSTER_SEED, VectorSimilarityMetric.EUCLIDEAN_SQUARED);
+        List<IActivity> activities = collectActivities(op);
+        int before = liveFiles();
+        IOperatorNodePushable poolStore = activities.get(0).createPushRuntime(ctx, recordDescProvider(), 0, 1);
+        IFrameWriter in = poolStore.getInputFrameWriter(0);
+        in.open();
+        in.nextFrame(envelopesFrame(ctx, new double[][] { { 0, 0, 0, 0, 1, 2 } }));
+        in.fail();
+        in.close(); // the framework always closes after fail
+        Assert.assertEquals("a failed input store must not leave its file", before, liveFiles());
+        Assert.assertNull("a failed input store must not publish its state",
+                ctx.getStateObject(new TaskId(activities.get(0).getActivityId(), 0)));
     }
 
     /** Drives RECLUSTER over the given envelope rows at a chosen frame budget. */

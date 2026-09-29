@@ -113,6 +113,7 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
                 means.add(KMeansLoopIO.centroidOf(sum, weight, metric));
                 memberWeights[meanCount[0]++] = weight;
             });
+            rt.discard(); // the partials are folded into the means; their sort runs are dead from here on
             means.seal();
 
             // Fewer means than requested: the pool holds fewer distinct candidates than k, because the input has
@@ -224,6 +225,7 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private MaterializerTaskState state;
+                private boolean failed;
 
                 @Override
                 public void open() throws HyracksDataException {
@@ -240,16 +242,24 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
                 @Override
                 public void close() throws HyracksDataException {
                     // state can be null if open() failed; close() is called either way.
-                    if (state != null) {
-                        state.close();
-                        ctx.setStateObject(state);
+                    if (state == null) {
+                        return;
                     }
+                    if (failed) {
+                        // A partial input is never scored (Score sits behind the blocking edge), so the file
+                        // has no reader: delete it rather than publish it.
+                        KMeansLoopIO.discard(state);
+                        state = null;
+                        return;
+                    }
+                    state.close();
+                    ctx.setStateObject(state);
                 }
 
                 @Override
                 public void fail() throws HyracksDataException {
-                    // Nothing to do: close() always follows and closes the run file. (The oversampling pool
-                    // store closes here instead, because its writer stays open across the loop.)
+                    // close() always follows, and deletes the run file.
+                    failed = true;
                 }
             };
         }
@@ -270,20 +280,34 @@ public final class KMeansReclusterOperatorDescriptor extends AbstractOperatorDes
                 @Override
                 public void initialize() throws HyracksDataException {
                     writer.open();
+                    MaterializerTaskState poolState = null;
+                    KMeansStageRuntime rt = null;
                     try {
-                        MaterializerTaskState poolState = (MaterializerTaskState) ctx.getStateObject(
+                        poolState = (MaterializerTaskState) ctx.getStateObject(
                                 new TaskId(new ActivityId(getOperatorId(), STORE_POOL_ACTIVITY_ID), partition));
-                        KMeansStageRuntime rt =
-                                new KMeansStageRuntime(ctx, writer, vecRecDesc, poolColumn, framesLimit);
-                        rt.readInput(poolState);
-                        KMeansStageRuntime.Emitter emitter = rt.newEmitter();
-                        emitRecluster(ctx, new TaskId(getActivityId(), partition), rt, emitter, partition);
-                        emitter.flush();
+                        if (partition == 0) {
+                            // Only partition 0 speaks (see emitRecluster). Elsewhere, reading the input would
+                            // only spill sort runs nothing merges, so the input is dropped unread.
+                            rt = new KMeansStageRuntime(ctx, writer, vecRecDesc, poolColumn, framesLimit);
+                            rt.readInput(poolState);
+                            KMeansStageRuntime.Emitter emitter = rt.newEmitter();
+                            emitRecluster(ctx, new TaskId(getActivityId(), partition), rt, emitter, partition);
+                            emitter.flush();
+                        }
                     } catch (Exception e) {
                         writer.fail();
                         throw HyracksDataException.create(e);
                     } finally {
-                        writer.close();
+                        try {
+                            // readInput already deleted the input after its one read; this covers the paths
+                            // that never got there. Then any sort runs the fold left behind.
+                            KMeansLoopIO.discard(poolState);
+                        } finally {
+                            if (rt != null) {
+                                rt.discard();
+                            }
+                            writer.close();
+                        }
                     }
                 }
             };

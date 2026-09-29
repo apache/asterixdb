@@ -211,6 +211,9 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
 
                 @Override
                 public void close() throws HyracksDataException {
+                    if (state == null) {
+                        return; // open() threw, or fail() already deleted the run file: nothing to publish
+                    }
                     flushToState();
                     if (vectors) {
                         // The vector file is fully written; close the writer handle now (readers open their own
@@ -224,10 +227,9 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                 @Override
                 public void fail() throws HyracksDataException {
                     // The run file is created in open() and only registered in close(), so on this path nothing
-                    // else holds a reference and nothing else will close it.
-                    if (state != null) {
-                        state.close();
-                    }
+                    // else holds a reference and nothing else will close or delete it.
+                    KMeansLoopIO.discard(state);
+                    state = null;
                 }
             };
         }
@@ -271,9 +273,10 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                     final IFrameWriter sigmaWriter = writers[OUT_SIGMA];
                     poolWriter.open();
                     sigmaWriter.open();
-                    // Held outside the try so the finally can close the pool handle on every path, not just the
-                    // successful one -- an aborted loop otherwise leaves this writer open until joblet cleanup.
+                    // Held outside the try so the finally can delete both run files on every path, not just the
+                    // successful one -- otherwise they stay on disk until joblet cleanup.
                     MaterializerTaskState poolState = null;
+                    MaterializerTaskState vectorState = null;
                     try {
                         // Registered by StoreActivity, which addBlockingEdge (contributeActivities) joins ahead
                         // of this activity -- so these are already present; no wait is warranted.
@@ -281,7 +284,7 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                                 LoopControlState.controlStateId(loopKey, partition));
                         poolState = (MaterializerTaskState) LoopControlState.required(ctx,
                                 LoopControlState.poolStateId(loopKey, partition));
-                        MaterializerTaskState vectorState = (MaterializerTaskState) LoopControlState.required(ctx,
+                        vectorState = (MaterializerTaskState) LoopControlState.required(ctx,
                                 LoopControlState.vectorsStateId(loopKey, partition));
                         runLoop(control, poolState, vectorState, sigmaWriter);
                         emitWeighPartials(poolState, vectorState, poolWriter);
@@ -295,14 +298,19 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                         sigmaWriter.fail();
                         throw HyracksDataException.create(e);
                     } finally {
-                        // Release has appended every round and Sample/Cost have read for the last time, so the
-                        // pool writer handle can go (StoreVectors already closed the vector writer). The managed
-                        // workspace files themselves are reclaimed at joblet cleanup.
-                        if (poolState != null) {
-                            poolState.close();
+                        // Release has appended every round and Sample has read for the last time (the final
+                        // awaitTurn orders both before this), and the terminal weigh was their last reader here, so
+                        // the pool and vector run files are dead: delete them now rather than at joblet cleanup.
+                        try {
+                            try {
+                                KMeansLoopIO.discard(poolState);
+                            } finally {
+                                KMeansLoopIO.discard(vectorState);
+                            }
+                        } finally {
+                            poolWriter.close();
+                            sigmaWriter.close();
                         }
-                        poolWriter.close();
-                        sigmaWriter.close();
                     }
                 }
 
@@ -328,10 +336,7 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                         for (int r = 0; r < loopRounds; r++) {
                             // A fresh column per round; the previous one is dead once Op3 consumed it, which the
                             // loop's ordering guarantees has happened before this round begins.
-                            if (scoreState != null) {
-                                scoreState.close();
-                                scoreState.deleteFile();
-                            }
+                            KMeansLoopIO.discard(scoreState);
                             scoreState = LoopControlState.sharedRunFile(ctx,
                                     LoopControlState.scoreStateId(loopKey, partition));
                             ctx.setStateObject(scoreState);
@@ -376,10 +381,7 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                             }
                         }
                     } finally {
-                        if (scoreState != null) {
-                            scoreState.close();
-                            scoreState.deleteFile();
-                        }
+                        KMeansLoopIO.discard(scoreState);
                     }
                 }
 
@@ -459,8 +461,7 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                                         index, count, sum));
                         envelope.flush();
                     } finally {
-                        weighColumn.close();
-                        weighColumn.deleteFile();
+                        KMeansLoopIO.discard(weighColumn);
                     }
                 }
 

@@ -24,13 +24,20 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.asterix.runtime.utils.VectorDistanceCalculation;
+import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
+import org.apache.hyracks.dataflow.std.sort.Algorithm;
+import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
 import org.apache.hyracks.test.support.TestUtils;
 import org.junit.Assert;
@@ -54,13 +61,18 @@ public class KMeansRunFileLifecycleTest {
 
     /** Managed workspace files currently on disk. */
     private static int liveFiles() {
+        return liveFiles(WORKSPACE_PREFIX);
+    }
+
+    /** Workspace files with the given prefix currently on disk. */
+    private static int liveFiles(String prefix) {
         File[] files = new File(System.getProperty("java.io.tmpdir")).listFiles();
         if (files == null) {
             return 0;
         }
         int n = 0;
         for (File f : files) {
-            if (f.getName().startsWith(WORKSPACE_PREFIX)) {
+            if (f.getName().startsWith(prefix)) {
                 n++;
             }
         }
@@ -152,6 +164,63 @@ public class KMeansRunFileLifecycleTest {
             state.deleteFile();
         }
         Assert.assertEquals(before, liveFiles());
+    }
+
+    /** discard() deletes the file on the spot, and is safe to repeat and to call on nothing. */
+    @Test
+    public void discardDeletesTheFileAndIsIdempotent() throws Exception {
+        IHyracksTaskContext ctx = TestUtils.create(FRAME_SIZE);
+        int before = liveFiles();
+        MaterializerTaskState state = newState(ctx, 5);
+        KMeansLoopIO.ScoreColumnWriter w = new KMeansLoopIO.ScoreColumnWriter(state, ctx);
+        w.append(new double[] { 1.0d }, new int[] { 0 }, 1);
+        w.finish();
+        Assert.assertEquals(1, liveFiles() - before);
+        KMeansLoopIO.discard(state);
+        Assert.assertEquals("deleted when discarded, not at job end", before, liveFiles());
+        KMeansLoopIO.discard(state); // a finally repeating the success path's discard
+        KMeansLoopIO.discard(null); // a state that was never created
+        Assert.assertEquals(before, liveFiles());
+    }
+
+    /**
+     * A sort's runs are delete-on-close, but a run only deletes once opened, so runs no merge reached -- a merge
+     * that failed, or one that never ran -- would stay on disk to job end. discardRuns() removes them.
+     */
+    @Test
+    public void discardRunsDeletesRunsNoMergeOpened() throws Exception {
+        IHyracksTaskContext ctx = TestUtils.create(FRAME_SIZE);
+        String prefix = ExternalSortRunGenerator.class.getSimpleName();
+        int before = liveFiles(prefix);
+        ExternalSortRunGenerator sort = new ExternalSortRunGenerator(ctx, KMeansLoopIO.PARTIAL_FLAT_SORT_FIELDS, null,
+                KMeansLoopIO.PARTIAL_FLAT_COMPARATORS, KMeansLoopIO.PARTIAL_FLAT_RD, Algorithm.MERGE_SORT, 4);
+        sort.open();
+        VSizeFrame frame = new VSizeFrame(ctx);
+        FrameTupleAppender appender = new FrameTupleAppender(frame);
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(4);
+        // Well past a 4-frame budget, so the generator has to spill several runs.
+        for (int i = 0; i < 20000; i++) {
+            tb.reset();
+            tb.addField(IntegerSerializerDeserializer.INSTANCE, 20000 - i);
+            tb.addField(IntegerSerializerDeserializer.INSTANCE, i % 7);
+            tb.addField(DoubleSerializerDeserializer.INSTANCE, 1.0d);
+            KMeansLoopIO.writeRawVector(tb, new double[] { i, i + 1 });
+            if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                sort.nextFrame(frame.getBuffer());
+                appender.reset(frame, true);
+                Assert.assertTrue(appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize()));
+            }
+        }
+        sort.nextFrame(frame.getBuffer());
+        sort.close();
+        Assert.assertTrue("the fixture must spill more than one run", sort.getRuns().size() > 1);
+        Assert.assertEquals(sort.getRuns().size(), liveFiles(prefix) - before);
+
+        KMeansLoopIO.discardRuns(sort); // no merge ever opened a run
+        Assert.assertEquals("unmerged runs must be deleted", before, liveFiles(prefix));
+        Assert.assertTrue(sort.getRuns().isEmpty());
+        KMeansLoopIO.discardRuns(sort); // idempotent
+        KMeansLoopIO.discardRuns(null); // a sort that was never started
     }
 
     /** A partition with no rows must not fault the scan or the accumulator -- the width filter can empty one. */

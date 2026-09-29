@@ -123,6 +123,15 @@ final class KMeansStageRuntime {
         return poolSize;
     }
 
+    /**
+     * Deletes the partial sort's run files. The fold's merge consumes them, but only the ones it opened, so a
+     * failure part-way (or before the fold) would leave the rest on disk until the job ends. Idempotent.
+     */
+    void discard() {
+        KMeansLoopIO.discardRuns(partialSort);
+        partialSort = null;
+    }
+
     /** Re-emits one weigh partial into the sort, flat, keyed by (seq, part). */
     private void spillPartial(Row r) throws HyracksDataException {
         partialTb.reset();
