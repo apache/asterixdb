@@ -57,6 +57,7 @@ import org.apache.hyracks.control.cc.scheduler.IJobQueue;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.NoOpCallback;
+import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -239,6 +240,10 @@ public class JobManager implements IJobManager {
             } else {
                 try {
                     ncs.getNodeController().cleanUpJoblet(jobId, status);
+                } catch (IPCException e) {
+                    LOGGER.error("Exception cleaning up joblet {} on node {}", jobId, n, e);
+                    caughtException = ExceptionUtils.suppress(caughtException,
+                            HyracksException.create(ErrorCode.NODE_UNREACHABLE, e, n));
                 } catch (Exception e) {
                     LOGGER.error("Exception cleaning up joblet {} on node {}", jobId, n, e);
                     caughtException = ExceptionUtils.suppress(caughtException, e);

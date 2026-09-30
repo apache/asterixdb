@@ -166,6 +166,7 @@ public enum ErrorCode implements IError {
     VECTOR_INDEX_BUILD_FAILED(136),
     MALFORMED_VECTOR_INDEX(137),
     UNEXPECTED_VECTOR_VALUE(138),
+    NODE_UNREACHABLE(139),
 
     // Compilation error codes.
     RULECOLLECTION_NOT_INSTANCE_OF_LIST(10000),

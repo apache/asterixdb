@@ -53,6 +53,7 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import org.apache.hyracks.control.common.logs.LogFile;
 import org.apache.hyracks.control.common.work.NoOpCallback;
+import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -352,6 +353,30 @@ public class JobManagerTest {
         jobManager.add(run);
 
         verify(ccs.getContext(), never()).notifyJobSubmissionFailed(any(), any());
+    }
+
+    /**
+     * A node that has gone away stays registered until its heartbeats lapse, so cleaning up a job on it fails
+     * with a bare IPC failure. Uncoded, that reaches the client as an internal error rather than as the node
+     * being unreachable.
+     */
+    @Test
+    public void unreachableNodeFailsCleanupAsNodeUnreachable() throws Exception {
+        IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
+        ClusterControllerService ccs = mockClusterControllerService();
+        IJobManager jobManager = new JobManager(ccConfig, ccs, jobCapacityController);
+        NodeControllerRemoteProxy nodeController =
+                ccs.getNodeManager().getNodeControllerState("node1").getNodeController();
+        doThrow(new IPCException(new IOException("Connection failed"))).when(nodeController).cleanUpJoblet(any(),
+                any());
+
+        JobRun run = mockJobRun(1);
+        try {
+            jobManager.prepareComplete(run, JobStatus.FAILURE, Collections.emptyList());
+            Assert.fail("cleanup on an unreachable node should fail");
+        } catch (HyracksException e) {
+            Assert.assertTrue(String.valueOf(e), e.matches(ErrorCode.NODE_UNREACHABLE));
+        }
     }
 
     private JobRun mockJobRun(long id) {
