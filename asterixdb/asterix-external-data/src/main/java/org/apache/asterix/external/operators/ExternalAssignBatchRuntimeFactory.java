@@ -118,7 +118,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                         libraryEvaluators.add(Pair.of(id, eval));
                     }
                 } catch (IOException | AsterixException e) {
-                    throw RuntimeDataException.create(ErrorCode.EXTERNAL_UDF_EXCEPTION, e, sourceLoc, e.getMessage());
+                    throw new RuntimeDataException(ErrorCode.EXTERNAL_UDF_EXCEPTION, e, sourceLoc, e.getMessage());
                 }
                 argHolders = new ArrayList<>(fnArgColumns.length);
                 for (int i = 0; i < fnArgColumns.length; i++) {
