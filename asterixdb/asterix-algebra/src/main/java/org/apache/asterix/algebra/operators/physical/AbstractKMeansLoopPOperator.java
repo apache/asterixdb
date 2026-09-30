@@ -19,6 +19,7 @@
 package org.apache.asterix.algebra.operators.physical;
 
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -47,6 +48,14 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
  * This class settles the inputs; a subclass builds its own chain.
  */
 public abstract class AbstractKMeansLoopPOperator extends AbstractKMeansStagePOperator {
+
+    /** The vectors and the pool are both stored before the loop runs; see the superclass. */
+    @Override
+    public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
+        int[] inputDependencyLabels = new int[] { 0, 0 };
+        int[] outputDependencyLabels = new int[] { 1 };
+        return Pair.of(inputDependencyLabels, outputDependencyLabels);
+    }
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,

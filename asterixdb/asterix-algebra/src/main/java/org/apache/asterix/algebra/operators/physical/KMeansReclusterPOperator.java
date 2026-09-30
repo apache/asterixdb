@@ -19,6 +19,7 @@
 package org.apache.asterix.algebra.operators.physical;
 
 import org.apache.asterix.runtime.operators.kmeans.KMeansReclusterOperatorDescriptor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -48,6 +49,14 @@ public class KMeansReclusterPOperator extends AbstractKMeansStagePOperator {
     @Override
     public PhysicalOperatorTag getOperatorTag() {
         return PhysicalOperatorTag.KMEANS_RECLUSTER;
+    }
+
+    /** The partials are stored before the reduction runs; see the superclass. */
+    @Override
+    public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
+        int[] inputDependencyLabels = new int[] { 0 };
+        int[] outputDependencyLabels = new int[] { 1 };
+        return Pair.of(inputDependencyLabels, outputDependencyLabels);
     }
 
     @Override

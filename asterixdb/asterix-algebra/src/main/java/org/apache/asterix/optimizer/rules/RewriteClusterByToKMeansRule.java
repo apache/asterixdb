@@ -20,9 +20,11 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.clustering.ClusterByOptions;
@@ -41,8 +43,10 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -64,6 +68,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedLoopJoinPOperator;
@@ -116,10 +121,12 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         return requested == null ? LLOYD_ITERATIONS_DEFAULT : Math.min(requested, LLOYD_ITERATIONS_MAX);
     }
 
-    /** Operators whose reads are in {@link #readVariables}; rewritePre on any other is a root not yet walked. */
+    /** Operators whose reads are in {@link #readCounts}; rewritePre on any other is a root not yet walked. */
     private final Set<ILogicalOperator> walked = Collections.newSetFromMap(new IdentityHashMap<>());
-    /** Every variable some operator of the plan reads, projections included. */
-    private final Set<LogicalVariable> readVariables = new HashSet<>();
+    /** Every variable some operator of the plan reads, projections included, with how many operators read it. */
+    private final Map<LogicalVariable, Integer> readCounts = new HashMap<>();
+    /** The GROUP BY each expansion ends in, mapped to the operator it replaced; see cancelMembersUnnest. */
+    private final Map<ILogicalOperator, ClusterByOperator> expandedGroupBys = new IdentityHashMap<>();
 
     /** Walks each root before anything below it is expanded, since rewritePost cannot see above the node. */
     @Override
@@ -136,7 +143,11 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         if (!walked.add(op)) {
             return;
         }
-        VariableUtilities.getUsedVariables(op, readVariables);
+        Set<LogicalVariable> reads = new HashSet<>();
+        VariableUtilities.getUsedVariables(op, reads);
+        for (LogicalVariable v : reads) {
+            readCounts.merge(v, 1, Integer::sum);
+        }
         for (Mutable<ILogicalOperator> input : op.getInputs()) {
             collectReadVariables(input.getValue());
         }
@@ -154,7 +165,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
      * operator's own report of the per-row centroid does not count, since the expansion replaces the operator.
      */
     private boolean centroidIsRead(ClusterByOperator cop) throws AlgebricksException {
-        if (readVariables.contains(cop.getCentroidVariable())) {
+        if (readCounts.containsKey(cop.getCentroidVariable())) {
             return true;
         }
         Set<LogicalVariable> nestedReads = new HashSet<>();
@@ -170,12 +181,153 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         ILogicalOperator op = opRef.getValue();
+        if (op.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+            // rewritePost runs on the input first, so a CLUSTER BY right below has been expanded by now.
+            return cancelMembersUnnest(opRef, context);
+        }
         if (op.getOperatorTag() != LogicalOperatorTag.CLUSTER_BY) {
             return false;
         }
         ClusterByOperator cop = (ClusterByOperator) op;
-        opRef.setValue(expansionFor(cop).expand(cop, context));
+        ILogicalOperator expanded = expansionFor(cop).expand(cop, context);
+        expandedGroupBys.put(expanded, cop);
+        opRef.setValue(expanded);
         return true;
+    }
+
+    /**
+     * Streams the members instead of collecting them when the plan only unnests them again:
+     *
+     * <pre>
+     *   unnest $x <- scan-collection($members)            assign $x <- $r
+     *     group by ($cid := $rowCid) decor (...) {   =>     (the nested pipeline, moved out)
+     *       aggregate $members <- listify($r)                 assign [$cid, decor..., $centroid]
+     *       (assign / select / unnest / subplan ...)            <- [$rowCid, decor..., $assignedCentroid]
+     *       nested tuple source                             (the labelled rows)
+     *     } [{ aggregate $centroid <- first($assignedCentroid) }]
+     * </pre>
+     *
+     * Each cluster's member list is one in-memory array, which a large cluster can push past the frame and
+     * array size limits, and every row of it already carries its cluster id, its decorations and its centroid,
+     * so nothing is lost by never building it. This is {@code CancelUnnestWithNestedListifyRule}'s rewrite,
+     * which cannot see this GROUP BY because the logical rules have run before the expansion builds it; it is
+     * limited to the GROUP BY an expansion just built, and to the shapes that rewrite also accepts.
+     */
+    private boolean cancelMembersUnnest(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        UnnestOperator unnest = (UnnestOperator) opRef.getValue();
+        ILogicalOperator below = unnest.getInputs().get(0).getValue();
+        ClusterByOperator cop = expandedGroupBys.get(below);
+        if (cop == null || below.getOperatorTag() != LogicalOperatorTag.GROUP || unnest.hasPositionalVariable()
+                || unnest.hasTimeTravel()) {
+            return false;
+        }
+        GroupByOperator gby = (GroupByOperator) below;
+        LogicalVariable listVar = unnestedVariable(unnest.getExpressionRef().getValue());
+        // Read by anything but this unnest, the list itself is needed.
+        if (listVar == null || readCounts.getOrDefault(listVar, 0) != 1) {
+            return false;
+        }
+        // The members plan must be the only aggregate besides the reported centroid, which is per-row anyway.
+        AggregateOperator members = null;
+        boolean withCentroid = false;
+        for (ILogicalPlan plan : gby.getNestedPlans()) {
+            if (plan.getRoots().size() != 1
+                    || plan.getRoots().get(0).getValue().getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+                return false;
+            }
+            AggregateOperator agg = (AggregateOperator) plan.getRoots().get(0).getValue();
+            if (agg.getVariables().size() != 1) {
+                return false;
+            }
+            LogicalVariable aggVar = agg.getVariables().get(0);
+            if (aggVar.equals(cop.getCentroidVariable())) {
+                withCentroid = true;
+            } else if (aggVar.equals(listVar) && members == null) {
+                members = agg;
+            } else {
+                return false;
+            }
+        }
+        if (members == null) {
+            return false;
+        }
+        ILogicalExpression aggFun = members.getExpressions().get(0).getValue();
+        if (aggFun.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL
+                || !BuiltinFunctions.LISTIFY.equals(((AbstractFunctionCallExpression) aggFun).getFunctionIdentifier())
+                || ((AbstractFunctionCallExpression) aggFun).getArguments().size() != 1) {
+            return false;
+        }
+        ILogicalExpression member = ((AbstractFunctionCallExpression) aggFun).getArguments().get(0).getValue();
+        // Only per-row operators may sit between the aggregate and the nested tuple source; an order, a limit,
+        // a distinct or a grouping needs the whole group.
+        List<AbstractLogicalOperator> chain = new ArrayList<>();
+        Mutable<ILogicalOperator> bottomRef = members.getInputs().get(0);
+        while (bottomRef.getValue().getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            AbstractLogicalOperator chainOp = (AbstractLogicalOperator) bottomRef.getValue();
+            switch (chainOp.getOperatorTag()) {
+                case ASSIGN:
+                case SELECT:
+                case UNNEST:
+                case SUBPLAN:
+                    break;
+                default:
+                    return false;
+            }
+            chain.add(chainOp);
+            bottomRef = chainOp.getInputs().get(0);
+        }
+
+        // What the GROUP BY gave each cluster, given to each row instead: the id, the decorations and the
+        // centroid, each already a per-row value below it.
+        List<LogicalVariable> perRowVars = new ArrayList<>();
+        List<Mutable<ILogicalExpression>> perRowExprs = new ArrayList<>();
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> keysAndDecors = new ArrayList<>(gby.getGroupByList());
+        keysAndDecors.addAll(gby.getDecorList());
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : keysAndDecors) {
+            if (p.getLeft() == null) {
+                return false;
+            }
+            perRowVars.add(p.getLeft());
+            perRowExprs.add(new MutableObject<>(p.getRight().getValue().cloneExpression()));
+        }
+        if (withCentroid) {
+            perRowVars.add(cop.getCentroidVariable());
+            perRowExprs.add(ref(cop.getAssignedCentroidVariable()));
+        }
+        SourceLocation loc = gby.getSourceLocation();
+        AssignOperator perRow = new AssignOperator(perRowVars, perRowExprs);
+        perRow.setSourceLocation(loc);
+        perRow.getInputs().add(gby.getInputs().get(0));
+        finish(perRow, context);
+
+        // The nested pipeline now reads the rows themselves; its operators leave LOCAL mode for the rows'.
+        bottomRef.setValue(perRow);
+        for (int i = chain.size() - 1; i >= 0; i--) {
+            finish(chain.get(i), context);
+        }
+
+        AssignOperator unnested =
+                new AssignOperator(unnest.getVariable(), new MutableObject<>(member.cloneExpression()));
+        unnested.setSourceLocation(unnest.getSourceLocation());
+        unnested.getInputs().add(members.getInputs().get(0));
+        finish(unnested, context);
+        opRef.setValue(unnested);
+        expandedGroupBys.remove(gby);
+        return true;
+    }
+
+    /** {@code $v} of {@code unnest $x <- $v} or {@code unnest $x <- scan-collection($v)}; else null. */
+    private static LogicalVariable unnestedVariable(ILogicalExpression expr) {
+        if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression call = (AbstractFunctionCallExpression) expr;
+            if (!BuiltinFunctions.SCAN_COLLECTION.equals(call.getFunctionIdentifier())) {
+                return null;
+            }
+            expr = call.getArguments().get(0).getValue();
+        }
+        return expr.getExpressionTag() == LogicalExpressionTag.VARIABLE
+                ? ((VariableReferenceExpression) expr).getVariableReference() : null;
     }
 
     /**

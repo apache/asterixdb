@@ -1,0 +1,32 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- A members subquery pushed into the operator, then unnested: the subquery's pipeline is hoisted onto the
+-- rows, the project the logical phase pushed into it dropped so the cluster id survives.
+use test;
+with mc as (
+  from Points as p
+  cluster by p.vec as sc cluster as members
+  with { "clustering_algorithm": "K-Means", "dimension": [2], "num_clusters": 4, "seed": 7 }
+  select sc.cluster_id as cid,
+         (select value { "g": x.p.grp, "half": x.p.id div 20 } from members as x) as members
+)
+from mc, mc.members as mi
+group by mc.cid as cid, mi.g as g, mi.half as half
+select cid, g, half, count(*) as n
+order by cid, g, half;

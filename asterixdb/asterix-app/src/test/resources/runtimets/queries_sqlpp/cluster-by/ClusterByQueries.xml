@@ -195,6 +195,16 @@
             <output-dir compare="Text">unnest-in-from</output-dir>
         </compilation-unit>
     </test-case>
+    <!-- Members unnested straight after CLUSTER BY take the optimizer's collect-then-unnest shortcut, where the
+         member list is never built (RewriteClusterByToKMeansRule#membersOf). The shapes that take it (plain,
+         filtered on the cluster id, a pushed members subquery, the centroid alongside) and the ones that must
+         not (the list read twice, a positional unnest, a filter on the list) all answer as building the list
+         would. -->
+    <test-case FilePath="cluster-by">
+        <compilation-unit name="unnest-members">
+            <output-dir compare="Text">unnest-members</output-dir>
+        </compilation-unit>
+    </test-case>
     <!-- Cosine: two directions held at very different magnitudes, so Euclidean would group by magnitude and
          return {1,3},{2,4} instead. Passing means the metric reached both the loops and the labeling, and that
          the centroid update kept the centroids on the unit sphere. -->
