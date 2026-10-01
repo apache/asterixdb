@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
+import org.apache.asterix.external.input.filter.NoOpFilterValueEmbedder;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.ARecord;
@@ -79,9 +80,10 @@ public class ParquetDecimalToDoubleTest {
         Path path = new Path(new File(tempFolder.getRoot(), "decimals.parquet").toURI());
         write(path, conf);
 
+        ParquetReadSupport readSupport = new ParquetReadSupport();
+        readSupport.setValueEmbedder(NoOpFilterValueEmbedder.INSTANCE);
         int row = 0;
-        try (ParquetReader<IValueReference> reader =
-                ParquetReader.builder(new ParquetReadSupport(), path).withConf(conf).build()) {
+        try (ParquetReader<IValueReference> reader = ParquetReader.builder(readSupport, path).withConf(conf).build()) {
             for (IValueReference value = reader.read(); value != null; value = reader.read()) {
                 Map<String, Double> actual = toDoubles(value);
                 for (Column column : COLUMNS) {
