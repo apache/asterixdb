@@ -105,7 +105,7 @@
     <azurecore.version>1.60.0</azurecore.version>
     <azurecorehttpnetty.version>1.16.8</azurecorehttpnetty.version>
 
-    <gcsjavasdk.version>2.74.0</gcsjavasdk.version>
+    <gcsjavasdk.version>2.75.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
