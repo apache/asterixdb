@@ -24,6 +24,9 @@
 
 USE tpch;
 
+-- To keep the costs independent of the number of cores
+SET `compiler.parallelism` "0";
+
 EXPLAIN
 SELECT o.o_orderstatus, COUNT(*) AS cnt
 FROM Orders o

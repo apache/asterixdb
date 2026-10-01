@@ -1,0 +1,18 @@
+distribute result [$$18] [cardinality: 1501.41, doc-size: 12.0, op-cost: 0.0, total-cost: 752.24]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1501.41, doc-size: 12.0, op-cost: 0.0, total-cost: 752.24]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (gt($$o.getField(1), 0)) project: [$$18] [cardinality: 1501.41, doc-size: 12.0, op-cost: 0.0, total-cost: 752.24]
+    -- STREAM_SELECT  |PARTITIONED|
+      assign [$$18] <- [$$o.getField(4)] [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 752.24]
+      -- ASSIGN  |PARTITIONED|
+        project ([$$o]) [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 752.24]
+        -- STREAM_PROJECT  |PARTITIONED|
+          exchange [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 752.24]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            data-scan []<-[$$19, $$o] <- tpch.Orders [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 752.24]
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

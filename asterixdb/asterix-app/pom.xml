@@ -420,6 +420,7 @@
                 <exclude>src/test/resources/**/results/**</exclude>
                 <exclude>src/test/resources/**/results_cbo/**</exclude>
                 <exclude>src/test/resources/**/results_column/**</exclude>
+                <exclude>src/test/resources/**/results_cloud/**</exclude>
                 <exclude>src/test/resources/**/results_less_parallelism/**</exclude>
                 <exclude>src/test/resources/**/results_full_parallelism/**</exclude>
                 <exclude>src/test/resources/fuzzyjoin/pub/fuzzy-join-aql*.dot</exclude>

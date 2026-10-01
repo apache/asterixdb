@@ -24,6 +24,9 @@
 
 USE tpch;
 
+-- To keep the costs independent of the number of cores
+SET `compiler.parallelism` "0";
+
 EXPLAIN
 SELECT l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber, l.l_quantity, l.l_extendedprice,
        l.l_discount, l.l_tax, l.l_returnflag, l.l_linestatus, l.l_shipdate, l.l_commitdate,

@@ -1,36 +1,36 @@
-distribute result [$$52] [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1523.47]
+distribute result [$$52] [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1151.59]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1523.47]
+  exchange [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1151.59]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$52] <- [{"o_orderstatus": $$o_orderstatus, "cnt": $$55}] project: [$$52] [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1523.47]
+    assign [$$52] <- [{"o_orderstatus": $$o_orderstatus, "cnt": $$55}] project: [$$52] [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1151.59]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1523.47]
+      exchange [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1151.59]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         group by ([$$o_orderstatus := $$57]) decor ([]) {
                   aggregate [$$55] <- [sql-sum-serial($$56)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
                     nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-               } [cardinality: 4.0, doc-size: 3.0, op-cost: 16.0, total-cost: 1523.47]
+               } [cardinality: 4.0, doc-size: 3.0, op-cost: 20.0, total-cost: 1151.59]
         -- EXTERNAL_GROUP_BY[$$57]  |PARTITIONED|
-          exchange [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1507.47]
+          exchange [cardinality: 4.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1131.59]
           -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
             group by ([$$57 := $$53]) decor ([]) {
                       aggregate [$$56] <- [sql-count-serial(1)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 4.0, doc-size: 3.0, op-cost: 504.47, total-cost: 1507.47]
+                   } [cardinality: 4.0, doc-size: 3.0, op-cost: 379.35, total-cost: 1131.59]
             -- EXTERNAL_GROUP_BY[$$53]  |PARTITIONED|
-              exchange [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1003.0]
+              exchange [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 752.24]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                assign [$$53] <- [$$o.getField(2)] project: [$$53] [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1003.0]
+                assign [$$53] <- [$$o.getField(2)] project: [$$53] [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 752.24]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$o]) [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1003.0]
+                  project ([$$o]) [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 752.24]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1003.0]
+                    exchange [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 752.24]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$54, $$o] <- tpch.Orders [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 1003.0]
+                      data-scan []<-[$$54, $$o] <- tpch.Orders [cardinality: 1500.0, doc-size: 3.0, op-cost: 0.0, total-cost: 752.24]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
