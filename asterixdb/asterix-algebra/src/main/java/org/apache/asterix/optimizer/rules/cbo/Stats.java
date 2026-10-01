@@ -1183,6 +1183,11 @@ public class Stats {
 
         // distinct cardinality supported only for GroupByOp and DistinctOp
         if (tag == LogicalOperatorTag.DISTINCT || tag == LogicalOperatorTag.GROUP) {
+            if (hasClusterByBelow(grpByDistinctOp)) {
+                // Not estimated: the sample query would run the whole clustering once per key over the sample,
+                // and a clustering of a sample is not the clustering of the dataset.
+                return distinctCard;
+            }
             ILogicalOperator parent = OperatorUtils.findDataSourceScanOperatorParent(grpByDistinctOp);
             DataSourceScanOperator scanOp = (DataSourceScanOperator) parent.getInputs().get(0).getValue();
             if (scanOp == null) {
@@ -1217,6 +1222,17 @@ public class Stats {
             distinctCard = findEstDistinctWithPredicates(grpByDistinctOp, origDatasetCard, sampleDataSource, index);
         }
         return distinctCard;
+    }
+
+    /** Whether a CLUSTER BY sits on the path from {@code op} down to its data source. */
+    private static boolean hasClusterByBelow(ILogicalOperator op) {
+        while (op != null && !op.getInputs().isEmpty()) {
+            if (op.getOperatorTag() == LogicalOperatorTag.CLUSTER_BY) {
+                return true;
+            }
+            op = op.getInputs().get(0).getValue();
+        }
+        return false;
     }
 
     private long findSampleSizeWithPredicates(SelectOperator selOp, SampleDataSource sampleDataSource)
