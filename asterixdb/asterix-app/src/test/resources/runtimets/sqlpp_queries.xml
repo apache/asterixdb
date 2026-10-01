@@ -15024,9 +15024,14 @@
         <output-dir compare="Text">isarray</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="types">
+    <test-case FilePath="types" check-warnings="true">
       <compilation-unit name="isvector">
         <output-dir compare="Text">isvector</output-dir>
+        <expected-error>ASX1081: Cannot find function with signature isvector(1)</expected-error>
+        <expected-warn>ASX0043: Value out of range, function asterix:is-vector#2 expects its 2nd input parameter value to be between 1 and 2147483647, received 0 (in line 25, at column 21)</expected-warn>
+        <expected-warn>ASX0043: Value out of range, function asterix:is-vector#2 expects its 2nd input parameter value to be between 1 and 2147483647, received -1 (in line 26, at column 21)</expected-warn>
+        <expected-warn>ASX0002: Type mismatch: function is-vector expects its 2nd input parameter to be of type bigint, but the actual input type is double (in line 27, at column 21)</expected-warn>
+        <expected-warn>ASX0002: Type mismatch: function is-vector expects its 2nd input parameter to be of type bigint, but the actual input type is string (in line 28, at column 21)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">

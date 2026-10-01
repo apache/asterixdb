@@ -23,8 +23,10 @@ import java.io.DataOutput;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.VectorValidator;
@@ -50,7 +52,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * </pre>
  * <p>
  * Null and missing propagate as for {@code is_array} and the rest of the {@code is_*} family, so
- * {@code isvector(null)} is {@code null} rather than {@code false}. Negating the call alone would
+ * {@code isvector(null, 4)} is {@code null} rather than {@code false}. Negating the call alone would
  * therefore leave out the rows whose field is null or absent, which the index skips too.
  * <p>
  * The function is <b>total</b> since {@link VectorValidator} never throws, which CLUSTER BY's usable-vector
@@ -94,7 +96,7 @@ public class IsVectorDescriptor extends AbstractScalarFunctionDynamicDescriptor 
         }
     }
 
-    private static final class IsVectorEvaluator implements IScalarEvaluator {
+    private final class IsVectorEvaluator implements IScalarEvaluator {
 
         private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
         private final DataOutput out = resultStorage.getDataOutput();
@@ -103,8 +105,10 @@ public class IsVectorDescriptor extends AbstractScalarFunctionDynamicDescriptor 
         private final IScalarEvaluator valueEval;
         private final IScalarEvaluator dimensionEval;
         private final VectorValidator validator = new VectorValidator();
+        private final IEvaluatorContext ctx;
 
         private IsVectorEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx) throws HyracksDataException {
+            this.ctx = ctx;
             valueEval = args[0].createScalarEvaluator(ctx);
             dimensionEval = args.length > 1 ? args[1].createScalarEvaluator(ctx) : null;
         }
@@ -122,10 +126,25 @@ public class IsVectorDescriptor extends AbstractScalarFunctionDynamicDescriptor 
                     return;
                 }
             }
-            // Any dimension when none was given; getIntegerValue rejects a non-numeric second argument.
-            int dimension = dimensionEval == null ? -1
-                    : ATypeHierarchy.getIntegerValue(BuiltinFunctions.IS_VECTOR.getName(), 1,
-                            dimensionPtr.getByteArray(), dimensionPtr.getStartOffset());
+            // -1 means any length; only the internal one-argument form uses it.
+            int dimension = -1;
+            if (dimensionEval != null) {
+                byte[] bytes = dimensionPtr.getByteArray();
+                int offset = dimensionPtr.getStartOffset();
+                if (!PointableHelper.isValidLongValue(bytes, offset, true)) {
+                    PointableHelper.setNull(result);
+                    ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, getIdentifier(), bytes[offset], 1, ATypeTag.BIGINT);
+                    return;
+                }
+                dimension = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset);
+                // The validator would read 0 or a negative dimension as "any length".
+                if (dimension < 1) {
+                    PointableHelper.setNull(result);
+                    ExceptionUtil.warnValueOutOfRange(ctx, sourceLoc, getIdentifier(), 1, 1, Integer.MAX_VALUE,
+                            dimension);
+                    return;
+                }
+            }
             boolean isVector = validator.isVector(valuePtr.getByteArray(), valuePtr.getStartOffset(),
                     valuePtr.getLength(), dimension);
             resultStorage.reset();

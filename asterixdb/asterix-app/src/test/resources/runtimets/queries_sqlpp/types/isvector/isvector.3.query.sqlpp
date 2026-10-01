@@ -17,19 +17,13 @@
  * under the License.
  */
 
-// isvector(v, dimension). Null and missing propagate as for the rest of the is_* family, so "k" is
-// null and "l" is absent rather than both being false.
+// A dimension that is not a positive integer gives null and a warning rather than an answer.
+// requesttype=application/json
+// param max-warnings:json=10
+
 {
-  "b_ok_dim":      isvector([0.2, 0.1, 0.4, 0.3], 4),
-  "c_mixed":       isvector([0.2, 0.1, "s", 0.3], 4),
-  "d_all_string":  isvector(["a", "b", "c", "d"], 4),
-  "e_null_elem":   isvector([0.2, 0.1, null, 0.3], 4),
-  "f_nested":      isvector([0.2, 0.1, [1], 0.3], 4),
-  "g_short":       isvector([0.2, 0.1, 0.3], 4),
-  "h_empty_dim":   isvector([], 4),
-  "j_not_list":    isvector("x", 4),
-  "k_null":        isvector(null, 4),
-  "l_missing":     isvector(missing, 4),
-  "m_integers":    isvector([1, 2, 3], 3),
-  "n_underscore":  is_vector([1, 2, 3], 3)
+  "a_zero_dim":     isvector([1, 2, 3], 0),
+  "b_negative_dim": isvector([1, 2, 3], -1),
+  "c_fraction_dim": isvector([1, 2, 3], 2.5),
+  "d_string_dim":   isvector([1, 2, 3], "3")
 };

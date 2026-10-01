@@ -1431,7 +1431,7 @@ public class BuiltinFunctions {
         addFunction(IS_NUMBER, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_STRING, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_ARRAY, ABooleanTypeComputer.INSTANCE, true);
-        addFunction(IS_VECTOR, ABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(IS_VECTOR, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_VECTOR_WITH_DIMENSION, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_OBJECT, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_MULTISET, ABooleanTypeComputer.INSTANCE, true);
