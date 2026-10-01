@@ -83,11 +83,19 @@ public class CloudUDFLibrarian implements IExternalUDFLibrarian {
         hc.delete().uri(path).responseSingle((response, content) -> handleResponse(response, content)).block();
     }
 
-    private Mono<Void> handleResponse(HttpClientResponse response, reactor.netty.ByteBufMono content) {
+    @Override
+    public String list(String path, Pair<String, String> credentials) {
+        UnixDomainSocketAddress sockAddr = UnixDomainSocketAddress.of(sockPath);
+        HttpClient hc = HttpClient.create().runOn(elg)
+                .headers(h -> h.set("Authorization", createAuthHeader(credentials))).remoteAddress(() -> sockAddr);
+        return hc.get().uri(path).responseSingle((response, content) -> handleResponse(response, content)).block();
+    }
+
+    private Mono<String> handleResponse(HttpClientResponse response, reactor.netty.ByteBufMono content) {
         return content.asString().defaultIfEmpty("").flatMap(body -> {
             int respCode = response.status().code();
             if (respCode == HttpResponseStatus.OK.code()) {
-                return Mono.empty();
+                return Mono.just(body);
             }
 
             String errorMessage;

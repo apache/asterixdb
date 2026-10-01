@@ -17,14 +17,11 @@
   ~  under the License.
   ~
   -->
-<!-- Everything in testsuite_it_python.xml, plus the cases that can only hold when the UDF
-     interpreter is a separate, fenced process reached over a domain socket. Those report
-     failures differently from the in-process interpreter the plain suite runs against, so only
-     PodmanPythonFunctionIT reads this file. -->
+<!-- Everything in PythonQueries.xml, plus the cases whose outcome differs when the UDF API is served in a
+     cloud deployment. -->
 <!DOCTYPE test-suite [
         <!ENTITY PythonQueries SYSTEM "queries_sqlpp/external-library/PythonQueries.xml">
-        <!ENTITY PythonLibraryApiQueries SYSTEM "queries_sqlpp/external-library/PythonLibraryApiQueries.xml">
-        <!ENTITY PythonFencedQueries SYSTEM "queries_sqlpp/external-library/PythonFencedQueries.xml">
+        <!ENTITY PythonCloudQueries SYSTEM "queries_sqlpp/external-library/PythonCloudQueries.xml">
         ]>
 <test-suite
              xmlns="urn:xml.testframework.asterix.apache.org"
@@ -32,6 +29,5 @@
              QueryOffsetPath="queries_sqlpp"
              QueryFileExtension=".sqlpp">
   &PythonQueries;
-  &PythonLibraryApiQueries;
-  &PythonFencedQueries;
+  &PythonCloudQueries;
 </test-suite>

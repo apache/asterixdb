@@ -192,6 +192,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.RawValue;
 
@@ -217,6 +218,7 @@ public class TestExecutor {
     protected static final ObjectReader RESULT_NODE_READER =
             JSON_NODE_READER.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
     protected static final String SQLPP = "sqlpp";
+    private static final String LIBRARY_API_PATH = "/admin/udf";
     private static final String DEFAULT_PLAN_FORMAT = "string";
     // see
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
@@ -1500,19 +1502,21 @@ public class TestExecutor {
                 lines = stripAllComments(statement).trim().split("\n");
                 for (String line : lines) {
                     String[] command = line.trim().split(" ");
-                    //TODO: this is not right. URLEncoder does not properly encode paths.
-                    String dataverse = URLEncoder.encode(command[1], StandardCharsets.US_ASCII.name());
-                    String library = URLEncoder.encode(command[2], StandardCharsets.US_ASCII.name());
-                    String basePath = "/admin/udf/" + dataverse + "/" + library;
-                    String path = "";
-                    switch (librarian.getSocketType()){
-                        case DOMAIN -> path = basePath;
-                        case LOOPBACK -> path = createEndpointURI(basePath).toString();
-                        default -> path = createEndpointURI(basePath).toString();
-                    }
                     if (command.length < 2) {
                         throw new Exception("invalid library command: " + line);
                     }
+                    if (command[0].equals("list")) {
+                        if (command.length != 4) {
+                            throw new Exception("invalid library format");
+                        }
+                        listLibraries(command[1], Pair.of(command[2], command[3]), testCaseCtx, cUnit, testFile,
+                                statement, queryCount, expectedResultFileCtxs, actualPath);
+                        continue;
+                    }
+                    //TODO: this is not right. URLEncoder does not properly encode paths.
+                    String dataverse = URLEncoder.encode(command[1], StandardCharsets.US_ASCII.name());
+                    String library = URLEncoder.encode(command[2], StandardCharsets.US_ASCII.name());
+                    String path = libraryEndpoint(LIBRARY_API_PATH + "/" + dataverse + "/" + library);
                     switch (command[0]) {
                         case "install":
                             if (command.length != 7) {
@@ -1688,6 +1692,38 @@ public class TestExecutor {
             matchExpectedResult(testFile, expectedResultFile, actualResultFile, resultStream, queryCount,
                     numResultFiles, compare, statement);
         }
+        queryCount.increment();
+    }
+
+    private String libraryEndpoint(String path) throws URISyntaxException {
+        return librarian.getSocketType() == IExternalUDFLibrarian.SocketType.DOMAIN ? path
+                : createEndpointURI(path).toString();
+    }
+
+    /**
+     * Writes the libraries the library API lists for {@code dataverse} as the next result of the test. The listing
+     * is narrowed to one dataverse so that libraries left installed by other tests do not leak into the result.
+     */
+    private void listLibraries(String dataverse, Pair<String, String> credentials, TestCaseContext testCaseCtx,
+            CompilationUnit cUnit, File testFile, String statement, MutableInt queryCount,
+            List<TestFileContext> expectedResultFileCtxs, String actualPath) throws Exception {
+        String listing = librarian.list(libraryEndpoint(LIBRARY_API_PATH), credentials);
+        ArrayNode libraries = OM.createArrayNode();
+        for (JsonNode library : OM.readTree(listing)) {
+            if (dataverse.equals(library.get("dataverse").asText())) {
+                libraries.add(library);
+            }
+        }
+        String result = OM.writeValueAsString(libraries);
+        File expectedResultFile = queryCount.intValue() < expectedResultFileCtxs.size()
+                ? expectedResultFileCtxs.get(queryCount.intValue()).getFile() : null;
+        File actualResultFile = expectedResultFile == null ? null
+                : testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
+        if (actualResultFile != null) {
+            writeOutputToFile(actualResultFile, result);
+        }
+        matchExpectedResult(testFile, expectedResultFile, actualResultFile, IOUtils.toInputStream(result, UTF_8),
+                queryCount, expectedResultFileCtxs.size(), cUnit.getOutputDir().getCompare(), statement);
         queryCount.increment();
     }
 

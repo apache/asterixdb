@@ -376,7 +376,7 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         String localPath = localPath(request);
         try {
-            if (localPath.equals("/") || localPath.equals("")) {
+            if (isLibraryListingRequest(request)) {
                 //TODO: nicer way to get this into display form?
                 Map<Namespace, Map<String, String>> dvToLibHashes =
                         ExternalLibraryUtils.produceLibraryListing(libraryManager);
@@ -418,6 +418,11 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
             writeException(e, response);
             LOGGER.error("Error reading library", e);
         }
+    }
+
+    protected boolean isLibraryListingRequest(IServletRequest request) {
+        String localPath = localPath(request);
+        return localPath.equals("/") || localPath.isEmpty();
     }
 
     protected void writeException(Exception e, IServletResponse response) {

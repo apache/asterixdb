@@ -21,6 +21,7 @@ package org.apache.asterix.app.external;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,6 +33,7 @@ import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URIUtils;
@@ -42,6 +44,7 @@ import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -75,6 +78,16 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
         HttpDelete del = new HttpDelete(path);
         HttpResponse response = hc.execute(del, hcCtx);
         handleResponse(response);
+    }
+
+    @Override
+    public String list(String path, Pair<String, String> credentials) throws IOException, AsterixException {
+        HttpClientContext hcCtx = createHttpClientContext(URI.create(path), credentials);
+        HttpResponse response = hc.execute(new HttpGet(path), hcCtx);
+        if (response.getStatusLine().getStatusCode() != 200) {
+            handleResponse(response);
+        }
+        return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
     }
 
     private HttpClientContext createHttpClientContext(URI path, Pair<String, String> credentials) {

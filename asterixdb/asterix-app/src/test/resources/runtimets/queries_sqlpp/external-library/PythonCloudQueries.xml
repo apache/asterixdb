@@ -17,15 +17,11 @@
   ~  under the License.
   ~
   -->
-<!DOCTYPE test-suite [
-        <!ENTITY PythonQueries SYSTEM "queries_sqlpp/external-library/PythonQueries.xml">
-        <!ENTITY PythonLibraryApiQueries SYSTEM "queries_sqlpp/external-library/PythonLibraryApiQueries.xml">
-        ]>
-<test-suite
-             xmlns="urn:xml.testframework.asterix.apache.org"
-             ResultOffsetPath="results"
-             QueryOffsetPath="queries_sqlpp"
-             QueryFileExtension=".sqlpp">
-  &PythonQueries;
-  &PythonLibraryApiQueries;
-</test-suite>
+<test-group name="external-library-python-cloud">
+  <test-case FilePath="external-library">
+    <compilation-unit name="py_library_list">
+      <output-dir compare="Text">py_library_list</output-dir>
+      <expected-error>405 Method Not Allowed</expected-error>
+    </compilation-unit>
+  </test-case>
+</test-group>

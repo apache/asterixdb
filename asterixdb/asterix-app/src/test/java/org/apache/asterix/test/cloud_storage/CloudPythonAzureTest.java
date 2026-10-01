@@ -68,7 +68,7 @@ import reactor.netty.http.client.HttpClient;
 public class CloudPythonAzureTest {
 
     private final TestCaseContext tcCtx;
-    private static final String SUITE_TESTS = "testsuite_it_python.xml";
+    private static final String SUITE_TESTS = "testsuite_it_python_cloud.xml";
     private static final String ONLY_TESTS = "testsuite_cloud_storage_only.xml";
     private static final String DELTA_RESULT_PATH = "results_cloud";
     public static final String CONFIG_FILE_TEMPLATE = "src/test/resources/cc-cloud-storage-azblob.ftl";

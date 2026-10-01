@@ -16,28 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.external;
 
-import java.io.IOException;
-
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.commons.lang3.tuple.Pair;
-
-public interface IExternalUDFLibrarian {
-    public enum SocketType {
-        LOOPBACK,
-        DOMAIN
-    }
-
-    void install(String path, String type, String libPath, Pair<String, String> credentials) throws Exception;
-
-    void uninstall(String path, Pair<String, String> credentials) throws IOException, AsterixException;
-
-    /**
-     * @return the body of a successful GET of the library listing at {@code path}
-     * @throws AsterixException if the listing is refused
-     */
-    String list(String path, Pair<String, String> credentials) throws Exception;
-
-    SocketType getSocketType();
-}
+drop  dataverse pylistlib if exists;
+create  dataverse pylistlib;

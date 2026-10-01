@@ -47,6 +47,7 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 
 import io.netty.buffer.ByteBufInputStream;
+import io.netty.handler.codec.http.HttpMethod;
 
 public class NCUdfDSApiServlet extends AbstractNCUdfServlet {
 
@@ -99,6 +100,13 @@ public class NCUdfDSApiServlet extends AbstractNCUdfServlet {
     @Override
     protected boolean isRequestPermitted(IServletRequest request, IServletResponse response) throws IOException {
         return true;
+    }
+
+    @Override
+    protected void get(IServletRequest request, IServletResponse response) throws Exception {
+        // TODO: the listing does not reflect the libraries installed in cloud storage; refuse it until it does
+        //       any other path in GET is irrelevant in cloud mode
+        methodNotAllowed(HttpMethod.GET, response);
     }
 
     @Override

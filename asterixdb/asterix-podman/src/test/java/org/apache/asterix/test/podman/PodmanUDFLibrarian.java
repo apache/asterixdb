@@ -72,6 +72,14 @@ public class PodmanUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
+    public String list(String path, Pair<String, String> credentials) throws Exception {
+        Container.ExecResult curlResult = asterix.execInContainer("curl", "--no-progress-meter", "-u",
+                credentials.getLeft() + ":" + credentials.getRight(), "http://localhost:19004" + path);
+        handleResponse(curlResult);
+        return curlResult.getStdout();
+    }
+
+    @Override
     public SocketType getSocketType() {
         // install()/uninstall() build their own "http://localhost:19004" + path URL for curl to run
         // inside the container, so TestExecutor must hand us the bare path, not a fully-qualified URI.

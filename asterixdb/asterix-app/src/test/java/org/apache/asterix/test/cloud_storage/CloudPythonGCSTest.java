@@ -64,7 +64,7 @@ import com.google.cloud.storage.StorageOptions;
 public class CloudPythonGCSTest {
 
     private final TestCaseContext tcCtx;
-    private static final String SUITE_TESTS = "testsuite_it_python.xml";
+    private static final String SUITE_TESTS = "testsuite_it_python_cloud.xml";
     private static final String ONLY_TESTS = "testsuite_cloud_storage_only.xml";
     private static final String DELTA_RESULT_PATH = "results_cloud";
     private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage-gcs-python.conf";
