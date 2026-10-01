@@ -137,7 +137,7 @@ public class VectorDistanceScalarEvaluator implements IScalarEvaluator {
             if (listAccessorLeft.size() != listAccessorRight.size() || listAccessorLeft.size() == 0
                     || listAccessorRight.size() == 0) {
                 ExceptionUtil.warnFunctionEvalFailed(ctx, sourceLoc, funcId,
-                        "vector distance expects equal-length non-empty arrays");
+                        "vector distance expects equal-length non-empty numeric arrays");
                 PointableHelper.setNull(result);
                 return;
             }
@@ -153,7 +153,7 @@ public class VectorDistanceScalarEvaluator implements IScalarEvaluator {
 
             if (Double.isNaN(distanceCal)) {
                 ExceptionUtil.warnFunctionEvalFailed(ctx, sourceLoc, funcId,
-                        "vector distance expects equal-length non-empty arrays");
+                        "vector distance expects equal-length non-empty numeric arrays");
                 PointableHelper.setNull(result);
                 return;
             }

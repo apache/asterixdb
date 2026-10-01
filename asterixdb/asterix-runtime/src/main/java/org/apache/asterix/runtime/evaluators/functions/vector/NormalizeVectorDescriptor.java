@@ -117,8 +117,7 @@ public class NormalizeVectorDescriptor extends AbstractScalarFunctionDynamicDesc
                 if (!decoder.checkListType(valuePtr)) {
                     ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funcId,
                             valuePtr.getByteArray()[valuePtr.getStartOffset()], 0,
-                            new byte[] { ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
-                                    ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG });
+                            new byte[] { ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG });
                     PointableHelper.setNull(result);
                     return;
                 }

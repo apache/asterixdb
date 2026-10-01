@@ -28,7 +28,7 @@
             <!-- Empty list. -->
             <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize-vector expects a non-empty numeric list</expected-warn>
             <!-- Non-list argument. -->
-            <expected-warn>Type mismatch: function normalize-vector expects its 1st input parameter to be of type array or multiset, but the actual input type is string</expected-warn>
+            <expected-warn>Type mismatch: function normalize-vector expects its 1st input parameter to be of type array, but the actual input type is string</expected-warn>
             <!-- Mixed, zero, NaN, INF, null element, nested, all-string: non-numeric → NaN → zero/non-finite path. -->
             <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
             <expected-warn>Function 'normalize-vector' failed to evaluate because: normalize vector expects equal-length non-empty arrays</expected-warn>
