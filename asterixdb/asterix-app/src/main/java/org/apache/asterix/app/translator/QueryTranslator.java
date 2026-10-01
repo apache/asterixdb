@@ -6117,7 +6117,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams,
                 requestParameters, resultMetadata, null);
         final CompiledPlan compiledPlan = apiFramework.getLastCompiledPlan();
-        if (cacheKey == null || compiledPlan == null) {
+        // the key is resolved before rewriting, but a rewrite can opt this statement out of the cache (e.g. a
+        // CLUSTER BY whose seed was drawn at compile time), so the plan must not be cached under that key
+        if (cacheKey == null || compiledPlan == null || isIgnoreCache(metadataProvider, requestParameters)) {
             return new CacheMissResult(jobSpec, null);
         }
         final Set<Warning> warnings = new LinkedHashSet<>();
