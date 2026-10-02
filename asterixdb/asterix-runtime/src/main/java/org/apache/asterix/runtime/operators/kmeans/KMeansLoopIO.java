@@ -370,6 +370,102 @@ public final class KMeansLoopIO {
     }
 
     /**
+     * Writes the payload column: each resident row's other columns, byte for byte, aligned with the vector run
+     * file (entry {@code i} is vector {@code i}), for the Lloyd loop to emit with the row's label.
+     */
+    public static final class PayloadColumnWriter {
+        private final MaterializerTaskState state;
+        private final VSizeFrame frame;
+        private final FrameTupleAppender appender;
+        private final ArrayTupleBuilder tb;
+        private final int[] columns;
+
+        public PayloadColumnWriter(MaterializerTaskState state, IHyracksTaskContext ctx, int[] columns)
+                throws HyracksDataException {
+            this.state = state;
+            this.frame = new VSizeFrame(ctx);
+            this.appender = new FrameTupleAppender(frame);
+            this.tb = new ArrayTupleBuilder(columns.length);
+            this.columns = columns;
+        }
+
+        /** Appends tuple {@code tIndex}'s payload columns. */
+        public void append(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+            tb.reset();
+            for (int column : columns) {
+                tb.addField(accessor, tIndex, column);
+            }
+            if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                flushFrame();
+                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                    throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE,
+                            "a row's payload is too large to fit in a frame");
+                }
+            }
+        }
+
+        /** Flushes and closes the writer; readers open their own handles. */
+        public void finish() throws HyracksDataException {
+            if (appender.getTupleCount() > 0) {
+                flushFrame();
+            }
+            state.close();
+        }
+
+        private void flushFrame() throws HyracksDataException {
+            ByteBuffer buffer = frame.getBuffer();
+            buffer.position(0);
+            buffer.limit(buffer.capacity());
+            state.appendFrame(buffer);
+            appender.reset(frame, true);
+        }
+    }
+
+    /**
+     * Sequential reader over a {@link PayloadColumnWriter} column, one entry per vector.
+     */
+    public static final class PayloadColumnReader implements AutoCloseable {
+        private final FrameTupleAccessor accessor;
+        private final VSizeFrame frame;
+        private final RunFileReader reader;
+        private final int fieldCount;
+        private int tupleIndex = -1;
+        private int tupleCount;
+
+        public PayloadColumnReader(MaterializerTaskState state, IHyracksTaskContext ctx, int fieldCount)
+                throws HyracksDataException {
+            this.accessor = new FrameTupleAccessor(new RecordDescriptor(new ISerializerDeserializer[fieldCount]));
+            this.fieldCount = fieldCount;
+            this.frame = new VSizeFrame(ctx);
+            this.reader = state.createReader();
+            reader.open();
+        }
+
+        public void advance() throws HyracksDataException {
+            while (++tupleIndex >= tupleCount) {
+                if (!reader.nextFrame(frame)) {
+                    throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE,
+                            "the payload column is shorter than the vectors it belongs to");
+                }
+                accessor.reset(frame.getBuffer());
+                tupleCount = accessor.getTupleCount();
+                tupleIndex = -1;
+            }
+        }
+
+        public void copyInto(ArrayTupleBuilder tb) throws HyracksDataException {
+            for (int f = 0; f < fieldCount; f++) {
+                tb.addField(accessor, tupleIndex, f);
+            }
+        }
+
+        @Override
+        public void close() throws HyracksDataException {
+            reader.close();
+        }
+    }
+
+    /**
      * Anything that can replay a sequence of raw vectors in a fixed order: a run file, or the centroid store.
      * The scans below need only that, and the order they replay in is what makes their results reproducible.
      */

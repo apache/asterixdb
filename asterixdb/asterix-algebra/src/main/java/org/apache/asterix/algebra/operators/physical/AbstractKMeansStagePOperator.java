@@ -37,8 +37,9 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.api.exceptions.ErrorCode;
 
 /**
- * What the CLUSTER BY k-means|| stages share, whatever they compute: they are blocking, they emit only the
- * candidate variable, and each of their inputs delivers exactly one column. The stage a query actually runs is
+ * What the CLUSTER BY k-means|| stages share, whatever they compute: they are blocking, they emit only what
+ * the logical operator declares (the candidate variable, plus the labelled rows' own variables for the Lloyd
+ * loop), and each of their inputs delivers one vector column. The stage a query actually runs is
  * chosen by {@code SetAsterixPhysicalOperatorsRule} from the logical operator's mode, one subclass per
  * stage as the join and group-by families do, so an input arity or a partitioning requirement is a property
  * of the class.
@@ -61,9 +62,9 @@ public abstract class AbstractKMeansStagePOperator extends AbstractPhysicalOpera
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
-        // The output is partitioned like input 0 but carries ONLY the candidate variable: claiming the
-        // child's delivered properties would advertise partitioning on variables this operator drops,
-        // forcing the enforcer to insert bogus re-partitioning (e.g. hashing the candidate array).
+        // The output is partitioned like input 0 but carries only what the stage emits: claiming the child's
+        // delivered properties would advertise partitioning on variables this operator drops, forcing the
+        // enforcer to insert bogus re-partitioning (e.g. hashing the candidate array).
         // An unpartitioned stage delivers UNPARTITIONED, as GROUP BY over an unpartitioned input would.
         deliveredProperties =
                 unpartitioned(op) ? new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED, null)

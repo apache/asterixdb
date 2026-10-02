@@ -121,6 +121,7 @@ public final class KMeansVectorCodec {
         private final ArrayBackedValueStorage itemStorage = new ArrayBackedValueStorage();
         private final ArrayBackedValueStorage vecStorage = new ArrayBackedValueStorage();
         private final AOrderedListType openList = new AOrderedListType(BuiltinType.ANY, null);
+        private final VectorListWriter vectorList = new VectorListWriter();
 
         public PoolEnvelopeWriter(IHyracksTaskContext ctx, IFrameWriter writer) throws HyracksDataException {
             this.writer = writer;
@@ -167,19 +168,9 @@ public final class KMeansVectorCodec {
          * a centroid set and what a plain-vector consumer decodes.
          */
         public void plainVector(double[] vec) throws HyracksDataException {
-            try {
-                tb.reset();
-                vecBuilder.reset(openList);
-                for (double d : vec) {
-                    addDoubleItem(vecBuilder, d);
-                }
-                vecBuilder.write(tb.getDataOutput(), true);
-                tb.addFieldEndOffset();
-                FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
-                        tb.getSize());
-            } catch (Exception e) {
-                throw HyracksDataException.create(e);
-            }
+            tb.reset();
+            vectorList.addField(tb, vec);
+            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         }
 
         public void flush() throws HyracksDataException {
@@ -192,6 +183,33 @@ public final class KMeansVectorCodec {
                 itemStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                 itemStorage.getDataOutput().writeDouble(value);
                 builder.addItem(itemStorage);
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
+            }
+        }
+    }
+
+    /**
+     * Serializes a vector as the open ordered list of tagged doubles a plain-vector consumer decodes, as one
+     * field of a tuple; {@link PoolEnvelopeWriter#plainVector} is this on a single-field tuple.
+     */
+    public static final class VectorListWriter {
+        private final OrderedListBuilder vecBuilder = new OrderedListBuilder();
+        private final ArrayBackedValueStorage itemStorage = new ArrayBackedValueStorage();
+        private final AOrderedListType openList = new AOrderedListType(BuiltinType.ANY, null);
+
+        /** Appends {@code vec} as one list-valued field of {@code tb}. */
+        public void addField(ArrayTupleBuilder tb, double[] vec) throws HyracksDataException {
+            try {
+                vecBuilder.reset(openList);
+                for (double d : vec) {
+                    itemStorage.reset();
+                    itemStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
+                    itemStorage.getDataOutput().writeDouble(d);
+                    vecBuilder.addItem(itemStorage);
+                }
+                vecBuilder.write(tb.getDataOutput(), true);
+                tb.addFieldEndOffset();
             } catch (Exception e) {
                 throw HyracksDataException.create(e);
             }

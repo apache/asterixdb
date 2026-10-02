@@ -234,10 +234,9 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitKMeansStageOperator(KMeansStageOperator op, Void arg) throws AlgebricksException {
-        // Produced variables only: the operator consumes its input tuples and emits one new column, which is
-        // what recomputeSchema and the propagation policy both say. standardLayout would additionally report
-        // the inputs' live variables, which are gone by then. Same shape as visitAggregateOperator.
-        VariableUtilities.getProducedVariables(op, schemaVariables);
+        // What the operator emits, as recomputeSchema and the propagation policy say; standardLayout would
+        // also report the inputs' live variables, which are gone by then.
+        op.getOutputVariables(schemaVariables);
         return null;
     }
 

@@ -327,6 +327,9 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
             usedVariables.add(op.getVectorVariable());
         }
         usedVariables.add(op.getPoolVariable());
+        // Always used, even when not on the input: otherwise IntroduceProjectsRule, seeing an unread row
+        // variable, projects the inputs down and drops the vector and pool.
+        usedVariables.addAll(op.getRowVariables());
         return null;
     }
 

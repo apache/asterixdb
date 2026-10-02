@@ -64,8 +64,8 @@ public class KMeansOversampleLoopPOperator extends AbstractKMeansLoopPOperator {
 
     @Override
     protected void contributeLoop(IHyracksJobBuilder builder, KMeansStageOperator kop, AbstractLogicalOperator op,
-            RecordDescriptor poolEnvelopeRecDesc, int vectorColumn, int seedColumn, String[] clusterLocations,
-            ILogicalOperator src0, ILogicalOperator src1) throws AlgebricksException {
+            RecordDescriptor poolEnvelopeRecDesc, int vectorColumn, int[] payloadColumns, int seedColumn,
+            String[] clusterLocations, ILogicalOperator src0, ILogicalOperator src1) throws AlgebricksException {
         JobSpecification spec = builder.getJobSpec();
         // Unique + stable per loop instance (one per query); baked into all five descriptors so every partition
         // and NC agrees on the joblet-state keys.
@@ -76,8 +76,8 @@ public class KMeansOversampleLoopPOperator extends AbstractKMeansLoopPOperator {
         // Op1 Cost/Controller is the registered descriptor: inputs land here, and output 0 carries the
         // weighed partials the downstream RECLUSTER reduces.
         KMeansCostControllerOperatorDescriptor op1 = new KMeansCostControllerOperatorDescriptor(spec,
-                poolEnvelopeRecDesc, KMeansLoopIO.SIGMA_RD, loopKey, handOffVectors, vectorColumn, seedColumn,
-                kop.getLoopRounds(), framesLimit(), kop.getDimension(), metricOf(kop));
+                poolEnvelopeRecDesc, KMeansLoopIO.SIGMA_RD, loopKey, handOffVectors, vectorColumn, payloadColumns,
+                seedColumn, kop.getLoopRounds(), framesLimit(), kop.getDimension(), metricOf(kop));
         contributeOpDesc(builder, op, op1);
         builder.contributeGraphEdge(src0, 0, op, 0);
         builder.contributeGraphEdge(src1, 0, op, 1);

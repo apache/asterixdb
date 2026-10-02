@@ -312,8 +312,7 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitKMeansStageOperator(KMeansStageOperator op, Void arg) throws AlgebricksException {
-        // The output is a candidate set sized by the requested cluster count, not by how many rows came in,
-        // so the input's cardinality says nothing about it.
+        // A candidate set sized by k, or (Lloyd) the rows it could place: neither follows from the input.
         return UNKNOWN;
     }
 

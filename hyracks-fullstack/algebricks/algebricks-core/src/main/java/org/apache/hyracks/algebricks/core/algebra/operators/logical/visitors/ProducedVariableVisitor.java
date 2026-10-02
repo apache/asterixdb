@@ -233,6 +233,9 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
     @Override
     public Void visitKMeansStageOperator(KMeansStageOperator op, Void arg) throws AlgebricksException {
         producedVariables.add(op.getCandidateVariable());
+        if (op.emitsRows() && op.getLabelCentroidVariable() != null) {
+            producedVariables.add(op.getLabelCentroidVariable());
+        }
         return null;
     }
 

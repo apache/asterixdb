@@ -52,8 +52,8 @@ public class KMeansLloydLoopPOperator extends AbstractKMeansLoopPOperator {
 
     @Override
     protected void contributeLoop(IHyracksJobBuilder builder, KMeansStageOperator kop, AbstractLogicalOperator op,
-            RecordDescriptor centroidRecDesc, int vectorColumn, int centroidColumn, String[] clusterLocations,
-            ILogicalOperator src0, ILogicalOperator src1) throws AlgebricksException {
+            RecordDescriptor labelledRecDesc, int vectorColumn, int[] payloadColumns, int centroidColumn,
+            String[] clusterLocations, ILogicalOperator src0, ILogicalOperator src1) throws AlgebricksException {
         JobSpecification spec = builder.getJobSpec();
         // Unique + stable per loop instance, and distinct from any oversampling loop's key in the same job.
         String loopKey = "kmeansLloydLoop#" + kop.getCandidateVariable().getId();
@@ -62,9 +62,10 @@ public class KMeansLloydLoopPOperator extends AbstractKMeansLoopPOperator {
                 : KMeansOversampleLoopPOperator.loopKeyOf(kop.getVectorStoreVariable());
         int participants = clusterLocations.length;
 
-        KMeansLloydControllerOperatorDescriptor op1 = new KMeansLloydControllerOperatorDescriptor(spec, centroidRecDesc,
-                KMeansLoopIO.PARTIAL_RD, loopKey, sharedVectorsKey, vectorColumn, centroidColumn, kop.getLoopRounds(),
-                kop.getTopCount(), framesLimit(), kop.getDimension(), metricOf(kop));
+        KMeansLloydControllerOperatorDescriptor op1 = new KMeansLloydControllerOperatorDescriptor(spec, labelledRecDesc,
+                KMeansLoopIO.PARTIAL_RD, loopKey, sharedVectorsKey, vectorColumn, payloadColumns,
+                kop.getLabelCentroidVariable() != null, centroidColumn, kop.getLoopRounds(), kop.getTopCount(),
+                framesLimit(), kop.getDimension(), metricOf(kop));
         contributeOpDesc(builder, op, op1);
         builder.contributeGraphEdge(src0, 0, op, 0);
         builder.contributeGraphEdge(src1, 0, op, 1);

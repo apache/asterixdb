@@ -93,6 +93,12 @@ public abstract class AbstractKMeansLoopPOperator extends AbstractKMeansStagePOp
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         int vectorColumn = resolveSingleColumn(inputSchemas[0], kop.getVectorVariable());
         int poolColumn = resolveSingleColumn(inputSchemas[1], kop.getPoolVariable());
+        // Resolved only for the stage that stores the rows; a stage reading another's store needs the count.
+        int[] payloadColumns = new int[kop.getRowVariables().size()];
+        for (int i = 0; i < payloadColumns.length; i++) {
+            payloadColumns[i] =
+                    kop.storesRows() ? resolveSingleColumn(inputSchemas[0], kop.getRowVariables().get(i)) : -1;
+        }
         String[] clusterLocations =
                 ((MetadataProvider) context.getMetadataProvider()).getClusterLocations().getLocations();
         // A single-instance loop has one participant; the entry only sizes the loop, placement is by count-1
@@ -100,8 +106,8 @@ public abstract class AbstractKMeansLoopPOperator extends AbstractKMeansStagePOp
         if (unpartitioned(op)) {
             clusterLocations = new String[] { clusterLocations[0] };
         }
-        contributeLoop(builder, kop, (AbstractLogicalOperator) op, recDesc, vectorColumn, poolColumn, clusterLocations,
-                op.getInputs().get(0).getValue(), op.getInputs().get(1).getValue());
+        contributeLoop(builder, kop, (AbstractLogicalOperator) op, recDesc, vectorColumn, payloadColumns, poolColumn,
+                clusterLocations, op.getInputs().get(0).getValue(), op.getInputs().get(1).getValue());
     }
 
     /**
@@ -111,6 +117,7 @@ public abstract class AbstractKMeansLoopPOperator extends AbstractKMeansStagePOp
      * final sink as a job root so its branch is scheduled.
      */
     protected abstract void contributeLoop(IHyracksJobBuilder builder, KMeansStageOperator kop,
-            AbstractLogicalOperator op, RecordDescriptor recDesc, int vectorColumn, int poolColumn,
-            String[] clusterLocations, ILogicalOperator src0, ILogicalOperator src1) throws AlgebricksException;
+            AbstractLogicalOperator op, RecordDescriptor recDesc, int vectorColumn, int[] payloadColumns,
+            int poolColumn, String[] clusterLocations, ILogicalOperator src0, ILogicalOperator src1)
+            throws AlgebricksException;
 }

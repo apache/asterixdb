@@ -113,6 +113,13 @@ public final class LoopControlState extends AbstractStateObject {
     }
 
     /**
+     * The joblet-state id of this partition's payload column, aligned with the resident-vector run file.
+     */
+    public static Object payloadStateId(String loopKey, int partition) {
+        return loopKey + "#payload#" + partition;
+    }
+
+    /**
      * The joblet-state id of this partition's per-round score column, written by Op1 and read by Op3. Replaced
      * each round: the loop is strictly ordered, so Op3 has finished round r-1 before Op1 starts round r.
      */

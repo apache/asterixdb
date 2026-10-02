@@ -38,6 +38,5 @@ public class AsterixInlineVariablesRule extends InlineVariablesRule {
         doNotInlineFuncs.add(BuiltinFunctions.CREATE_POINT);
         doNotInlineFuncs.add(BuiltinFunctions.CREATE_POLYGON);
         doNotInlineFuncs.add(BuiltinFunctions.CREATE_RECTANGLE);
-        doNotInlineFuncs.add(BuiltinFunctions.NEAREST_CENTROID);
     }
 }

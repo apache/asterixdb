@@ -660,7 +660,6 @@ import org.apache.asterix.runtime.evaluators.functions.vector.DotDistanceDescrip
 import org.apache.asterix.runtime.evaluators.functions.vector.DotProductDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.vector.EuclideanDistanceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.vector.EuclideanSquaredDistanceDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.vector.NearestCentroidDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.vector.NormalizeVectorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.vector.VectorShuffleKeyDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.DenseRankRunningAggregateDescriptor;
@@ -1365,7 +1364,6 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(DotDistanceDescriptor.FACTORY);
         fc.add(NormalizeVectorDescriptor.FACTORY);
 
-        fc.add(NearestCentroidDescriptor.FACTORY);
         fc.add(VectorShuffleKeyDescriptor.FACTORY);
 
         // Type functions.

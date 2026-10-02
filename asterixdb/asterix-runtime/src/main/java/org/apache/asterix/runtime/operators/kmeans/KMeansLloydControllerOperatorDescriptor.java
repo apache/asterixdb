@@ -20,10 +20,17 @@
 package org.apache.asterix.runtime.operators.kmeans;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AMutableInt32;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -32,6 +39,7 @@ import org.apache.hyracks.api.dataflow.IActivityGraphBuilder;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -51,8 +59,9 @@ import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
 import org.apache.hyracks.dataflow.std.misc.SinkOperatorNodePushable;
 
 /**
- * The Lloyd loop head: materializes this partition's vectors once (or reads the oversampling loop's file), then
- * runs every refinement iteration against them without leaving the operator.
+ * The Lloyd loop head: materializes this partition's vectors and payload columns once -- or, when seeded by
+ * k-means||, reads the oversampling loop's files and stores nothing -- runs every refinement iteration against
+ * them without leaving the operator, then emits every row labelled with its cluster id (output 0).
  * <p>
  * An iteration is one assignment pass: each resident vector is charged to its nearest current centroid, and the
  * partition emits one {@code (count, sum)} partial per centroid that attracted anything. The reduce that turns
@@ -73,16 +82,30 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
     private static final int STORE_VECTORS_ACTIVITY_ID = 0;
     private static final int STORE_CENTROIDS_ACTIVITY_ID = 1;
     private static final int LLOYD_LOOP_ACTIVITY_ID = 2;
-    private static final int OUT_CENTROIDS = 0; // the final centroid set (plain vectors), downstream
+    private static final int OUT_ROWS = 0; // the labelled rows: payload columns, cluster id[, centroid]
     private static final int OUT_PARTIALS = 1; // per-iteration (count, sum) partials -> CentroidMerge
+    /** The ADM order of two arrays of doubles: element by element, then the shorter first. */
+    private static final Comparator<double[]> LEXICOGRAPHIC = (a, b) -> {
+        for (int i = 0; i < a.length && i < b.length; i++) {
+            int c = Double.compare(a[i], b[i]);
+            if (c != 0) {
+                return c;
+            }
+        }
+        return Integer.compare(a.length, b.length);
+    };
     private final String loopKey;
     // Key of the oversampling loop whose vector file this loop reads, or null. Both loops run on the same
     // locations; each partition file set covers the input once, which is all the update needs.
     private final String sharedVectorsKey;
     private final int vectorColumn; // vector column in input 0
+    // Input-0 columns emitted ahead of the cluster id.
+    private final int[] payloadColumns;
+    // Whether each row also carries its centroid after the cluster id.
+    private final boolean emitCentroid;
     private final int centroidColumn; // vector column in input 1 (the initial centroids)
     private final int iterations;
-    // The k the query asked for; the final centroid count is checked against it (see emitFinalCentroids).
+    // The k the query asked for; the final centroid count is checked against it (see labelRows).
     private final int numClusters;
     private final int framesLimit; // budget for the scan block, the slot window and the centroid stream
     // The declared Dimension, enforced by the decoders (see KMeansVectorCodec.ListVectorDecoder).
@@ -91,21 +114,23 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
     // centroid update, so only ones the algorithm can converge under reach here.
     private final VectorSimilarityMetric metric;
 
-    public KMeansLloydControllerOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor centroidRecDesc,
+    public KMeansLloydControllerOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor labelledRecDesc,
             RecordDescriptor partialRecDesc, String loopKey, String sharedVectorsKey, int vectorColumn,
-            int centroidColumn, int iterations, int numClusters, int framesLimit, int dimension,
-            VectorSimilarityMetric metric) {
+            int[] payloadColumns, boolean emitCentroid, int centroidColumn, int iterations, int numClusters,
+            int framesLimit, int dimension, VectorSimilarityMetric metric) {
         super(spec, 2, 2);
         this.metric = metric;
         this.loopKey = loopKey;
         this.sharedVectorsKey = sharedVectorsKey;
         this.vectorColumn = vectorColumn;
+        this.payloadColumns = payloadColumns;
+        this.emitCentroid = emitCentroid;
         this.centroidColumn = centroidColumn;
         this.iterations = iterations;
         this.numClusters = numClusters;
         this.framesLimit = framesLimit;
         this.dimension = dimension;
-        outRecDescs[OUT_CENTROIDS] = centroidRecDesc;
+        outRecDescs[OUT_ROWS] = labelledRecDesc;
         outRecDescs[OUT_PARTIALS] = partialRecDesc;
     }
 
@@ -120,15 +145,15 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
         builder.addActivity(this, storeCentroids);
         builder.addSourceEdge(1, storeCentroids, 0);
         builder.addActivity(this, loop);
-        builder.addTargetEdge(OUT_CENTROIDS, loop, OUT_CENTROIDS);
+        builder.addTargetEdge(OUT_ROWS, loop, OUT_ROWS);
         builder.addTargetEdge(OUT_PARTIALS, loop, OUT_PARTIALS);
         builder.addBlockingEdge(storeVectors, loop);
         builder.addBlockingEdge(storeCentroids, loop);
     }
 
     /**
-     * Materializes the partition's resident vectors into a raw-double run file for repeated re-streaming. With a
-     * shared vector file, the input is drained unread.
+     * Materializes the partition's resident vectors into a raw-double run file for repeated re-streaming, with
+     * the payload columns beside it. With a shared vector file, the input is drained unread.
      */
     private final class StoreVectorsActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
@@ -151,6 +176,8 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                         new KMeansVectorCodec.ListVectorDecoder(dimension);
                 private final ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
                 private MaterializerTaskState state;
+                private MaterializerTaskState payloadState; // null without payload columns
+                private KMeansLoopIO.PayloadColumnWriter payload;
                 private VSizeFrame frame;
                 private FrameTupleAppender appender;
 
@@ -159,6 +186,11 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                     state = LoopControlState.sharedRunFile(ctx, LoopControlState.vectorsStateId(loopKey, partition));
                     frame = new VSizeFrame(ctx);
                     appender = new FrameTupleAppender(frame);
+                    if (payloadColumns.length > 0) {
+                        payloadState = LoopControlState.sharedRunFile(ctx,
+                                LoopControlState.payloadStateId(loopKey, partition));
+                        payload = new KMeansLoopIO.PayloadColumnWriter(payloadState, ctx, payloadColumns);
+                    }
                 }
 
                 @Override
@@ -187,6 +219,9 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                                         "a vector is too large to fit in a frame");
                             }
                         }
+                        if (payload != null) {
+                            payload.append(accessor, i); // entry i of both files is the same row
+                        }
                     }
                 }
 
@@ -205,15 +240,24 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                     flushToState();
                     // Fully written; readers open their own independent handles via createReader.
                     state.close();
+                    if (payload != null) {
+                        payload.finish();
+                        ctx.setStateObject(payloadState);
+                    }
                     ctx.setStateObject(state);
                 }
 
                 @Override
                 public void fail() throws HyracksDataException {
                     // Created in open(), registered only in close(): on this path nothing else will close or
-                    // delete it, and the loop that would read it never runs.
-                    KMeansLoopIO.discard(state);
-                    state = null;
+                    // delete them, and the loop that would read them never runs.
+                    try {
+                        KMeansLoopIO.discard(state);
+                    } finally {
+                        state = null;
+                        KMeansLoopIO.discard(payloadState);
+                        payloadState = null;
+                    }
                 }
             };
         }
@@ -260,7 +304,7 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                         double[] centroid = decoder.decode(tuple, centroidColumn);
                         if (centroid == null) {
                             // Skip, not raise: under init_mode "random" this input is raw user rows, where a
-                            // bad value is ordinary input. Dropping it shrinks k, which emitFinalCentroids
+                            // bad value is ordinary input. Dropping it shrinks k, which labelRows
                             // reports.
                             if (ctx.getWarningCollector().shouldWarn()) {
                                 ctx.getWarningCollector()
@@ -345,47 +389,56 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
 
                 @Override
                 public void initialize() throws HyracksDataException {
-                    final IFrameWriter centroidWriter = writers[OUT_CENTROIDS];
+                    final IFrameWriter rowWriter = writers[OUT_ROWS];
                     final IFrameWriter partialWriter = writers[OUT_PARTIALS];
-                    centroidWriter.open();
+                    rowWriter.open();
                     partialWriter.open();
                     // Held outside the try so the finally can release the centroid handoff on every path. The
                     // loop is over by then either way, and nothing reads the store after this activity ends.
                     LoopControlState control = null;
                     MaterializerTaskState vectorState = null;
+                    MaterializerTaskState payloadState = null;
                     try {
                         // Registered by the store activities, which addBlockingEdge (contributeActivities) joins
                         // ahead of this activity -- so these are already present; no wait is warranted.
                         control = (LoopControlState) LoopControlState.required(ctx,
                                 LoopControlState.controlStateId(loopKey, partition));
-                        // A shared file is complete: the oversampling loop finished before it seeded this loop.
-                        vectorState = (MaterializerTaskState) LoopControlState.required(ctx, LoopControlState
-                                .vectorsStateId(sharedVectorsKey != null ? sharedVectorsKey : loopKey, partition));
+                        // A shared file is complete and registered: its store activity closed before the
+                        // oversampling loop ran, whose output seeded this loop's StoreCentroids, which this activity
+                        // is ordered behind. It is left for this loop to delete.
+                        String storeKey = sharedVectorsKey != null ? sharedVectorsKey : loopKey;
+                        vectorState = (MaterializerTaskState) LoopControlState.required(ctx,
+                                LoopControlState.vectorsStateId(storeKey, partition));
+                        if (payloadColumns.length > 0) {
+                            payloadState = (MaterializerTaskState) LoopControlState.required(ctx,
+                                    LoopControlState.payloadStateId(storeKey, partition));
+                        }
                         runLoop(control, vectorState, partialWriter);
-                        // The last iteration was the vectors' last reader; the final emit reads only the
-                        // centroid store, so the (input-sized) vector file can go before it.
-                        KMeansLoopIO.discard(vectorState);
-                        emitFinalCentroids(control, centroidWriter, partition);
+                        labelRows(control, vectorState, payloadState, rowWriter);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        centroidWriter.fail();
+                        rowWriter.fail();
                         partialWriter.fail();
                         throw HyracksDataException.create(e);
                     } catch (Exception e) {
-                        centroidWriter.fail();
+                        rowWriter.fail();
                         partialWriter.fail();
                         throw HyracksDataException.create(e);
                     } finally {
                         try {
                             try {
-                                KMeansLoopIO.discard(vectorState); // no-op when already deleted above
+                                KMeansLoopIO.discard(vectorState);
                             } finally {
-                                if (control != null) {
-                                    control.getCentroids().destroy();
+                                try {
+                                    KMeansLoopIO.discard(payloadState);
+                                } finally {
+                                    if (control != null) {
+                                        control.getCentroids().destroy();
+                                    }
                                 }
                             }
                         } finally {
-                            centroidWriter.close();
+                            rowWriter.close();
                             partialWriter.close();
                         }
                     }
@@ -466,22 +519,22 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                 }
 
                 /**
-                 * The loop's result. Every partition holds the same set (it was broadcast), so one partition
-                 * speaks — matching the single-node reduce this replaces, whose output likewise had one origin.
+                 * Labels this partition's rows: the cluster id is the position of the nearest centroid in the
+                 * final set ordered by value (ADM array order), ties to the first, so ids do not depend on the
+                 * order the loop produced the set in. The set is the same on every partition (it was broadcast).
+                 * It is held in the heap for the sort (k x dim, outside the frame budget).
                  */
-                private void emitFinalCentroids(LoopControlState control, IFrameWriter centroidWriter, int partition)
-                        throws HyracksDataException {
-                    if (partition != 0) {
-                        return;
-                    }
+                private void labelRows(LoopControlState control, MaterializerTaskState vectorState,
+                        MaterializerTaskState payloadState, IFrameWriter rowWriter) throws HyracksDataException {
                     CentroidStore finalCentroids = control.getCentroids();
                     // A backstop, not the primary report. When the input has fewer distinct vectors than k,
                     // RECLUSTER says so and names that count -- it is the only stage that knows it. What
                     // reaches here is what SURVIVED: initMode "random" seeds Lloyd directly and has no
                     // RECLUSTER to warn for it, and a cluster can also lose every row during refinement.
                     // Neither says how many distinct vectors the input holds, so this claims nothing about
-                    // that; like RECLUSTER it warns and returns the clusters that do exist.
-                    if (finalCentroids.size() < numClusters && ctx.getWarningCollector().shouldWarn()) {
+                    // that; like RECLUSTER it warns and returns the clusters that do exist. Partition 0 only.
+                    if (partition == 0 && finalCentroids.size() < numClusters
+                            && ctx.getWarningCollector().shouldWarn()) {
                         int remaining = finalCentroids.size();
                         ctx.getWarningCollector().warn(Warning.of(null, ErrorCode.CLUSTER_BY_INVALID_INPUT,
                                 "NumClusters is " + numClusters + " but only " + remaining + " cluster(s) remain"
@@ -489,10 +542,63 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                                                 : ": the input yielded fewer starting centroids, or a cluster"
                                                         + " lost every row during refinement")));
                     }
-                    KMeansVectorCodec.PoolEnvelopeWriter out =
-                            new KMeansVectorCodec.PoolEnvelopeWriter(ctx, centroidWriter);
-                    finalCentroids.stream(ctx, out::plainVector);
-                    out.flush();
+                    if (finalCentroids.size() == 0) {
+                        return; // no centroid to place a row by: no clusters
+                    }
+                    final List<double[]> byValue = new ArrayList<>(finalCentroids.size());
+                    finalCentroids.stream(ctx, byValue::add);
+                    byValue.sort(LEXICOGRAPHIC);
+
+                    final FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
+                    final ArrayTupleBuilder tb = new ArrayTupleBuilder(payloadColumns.length + (emitCentroid ? 2 : 1));
+                    final KMeansLoopIO.PayloadColumnReader payload = payloadState == null ? null
+                            : new KMeansLoopIO.PayloadColumnReader(payloadState, ctx, payloadColumns.length);
+                    final KMeansVectorCodec.VectorListWriter centroidWriter = new KMeansVectorCodec.VectorListWriter();
+                    final AMutableInt32 cid = new AMutableInt32(0);
+                    @SuppressWarnings("unchecked")
+                    final ISerializerDeserializer<AInt32> cidSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+                    try {
+                        // Both files are in the same order, so they advance in lockstep.
+                        KMeansLoopIO.streamScoredAgainstPool(KMeansLoopIO.source(vectorState, ctx), sink -> {
+                            for (double[] centroid : byValue) {
+                                sink.accept(centroid);
+                            }
+                        }, ctx, framesLimit, KMeansLoopIO.distanceFunction(metric), (vecs, n, nearest, nearestIdx) -> {
+                            for (int i = 0; i < n; i++) {
+                                if (payload != null) {
+                                    payload.advance();
+                                }
+                                // No finite distance to any centroid: the row is not placed.
+                                if (nearestIdx[i] < 0) {
+                                    if (ctx.getWarningCollector().shouldWarn()) {
+                                        ctx.getWarningCollector()
+                                                .warn(Warning.of(null, ErrorCode.CLUSTER_BY_INVALID_INPUT,
+                                                        "a row's clustering "
+                                                                + "expression has no finite distance to any "
+                                                                + "centroid; the row was excluded"));
+                                    }
+                                    continue;
+                                }
+                                tb.reset();
+                                if (payload != null) {
+                                    payload.copyInto(tb);
+                                }
+                                cid.setValue(nearestIdx[i]);
+                                tb.addField(cidSerde, cid);
+                                if (emitCentroid) {
+                                    centroidWriter.addField(tb, byValue.get(nearestIdx[i]));
+                                }
+                                FrameUtils.appendToWriter(rowWriter, appender, tb.getFieldEndOffsets(),
+                                        tb.getByteArray(), 0, tb.getSize());
+                            }
+                        });
+                        appender.write(rowWriter, true);
+                    } finally {
+                        if (payload != null) {
+                            payload.close();
+                        }
+                    }
                 }
 
                 @Override

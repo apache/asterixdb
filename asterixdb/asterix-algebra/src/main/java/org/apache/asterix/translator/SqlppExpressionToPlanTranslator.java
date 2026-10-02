@@ -314,7 +314,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         assignedSeed.setSourceLocation(clusterbyClause.getSourceLocation());
         assignedSeed.getInputs().add(memberInput);
         memberInput = new MutableObject<>(assignedSeed);
-        // The cluster id is nearest-centroid's result, an int32 position into the centroid list.
+        // The cluster id is an int32: the position of the row's nearest centroid in the value-ordered final set.
         ClusterByOperator cop = new ClusterByOperator(new MutableObject<>(vecRef), cidVar, BuiltinType.AINT32,
                 centroidVar, BuiltinType.ANY, membersVar, BuiltinType.ANY, clusterbyClause.getResolvedOptions());
         cop.setSourceLocation(clusterbyClause.getSourceLocation());

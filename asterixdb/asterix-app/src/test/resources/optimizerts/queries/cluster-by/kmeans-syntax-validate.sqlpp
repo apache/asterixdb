@@ -17,8 +17,8 @@
  * under the License.
  */
 -- CLUSTER BY syntax plan validation (minimal): the clause desugars into the distributed k-means shape
--- validated by kmeans-validate — first-k seed + 3 unrolled Lloyd iterations (two-step CENTROID
--- aggregate, centroid list broadcast into nearest_centroid) + a final GROUP BY labeling pass.
+-- validated by kmeans-validate — seed draw, oversampling and recluster stages, a Lloyd loop that emits the
+-- rows labelled with their cluster id, and a final GROUP BY on that id.
 drop dataverse clusterby_test if exists;
 create dataverse clusterby_test;
 use clusterby_test;

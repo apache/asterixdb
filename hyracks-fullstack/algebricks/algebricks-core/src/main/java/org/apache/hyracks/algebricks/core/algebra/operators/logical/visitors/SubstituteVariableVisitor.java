@@ -331,6 +331,16 @@ public class SubstituteVariableVisitor
         if (pair.getLeft().equals(op.getVectorStoreVariable())) {
             op.setVectorStoreVariable(pair.getRight());
         }
+        if (pair.getLeft().equals(op.getLabelCentroidVariable())) {
+            op.setLabelCentroidVariable(pair.getRight(), op.getLabelCentroidVarType());
+        }
+        List<LogicalVariable> rowVars = op.getRowVariables();
+        for (int i = 0; i < rowVars.size(); i++) {
+            if (rowVars.get(i).equals(pair.getLeft())) {
+                rowVars.set(i, pair.getRight());
+            }
+        }
+        substProducedVarInTypeEnvironment(op, pair);
         return null;
     }
 

@@ -19,6 +19,8 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -44,6 +46,10 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
  * <p>
  * The vector input (input 0) is present for OVERSAMPLE_LOOP and LLOYD_LOOP; it is ABSENT (a single pool
  * input) for the RECLUSTER merge, so {@link #getVectorVariable()} is null in that mode.
+ * <p>
+ * Exception: LLOYD_LOOP ends by labelling its rows, emitting the {@link #getRowVariables() row variables} with
+ * the cluster id (and optionally the centroid). Under k-means|| those rows come from another stage's store,
+ * not its own input, so their types are kept on the operator.
  */
 public class KMeansStageOperator extends AbstractLogicalOperator {
 
@@ -63,7 +69,7 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
         // The Lloyd refinement as ONE operator that iterates internally: each of loopRounds iterations
         // assigns every resident vector to its nearest current centroid and all-reduces the per-centroid
         // (count, sum) partials into the next centroid set. The physical operator injects this as a
-        // pipelined systolic sub-graph, as for OVERSAMPLE_LOOP. Emits the final centroids as plain vectors.
+        // pipelined systolic sub-graph, as for OVERSAMPLE_LOOP. Emits every row labelled with its cluster id.
         LLOYD_LOOP("lloyd-loop");
 
         private final String label;
@@ -85,7 +91,7 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
     // is no vector input and the pool is the operator's sole (index-0) input.
     private final Mutable<ILogicalExpression> vectorRef;
     private final Mutable<ILogicalExpression> poolRef;
-    // The single produced variable: a candidate vector, typed open by the expansion rule that builds the stage.
+    // A candidate vector, typed open; for LLOYD_LOOP the cluster id.
     private LogicalVariable candidateVar;
     private final Object candidateVarType;
     // RECLUSTER: k, the number of initial centroids to keep. Always non-negative.
@@ -104,6 +110,12 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
     // The vector store shared by the two loops of one expansion, named by the OVERSAMPLE_LOOP's candidate
     // variable: that loop keeps its file, the LLOYD_LOOP reads it. Null when a stage keeps its own store.
     private LogicalVariable vectorStoreVar;
+    // Columns stored beside each vector and emitted by LLOYD_LOOP, in that order, with their types.
+    private final List<LogicalVariable> rowVars = new ArrayList<>();
+    private final List<Object> rowVarTypes = new ArrayList<>();
+    // LLOYD_LOOP only: the row's centroid, or null when nothing reads it.
+    private LogicalVariable labelCentroidVar;
+    private Object labelCentroidVarType;
 
     public KMeansStageOperator(Mutable<ILogicalExpression> vectorRef, Mutable<ILogicalExpression> poolRef,
             LogicalVariable candidateVar, Object candidateVarType, int topCount, Mode mode, long seed, int loopRounds,
@@ -136,11 +148,32 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
         return false;
     }
 
+    /** Whether this stage emits labelled rows rather than a candidate set. */
+    public boolean emitsRows() {
+        return mode == Mode.LLOYD_LOOP;
+    }
+
+    /** Whether this stage writes the row store from its input (only a storing stage reads the row columns). */
+    public boolean storesRows() {
+        return mode == Mode.OVERSAMPLE_LOOP || (mode == Mode.LLOYD_LOOP && vectorStoreVar == null);
+    }
+
+    /** The variables this stage emits, in column order. */
+    public void getOutputVariables(Collection<LogicalVariable> vars) {
+        if (emitsRows()) {
+            vars.addAll(rowVars);
+        }
+        vars.add(candidateVar);
+        if (emitsRows() && labelCentroidVar != null) {
+            vars.add(labelCentroidVar);
+        }
+    }
+
     @Override
     public void recomputeSchema() throws AlgebricksException {
-        // Only the candidate variable is live downstream; input tuples are consumed, not propagated.
+        // Input tuples are consumed; only what the stage emits is live downstream.
         schema = new ArrayList<>();
-        schema.add(candidateVar);
+        getOutputVariables(schema);
     }
 
     @Override
@@ -149,7 +182,11 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
             @Override
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
                     throws AlgebricksException {
-                target.addVariable(candidateVar);
+                List<LogicalVariable> vars = new ArrayList<>();
+                getOutputVariables(vars);
+                for (LogicalVariable v : vars) {
+                    target.addVariable(v);
+                }
             }
         };
     }
@@ -165,10 +202,18 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         // Non-propagating, to agree with recomputeSchema and the propagation policy: the input tuples are
-        // consumed, and the candidate variable is the only thing live downstream. Propagating the inputs here
+        // consumed, and only what the stage emits is live downstream. Propagating the inputs here
         // would advertise types for variables the schema says are gone. Same shape as AggregateOperator.
         IVariableTypeEnvironment env =
                 new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
+        if (emitsRows()) {
+            for (int i = 0; i < rowVars.size(); i++) {
+                env.setVarType(rowVars.get(i), rowVarTypes.get(i));
+            }
+            if (labelCentroidVar != null) {
+                env.setVarType(labelCentroidVar, labelCentroidVarType);
+            }
+        }
         env.setVarType(candidateVar, candidateVarType);
         return env;
     }
@@ -208,6 +253,34 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
 
     public void setVectorStoreVariable(LogicalVariable v) {
         this.vectorStoreVar = v;
+    }
+
+    /** Mutable. */
+    public List<LogicalVariable> getRowVariables() {
+        return rowVars;
+    }
+
+    /** Parallel to {@link #getRowVariables()}. */
+    public List<Object> getRowVariableTypes() {
+        return rowVarTypes;
+    }
+
+    public void addRowVariable(LogicalVariable v, Object type) {
+        rowVars.add(v);
+        rowVarTypes.add(type);
+    }
+
+    public LogicalVariable getLabelCentroidVariable() {
+        return labelCentroidVar;
+    }
+
+    public Object getLabelCentroidVarType() {
+        return labelCentroidVarType;
+    }
+
+    public void setLabelCentroidVariable(LogicalVariable v, Object type) {
+        this.labelCentroidVar = v;
+        this.labelCentroidVarType = type;
     }
 
     public int getTopCount() {

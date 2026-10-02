@@ -181,10 +181,12 @@ public class PushdownContext {
     }
 
     private static Set<LogicalOperatorTag> getScopeOperators() {
-        // LIMIT: a filter pushed into the scan beneath it would change which rows the LIMIT is taken from
+        // LIMIT: a filter pushed into the scan beneath it would change which rows the LIMIT is taken from.
+        // CLUSTER_BY / KMEANS_STAGE: a filter above must not change which rows are clustered.
         return EnumSet.of(LogicalOperatorTag.INNERJOIN, LogicalOperatorTag.LEFTOUTERJOIN, LogicalOperatorTag.GROUP,
                 LogicalOperatorTag.WINDOW, LogicalOperatorTag.RUNNINGAGGREGATE, LogicalOperatorTag.UNIONALL,
-                LogicalOperatorTag.INTERSECT, LogicalOperatorTag.LIMIT);
+                LogicalOperatorTag.INTERSECT, LogicalOperatorTag.LIMIT, LogicalOperatorTag.CLUSTER_BY,
+                LogicalOperatorTag.KMEANS_STAGE);
     }
 
 }

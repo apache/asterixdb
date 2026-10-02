@@ -23,15 +23,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.clustering.ClusterByOptions;
-import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
-import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
@@ -49,18 +48,17 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ClusterByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -70,8 +68,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedLoopJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -352,7 +348,8 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
     /**
      * k-means: seed, then refine. {@code kmeans_parallel} grows an oversampled pool from a single centre and
      * reduces it to k before refining; {@code random} (Forgy) takes k starting points and refines them directly.
-     * The input is read once: one REPLICATE feeds the seed draw, the loops and the labelling.
+     * The input is read once: one REPLICATE feeds the seed draw and the loops, and the refinement loop emits
+     * the rows labelled.
      */
     private ILogicalOperator expandKMeans(ClusterByOperator cop, IOptimizationContext context)
             throws AlgebricksException {
@@ -361,65 +358,91 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         boolean forgy = INIT_MODE_RANDOM.equals(kmeans(cop).getInitMode());
         long seed = kmeans(cop).getSeed();
 
-        // One REPLICATE over the input, built as IntroduceSecondaryIndexInsertDeleteRule builds its fan-out;
-        // the enforcer adds the exchanges and FixReplicateOperatorOutputsRule re-points the outputs before
-        // job generation. The seed draw and the loops store their input before they run, so their outputs
-        // stream. The labelling join's probe side would run in the input's activity cluster while its build
-        // side depends on that same cluster, which is a dependency cycle, so that last output is materialized
-        // to give the probe its own cluster (ExtractCommonOperatorsRule.requiresMaterialization is the same
-        // test).
-        int outputArity = forgy ? 3 : 4;
-        boolean[] materialize = new boolean[outputArity];
-        materialize[outputArity - 1] = true;
-        ReplicateOperator shared = new ReplicateOperator(outputArity, materialize);
-        shared.setSourceLocation(loc);
-        // The labelling branch below builds the real definition of the assignment centroid, so the
-        // translator's placeholder is spliced out; the translator always creates it, and a miss is a bug.
+        // The refinement loop defines the assignment centroid, so the translator's placeholder is spliced out.
         if (!spliceOutAssign(cop.getInputs().get(0), cop.getAssignedCentroidVariable(), context)) {
             throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE, loc,
                     "CLUSTER BY assignment-centroid placeholder not found below the operator");
         }
+        // One REPLICATE over the input, built as IntroduceSecondaryIndexInsertDeleteRule builds its fan-out;
+        // the enforcer adds the exchanges and FixReplicateOperatorOutputsRule re-points the outputs before
+        // job generation. Every consumer stores its input before running, so no output is materialized.
+        ReplicateOperator shared = new ReplicateOperator(forgy ? 2 : 3, new boolean[forgy ? 2 : 3]);
+        shared.setSourceLocation(loc);
         shared.getInputs().add(cop.getInputs().get(0));
         finish(shared, context);
+        List<LogicalVariable> payload = payloadOf(cop);
+        // Row types from the input, since under k-means|| they are not on the Lloyd loop's own input.
+        IVariableTypeEnvironment rowTypes = context.getOutputTypeEnvironment(cop.getInputs().get(0).getValue());
 
         // Forgy seeds with k centres and refines them directly; k-means|| grows a pool from one.
-        Pair<Mutable<ILogicalOperator>, LogicalVariable> seedInput = branchOf(shared, vectorVar, context, loc);
+        Pair<Mutable<ILogicalOperator>, LogicalVariable> seedInput =
+                branchOf(shared, vectorVar, Collections.emptyList(), context, loc);
         Mutable<ILogicalOperator> centroidsIn = seedOf(seedInput.getLeft(), seedInput.getRight(),
                 forgy ? kmeans(cop).getNumClusters() : 1, options(cop).getDimension(), seed, context, loc);
         LogicalVariable centroidsVar = seedInput.getRight();
         LogicalVariable vectorStore = null;
         if (!forgy) {
-            KMeansStageOperator recluster =
-                    oversampleAndRecluster(cop, shared, centroidsIn, centroidsVar, seed, context, loc);
+            KMeansStageOperator recluster = oversampleAndRecluster(cop, shared, payload, rowTypes, centroidsIn,
+                    centroidsVar, seed, context, loc);
             centroidsIn = new MutableObject<>(recluster);
             centroidsVar = recluster.getCandidateVariable();
+            // Named by the oversampling loop, whose input the recluster still is at this point.
             vectorStore = ((KMeansStageOperator) recluster.getInputs().get(0).getValue()).getVectorStoreVariable();
         }
 
-        KMeansStageOperator lloyd = refine(cop, shared, centroidsIn, centroidsVar, vectorStore, context, loc);
-        AggregateOperator finalSet = centroidList(lloyd, context, loc);
-        LogicalVariable cFinal = finalSet.getVariables().get(0);
-
         // An unread centroid cannot be pruned once built: a pushed projection lists it and keeps it on every row.
         boolean withCentroid = centroidIsRead(cop);
-        Labelled rows = label(cop, shared, finalSet, cFinal, withCentroid, context, loc);
-        return clustersOf(cop, rows.op, rows.cid, withCentroid, context, loc);
+        KMeansStageOperator lloyd = refine(cop, shared, payload, rowTypes, centroidsIn, centroidsVar, vectorStore,
+                withCentroid, context, loc);
+        return clustersOf(cop, lloyd, lloyd.getCandidateVariable(), withCentroid, context, loc);
+    }
+
+    /** The input variables the decorations, nested plans and member record read, in input order. */
+    private static List<LogicalVariable> payloadOf(ClusterByOperator cop) throws AlgebricksException {
+        Set<LogicalVariable> needed = new HashSet<>();
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : cop.getDecorList()) {
+            p.getRight().getValue().getUsedVariables(needed);
+        }
+        for (ILogicalPlan plan : cop.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+                VariableUtilities.getUsedVariablesInDescendantsAndSelf(root.getValue(), needed);
+            }
+        }
+        if (cop.getNestedPlans().isEmpty()) {
+            cop.getMemberRecordRef().getValue().getUsedVariables(needed);
+        }
+        List<LogicalVariable> live = new ArrayList<>();
+        VariableUtilities.getLiveVariables(cop.getInputs().get(0).getValue(), live);
+        // Live-variable lists are not de-duplicated.
+        Set<LogicalVariable> payload = new LinkedHashSet<>();
+        for (LogicalVariable v : live) {
+            if (needed.contains(v)) {
+                payload.add(v);
+            }
+        }
+        return new ArrayList<>(payload);
     }
 
     /** k-means||: oversample a pool from the seed, then reduce it to k centres. */
     private KMeansStageOperator oversampleAndRecluster(ClusterByOperator cop, ReplicateOperator shared,
-            Mutable<ILogicalOperator> seed, LogicalVariable seedVar, long seedValue, IOptimizationContext context,
-            SourceLocation loc) throws AlgebricksException {
+            List<LogicalVariable> payload, IVariableTypeEnvironment rowTypes, Mutable<ILogicalOperator> seed,
+            LogicalVariable seedVar, long seedValue, IOptimizationContext context, SourceLocation loc)
+            throws AlgebricksException {
         Pair<Mutable<ILogicalOperator>, LogicalVariable> input =
-                branchOf(shared, cop.getVectorVariable(), context, loc);
-        KMeansStageOperator oversample = stage(cop, KMeansStageOperator.Mode.OVERSAMPLE_LOOP, context,
-                ref(input.getRight()), ref(seedVar), oversamplingWidth(cop), seedValue, OVERSAMPLING_ROUNDS);
+                branchOf(shared, cop.getVectorVariable(), payload, context, loc);
+        KMeansStageOperator oversample =
+                stage(cop, KMeansStageOperator.Mode.OVERSAMPLE_LOOP, context, ref(input.getRight()), ref(seedVar),
+                        BuiltinType.ANY, oversamplingWidth(cop), seedValue, OVERSAMPLING_ROUNDS);
         oversample.getInputs().add(input.getLeft());
         oversample.getInputs().add(seed);
+        // The first loop to see the rows stores them, payload included.
+        for (LogicalVariable v : payload) {
+            oversample.addRowVariable(v, rowTypes.getVarType(v));
+        }
         finish(oversample, context);
 
         KMeansStageOperator recluster = stage(cop, KMeansStageOperator.Mode.RECLUSTER, context, null,
-                ref(oversample.getCandidateVariable()), kmeans(cop).getNumClusters(), seedValue, 0);
+                ref(oversample.getCandidateVariable()), BuiltinType.ANY, kmeans(cop).getNumClusters(), seedValue, 0);
         recluster.getInputs().add(new MutableObject<>(oversample));
         finish(recluster, context);
         // Kept for the refinement loop, which would otherwise write a copy of it.
@@ -427,121 +450,31 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         return recluster;
     }
 
-    /** The refinement loop: emits the k final centroids and nothing else. */
-    private KMeansStageOperator refine(ClusterByOperator cop, ReplicateOperator shared,
-            Mutable<ILogicalOperator> centroidsIn, LogicalVariable centroidsVar, LogicalVariable vectorStore,
-            IOptimizationContext context, SourceLocation loc) throws AlgebricksException {
-        Pair<Mutable<ILogicalOperator>, LogicalVariable> input =
-                branchOf(shared, cop.getVectorVariable(), context, loc);
+    /** The refinement loop: emits every placeable row with its cluster id and, if asked, its centroid. */
+    private KMeansStageOperator refine(ClusterByOperator cop, ReplicateOperator shared, List<LogicalVariable> payload,
+            IVariableTypeEnvironment rowTypes, Mutable<ILogicalOperator> centroidsIn, LogicalVariable centroidsVar,
+            LogicalVariable vectorStore, boolean withCentroid, IOptimizationContext context, SourceLocation loc)
+            throws AlgebricksException {
+        // Under k-means|| this input is drained unread (the rows come from the oversampling store).
+        Pair<Mutable<ILogicalOperator>, LogicalVariable> input = branchOf(shared, cop.getVectorVariable(),
+                vectorStore == null ? payload : Collections.emptyList(), context, loc);
         KMeansStageOperator lloyd = stage(cop, KMeansStageOperator.Mode.LLOYD_LOOP, context, ref(input.getRight()),
-                ref(centroidsVar), kmeans(cop).getNumClusters(), 0L, lloydIterations(cop));
+                ref(centroidsVar), BuiltinType.AINT32, kmeans(cop).getNumClusters(), 0L, lloydIterations(cop));
         lloyd.getInputs().add(input.getLeft());
         lloyd.getInputs().add(centroidsIn);
-        // Null under the random init: the loop keeps its own store.
+        for (LogicalVariable v : payload) {
+            lloyd.addRowVariable(v, rowTypes.getVarType(v));
+        }
+        if (withCentroid) {
+            lloyd.setLabelCentroidVariable(cop.getAssignedCentroidVariable(), BuiltinType.ANY);
+        }
+        // Null under the random init. Set before finish: storesRows() depends on it.
         lloyd.setVectorStoreVariable(vectorStore);
         // The execution mode is derived from the input, as GROUP BY's is: a partitioned input gives one loop
         // instance per partition, an unpartitioned input a single instance. The physical operators read it
         // (AbstractKMeansStagePOperator.unpartitioned) to size and place the loop.
         finish(lloyd, context);
         return lloyd;
-    }
-
-    /**
-     * The final centroid set as one list, ordered by centroid value: a cluster id is the position of the
-     * nearest centroid in this list, and the loop's output order varies run to run. The aggregate is global, so
-     * the enforcer sort-merges the partitions' streams into it.
-     */
-    private AggregateOperator centroidList(KMeansStageOperator lloyd, IOptimizationContext context, SourceLocation loc)
-            throws AlgebricksException {
-        LogicalVariable centroidVar = lloyd.getCandidateVariable();
-        OrderOperator byValue = new OrderOperator();
-        byValue.setSourceLocation(loc);
-        byValue.getOrderExpressions().add(Pair.of(OrderOperator.ASC_ORDER, ref(centroidVar)));
-        byValue.getInputs().add(new MutableObject<>(lloyd));
-        finish(byValue, context);
-
-        AggregateFunctionCallExpression listify = BuiltinFunctions
-                .makeAggregateFunctionExpression(BuiltinFunctions.LISTIFY, new ArrayList<>(List.of(ref(centroidVar))));
-        listify.setSourceLocation(loc);
-        AggregateOperator finalSet = new AggregateOperator(new ArrayList<>(List.of(context.newVar())),
-                new ArrayList<>(List.of(new MutableObject<>(listify))));
-        finalSet.setSourceLocation(loc);
-        finalSet.setGlobal(true);
-        finalSet.getInputs().add(new MutableObject<>(byValue));
-        finish(finalSet, context);
-        return finalSet;
-    }
-
-    /** The labelled rows: the operator at the top and the cluster-id variable. */
-    private static final class Labelled {
-        final ILogicalOperator op;
-        final LogicalVariable cid;
-
-        Labelled(ILogicalOperator op, LogicalVariable cid) {
-            this.op = op;
-            this.cid = cid;
-        }
-    }
-
-    /**
-     * Labels every row. The last replicate branch carries the rows under their original variables, and the
-     * single-tuple centroid list is attached to each row by a nested-loop join on TRUE with the list side
-     * broadcast. A row the labelling cannot place, where nearest-centroid returns NULL with a warning, is
-     * dropped so it cannot form a (k+1)-th NULL-keyed cluster. The row's assignment centroid is bound only
-     * when {@code withCentroid}.
-     */
-    private Labelled label(ClusterByOperator cop, ReplicateOperator shared, AggregateOperator finalSet,
-            LogicalVariable cFinal, boolean withCentroid, IOptimizationContext context, SourceLocation loc)
-            throws AlgebricksException {
-        LogicalVariable vectorVar = cop.getVectorVariable();
-        Mutable<ILogicalOperator> rows = new MutableObject<>(shared);
-        shared.getOutputs().add(rows);
-        InnerJoinOperator attach = new InnerJoinOperator(
-                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ABoolean.TRUE))), rows,
-                new MutableObject<>(finalSet));
-        attach.setSourceLocation(loc);
-        attach.setPhysicalOperator(new NestedLoopJoinPOperator(AbstractBinaryJoinOperator.JoinKind.INNER,
-                AbstractJoinPOperator.JoinPartitioningType.BROADCAST));
-        finish(attach, context);
-
-        Mutable<ILogicalExpression> metric = new MutableObject<>(
-                new ConstantExpression(new AsterixConstantValue(new AString(kmeans(cop).getMetric()))));
-        LogicalVariable rowCid = context.newVar();
-        ScalarFunctionCallExpression nearest = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.NEAREST_CENTROID), ref(vectorVar), ref(cFinal),
-                metric);
-        nearest.setSourceLocation(loc);
-        AssignOperator labelOp = new AssignOperator(rowCid, new MutableObject<>(nearest));
-        labelOp.setSourceLocation(loc);
-        labelOp.getInputs().add(new MutableObject<>(attach));
-        finish(labelOp, context);
-
-        AbstractLogicalOperator labelledSoFar = labelOp;
-        if (withCentroid) {
-            // The row's assignment centroid: its entry in the final list. Constant within a group, so the
-            // reported centroid aggregates it with FIRST, and a pushed members-subquery reads it per row.
-            ScalarFunctionCallExpression pick = new ScalarFunctionCallExpression(
-                    BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.GET_ITEM), ref(cFinal), ref(rowCid));
-            pick.setSourceLocation(loc);
-            AssignOperator assignedOp =
-                    new AssignOperator(cop.getAssignedCentroidVariable(), new MutableObject<>(pick));
-            assignedOp.setSourceLocation(loc);
-            assignedOp.getInputs().add(new MutableObject<>(labelOp));
-            finish(assignedOp, context);
-            labelledSoFar = assignedOp;
-        }
-
-        ScalarFunctionCallExpression unknown = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.IS_UNKNOWN), ref(rowCid));
-        unknown.setSourceLocation(loc);
-        ScalarFunctionCallExpression placed = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.NOT), new MutableObject<>(unknown));
-        placed.setSourceLocation(loc);
-        SelectOperator labelled = new SelectOperator(new MutableObject<>(placed));
-        labelled.setSourceLocation(loc);
-        labelled.getInputs().add(new MutableObject<>(labelledSoFar));
-        finish(labelled, context);
-        return new Labelled(labelled, rowCid);
     }
 
     /**
@@ -601,7 +534,7 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
      * as nested aggregates. It lives in the expansion since, from the optimizer's side, CLUSTER BY is one
      * operator and how it is carried out is this rule's business.
      */
-    private ILogicalOperator clustersOf(ClusterByOperator cop, ILogicalOperator labelled, LogicalVariable rowCid,
+    private ILogicalOperator clustersOf(ClusterByOperator cop, KMeansStageOperator labelled, LogicalVariable rowCid,
             boolean withCentroid, IOptimizationContext context, SourceLocation loc) throws AlgebricksException {
         GroupByOperator gby = new GroupByOperator();
         gby.setSourceLocation(loc);
@@ -739,11 +672,10 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
 
     private KMeansStageOperator stage(ClusterByOperator cop, KMeansStageOperator.Mode mode,
             IOptimizationContext context, Mutable<ILogicalExpression> vectorRef, Mutable<ILogicalExpression> poolRef,
-            int topCount, long seed, int loopRounds) {
-        // Every stage emits vectors (a pool, the k candidates, the k centroids), typed open: their width is enforced
-        // by the decoders, not by the type. The loop stages admit only numeric arrays of the declared width;
-        // RECLUSTER reads decoded envelopes.
-        KMeansStageOperator stage = new KMeansStageOperator(vectorRef, poolRef, context.newVar(), BuiltinType.ANY,
+            Object candidateType, int topCount, long seed, int loopRounds) {
+        // Seeding stages emit vectors, typed open (width is enforced by the decoders); the refinement loop emits
+        // the cluster id.
+        KMeansStageOperator stage = new KMeansStageOperator(vectorRef, poolRef, context.newVar(), candidateType,
                 topCount, mode, seed, loopRounds, options(cop).getDimension(), kmeans(cop).getMetric());
         stage.setSourceLocation(cop.getSourceLocation());
         return stage;
@@ -767,10 +699,11 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
     /**
      * One consumer's branch off the shared input: an ASSIGN giving the vector a variable of the branch's own,
      * so no stage sees the same variable on two of its inputs (the seed stream feeds the oversample loop, whose
-     * other input is the vectors).
+     * other input is the vectors), projected to that vector and {@code payload}.
      */
     private Pair<Mutable<ILogicalOperator>, LogicalVariable> branchOf(ReplicateOperator shared,
-            LogicalVariable vectorVar, IOptimizationContext context, SourceLocation loc) throws AlgebricksException {
+            LogicalVariable vectorVar, List<LogicalVariable> payload, IOptimizationContext context, SourceLocation loc)
+            throws AlgebricksException {
         LogicalVariable branchVar = context.newVar();
         AssignOperator rename = new AssignOperator(branchVar, ref(vectorVar));
         rename.setSourceLocation(loc);
@@ -778,9 +711,11 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         shared.getOutputs().add(fromShared);
         rename.getInputs().add(fromShared);
         finish(rename, context);
-        // Only the vector rides into a training branch: the member record the shared replicate carries is
-        // projected away here, so the seed sort and the stages move vector-wide tuples, not whole rows.
-        ProjectOperator thin = new ProjectOperator(new ArrayList<>(List.of(branchVar)));
+        // Everything else the replicate carries is projected away here.
+        List<LogicalVariable> kept = new ArrayList<>();
+        kept.add(branchVar);
+        kept.addAll(payload);
+        ProjectOperator thin = new ProjectOperator(kept);
         thin.setSourceLocation(loc);
         thin.getInputs().add(new MutableObject<>(rename));
         finish(thin, context);

@@ -253,6 +253,10 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
                 op.getCandidateVariable(), op.getCandidateVarType(), op.getTopCount(), op.getMode(), op.getSeed(),
                 op.getLoopRounds(), op.getDimension(), op.getMetric());
         opCopy.setVectorStoreVariable(op.getVectorStoreVariable());
+        for (int i = 0; i < op.getRowVariables().size(); i++) {
+            opCopy.addRowVariable(op.getRowVariables().get(i), op.getRowVariableTypes().get(i));
+        }
+        opCopy.setLabelCentroidVariable(op.getLabelCentroidVariable(), op.getLabelCentroidVarType());
         return opCopy;
     }
 

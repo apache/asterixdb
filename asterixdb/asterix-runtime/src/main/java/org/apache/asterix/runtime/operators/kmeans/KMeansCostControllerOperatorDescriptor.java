@@ -57,7 +57,7 @@ import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
  * <ul>
  * <li><b>StoreVectors</b> (input 0, sink): decodes each resident vector once (ordered list -> {@code double[]})
  * and materializes the per-partition <b>vector run file</b> as raw doubles ({@link KMeansLoopIO#POOL_RD}) — no
- * REPLICATE, decode-once.</li>
+ * REPLICATE, decode-once — plus the rows' payload columns beside it, for the Lloyd loop.</li>
  * <li><b>StoreSeed</b> (input 1, sink; the broadcast seed): decodes the seed into the per-partition <b>pool run
  * file</b> ({@code pool[0]}), and creates + registers this partition's {@link LoopControlState} (permit) and the
  * pool run file, so the co-located Sample/Release (Op3/Op5) can find them.</li>
@@ -68,7 +68,8 @@ import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
  * pool and emits it as {@link KMeansVectorCodec.PoolEnvelopeWriter KIND_POOL envelopes} on <b>output 0</b>.
  * Output 0 is idle during the loop, so the blocking consumer cannot back-pressure the iteration.</li>
  * </ul>
- * With {@code handOffVectors} the vector run file outlives the stage: the Lloyd loop reads and deletes it.
+ * With {@code handOffVectors}, the vector and payload files outlive the stage: the Lloyd loop reads and deletes
+ * them. Otherwise CostLoop deletes them with the pool file.
  * <p>
  * The loop is acyclic in the job graph, since Release's feedback to CostLoop is the shared permit plus the
  * pool run file and not a data edge. The per-round seed lives in Sample, so the draws depend only on the
@@ -89,6 +90,8 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
     // Leave the vector run file for the Lloyd loop (KMeansStageOperator#getVectorStoreVariable).
     private final boolean handOffVectors;
     private final int vectorColumn; // vector column in input 0
+    // Input-0 columns stored beside each vector for the Lloyd loop; used only with handOffVectors.
+    private final int[] payloadColumns;
     private final int seedColumn; // vector column in input 1 (the seed)
     private final int loopRounds; // N oversampling rounds
     private final int framesLimit; // block budget for the bounded scans
@@ -100,12 +103,13 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
 
     public KMeansCostControllerOperatorDescriptor(IOperatorDescriptorRegistry spec,
             RecordDescriptor poolEnvelopeRecDesc, RecordDescriptor sigmaRecDesc, String loopKey, boolean handOffVectors,
-            int vectorColumn, int seedColumn, int loopRounds, int framesLimit, int dimension,
+            int vectorColumn, int[] payloadColumns, int seedColumn, int loopRounds, int framesLimit, int dimension,
             VectorSimilarityMetric metric) {
         super(spec, 2, 2);
         this.loopKey = loopKey;
         this.handOffVectors = handOffVectors;
         this.vectorColumn = vectorColumn;
+        this.payloadColumns = payloadColumns;
         this.seedColumn = seedColumn;
         this.loopRounds = loopRounds;
         this.framesLimit = framesLimit;
@@ -159,6 +163,8 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                         new KMeansVectorCodec.ListVectorDecoder(dimension);
                 private final ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
                 private MaterializerTaskState state;
+                private MaterializerTaskState payloadState;
+                private KMeansLoopIO.PayloadColumnWriter payload;
                 private VSizeFrame frame;
                 private FrameTupleAppender appender;
 
@@ -169,6 +175,11 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                                     : LoopControlState.poolStateId(loopKey, partition));
                     frame = new VSizeFrame(ctx);
                     appender = new FrameTupleAppender(frame);
+                    if (vectors && handOffVectors && payloadColumns.length > 0) {
+                        payloadState = LoopControlState.sharedRunFile(ctx,
+                                LoopControlState.payloadStateId(loopKey, partition));
+                        payload = new KMeansLoopIO.PayloadColumnWriter(payloadState, ctx, payloadColumns);
+                    }
                     if (!vectors) {
                         // Register the loop control (permit) as soon as the pool file exists, so the co-located
                         // Sample/Release can rendezvous even before CostLoop starts.
@@ -205,6 +216,9 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                                         "a vector is too large to fit in a frame");
                             }
                         }
+                        if (payload != null) {
+                            payload.append(accessor, i); // entry i of both files is the same row
+                        }
                     }
                 }
 
@@ -227,6 +241,10 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                         // for Release's per-round appends -- CostLoop closes it after the final read.
                         state.close();
                     }
+                    if (payload != null) {
+                        payload.finish();
+                        ctx.setStateObject(payloadState);
+                    }
                     ctx.setStateObject(state);
                 }
 
@@ -234,8 +252,13 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                 public void fail() throws HyracksDataException {
                     // The run file is created in open() and only registered in close(), so on this path nothing
                     // else holds a reference and nothing else will close or delete it.
-                    KMeansLoopIO.discard(state);
-                    state = null;
+                    try {
+                        KMeansLoopIO.discard(state);
+                    } finally {
+                        state = null;
+                        KMeansLoopIO.discard(payloadState);
+                        payloadState = null;
+                    }
                 }
             };
         }
@@ -316,7 +339,12 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                                 KMeansLoopIO.discard(poolState);
                             } finally {
                                 if (!vectorsHandedOff) {
-                                    KMeansLoopIO.discard(vectorState);
+                                    try {
+                                        KMeansLoopIO.discard(vectorState);
+                                    } finally {
+                                        KMeansLoopIO.discard((MaterializerTaskState) ctx
+                                                .getStateObject(LoopControlState.payloadStateId(loopKey, partition)));
+                                    }
                                 }
                             }
                         } finally {
