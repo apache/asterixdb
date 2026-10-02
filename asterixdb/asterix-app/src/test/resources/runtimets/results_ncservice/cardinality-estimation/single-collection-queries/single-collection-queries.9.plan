@@ -1,0 +1,16 @@
+distribute result [$$17] [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 750.82]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 750.82]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$17] <- [{"o_orderdate": $$o.getField(4)}] project: [$$17] [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 750.82]
+    -- ASSIGN  |PARTITIONED|
+      project ([$$o]) [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 750.82]
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 750.82]
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          data-scan []<-[$$18, $$o] <- tpch.Orders [cardinality: 1500.0, doc-size: 12.0, op-cost: 0.0, total-cost: 750.82]
+          -- DATASOURCE_SCAN  |PARTITIONED|
+            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

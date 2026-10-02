@@ -1,0 +1,14 @@
+distribute result [$$32] [cardinality: 5981.0, doc-size: 142.72, op-cost: 0.0, total-cost: 2994.43]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 5981.0, doc-size: 142.72, op-cost: 0.0, total-cost: 2994.43]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$32] <- [{"l_orderkey": $$33, "l_partkey": $$l.getField(1), "l_suppkey": $$l.getField(2), "l_linenumber": $$34, "l_quantity": $$l.getField(4), "l_extendedprice": $$l.getField(5), "l_discount": $$l.getField(6), "l_tax": $$l.getField(7), "l_returnflag": $$l.getField(8), "l_linestatus": $$l.getField(9), "l_shipdate": $$l.getField(10), "l_commitdate": $$l.getField(11), "l_receiptdate": $$l.getField(12), "l_shipinstruct": $$l.getField(13), "l_shipmode": $$l.getField(14), "l_comment": $$l.getField(15)}] project: [$$32] [cardinality: 5981.0, doc-size: 142.72, op-cost: 0.0, total-cost: 2994.43]
+    -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 5981.0, doc-size: 142.72, op-cost: 0.0, total-cost: 2994.43]
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        data-scan []<-[$$33, $$34, $$l] <- tpch.LineItem [cardinality: 5981.0, doc-size: 142.72, op-cost: 0.0, total-cost: 2994.43]
+        -- DATASOURCE_SCAN  |PARTITIONED|
+          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

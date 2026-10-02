@@ -59,7 +59,9 @@ public abstract class AbstractExecutionIT {
 
     protected static final String HDFS_BASE = "../asterix-app/";
 
-    protected static final TestExecutor testExecutor = new TestExecutor();
+    private static final String DELTA_RESULT_PATH = "results_ncservice";
+
+    protected static final TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
 
     private static final String EXTERNAL_LIBRARY_TEST_GROUP = "lib";
 
