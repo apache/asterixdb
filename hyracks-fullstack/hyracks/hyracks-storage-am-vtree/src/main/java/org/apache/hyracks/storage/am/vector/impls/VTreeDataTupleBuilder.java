@@ -29,6 +29,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDataTupleBuilder;
 import org.apache.hyracks.storage.am.vector.api.VTreeQuantizationParams;
 import org.apache.hyracks.storage.am.vector.utils.VTreeDataTupleAccessor;
+import org.apache.hyracks.storage.am.vector.utils.VTreeScalarQuantization;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 /**
@@ -69,6 +70,12 @@ public class VTreeDataTupleBuilder implements IVTreeDataTupleBuilder {
 
     public VTreeDataTupleBuilder(int numIncludeFields, int numKeyFields, boolean isQuantized,
             VTreeQuantizationParams quantizationParams) {
+        // Leaf storage holds the quantized embedding as byte[], so a wider code would be silently truncated
+        // here while the bulk-load codec stores it as short[] or int[].
+        if (isQuantized && quantizationParams != null && quantizationParams.bits() > Byte.SIZE) {
+            throw new IllegalArgumentException("VTree leaf storage holds " + Byte.SIZE
+                    + "-bit quantization codes; this index was built with " + quantizationParams.bits() + " bits");
+        }
         this.numIncludeFields = numIncludeFields;
         this.numKeyFields = numKeyFields;
         this.isQuantized = isQuantized;
@@ -175,10 +182,7 @@ public class VTreeDataTupleBuilder implements IVTreeDataTupleBuilder {
             }
             byte[] result = quantizeScratch;
             for (int i = 0; i < vector.length; i++) {
-                double value = Math.max(minQ, Math.min(maxQ, vector[i]));
-                int quantizedValue = Math.toIntExact(Math.round((value - minQ) * alpha));
-                quantizedValue = Math.max(0, Math.min(levels - 1, quantizedValue));
-                result[i] = (byte) quantizedValue;
+                result[i] = (byte) VTreeScalarQuantization.encodeDimension(vector[i], minQ, maxQ, alpha, levels);
             }
             return result;
         }

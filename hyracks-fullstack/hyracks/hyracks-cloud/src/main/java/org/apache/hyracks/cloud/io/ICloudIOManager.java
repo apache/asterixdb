@@ -76,6 +76,16 @@ public interface ICloudIOManager {
     int localWriter(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
 
     /**
+     * Write to local drive only, gathering from several buffers
+     *
+     * @param fHandle file handle
+     * @param offset  starting offset
+     * @param data    to write
+     * @return number of written bytes
+     */
+    long localWriter(IFileHandle fHandle, long offset, ByteBuffer[] data) throws HyracksDataException;
+
+    /**
      * Write to cloud only
      *
      * @param fHandle file handle

@@ -36,13 +36,15 @@ import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.vector.impls.IVectorSearchCursor;
-import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeTopKSearchCursor;
+import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTree;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunctionFactory;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
@@ -340,10 +342,8 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     protected ITupleReference writeTupleToOutput(ITupleReference tuple) throws IOException {
         double dqx = Double.NaN;
         if (indexOnly) {
-            // Search always uses the pruned top-K cursor (addAdditionalIndexAccessorParams sets
-            // USE_TOPK_SEARCH), which is the only IVectorSearchCursor; the streaming LSMVTreeSearchCursor
-            // serves merges, full scans, and tests and never backs an index-only plan. A genuine NaN here
-            // (e.g. the cosine distance of a zero-magnitude vector) is a real value and flows through.
+            // createCursor always returns the top-K cursor, the only IVectorSearchCursor. A NaN distance, e.g.
+            // cosine against a zero-magnitude vector, is a real value and flows through.
             dqx = ((IVectorSearchCursor) activeCursor).getCurrentDistance();
         }
         ITupleReference projected = tupleProjector.project(tuple, dos, tb);
@@ -373,10 +373,11 @@ public class VTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
 
         // Task context for the spillable top-K buffer (follows inverted-index pattern).
         iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx);
+    }
 
-        // Production ANN search always uses the quantized top-K cursor. Without this flag,
-        // LSMVTreeIndexAccessor defaults to the streaming LSMVTreeSearchCursor (used by component
-        // merges and by test fixtures that verify through full-scan iteration).
-        iap.getParameters().put(LSMVTreeTopKSearchCursor.IAP_KEY, Boolean.TRUE);
+    /** Search runs on the quantized top-K cursor, while component merges keep the streaming cursor. */
+    @Override
+    protected IIndexCursor createCursor(IIndex index, IIndexAccessor indexAccessor) throws HyracksDataException {
+        return ((LSMVTree) index).createTopKSearchCursor(((LSMTreeIndexAccessor) indexAccessor).getOpContext());
     }
 }

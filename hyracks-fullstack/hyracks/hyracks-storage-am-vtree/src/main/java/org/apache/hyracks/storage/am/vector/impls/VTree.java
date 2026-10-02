@@ -38,7 +38,6 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
-import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessor;
 import org.apache.hyracks.storage.am.vector.api.IVTreeBinaryAccessorFactory;
@@ -106,27 +105,11 @@ public class VTree extends AbstractTreeIndex {
      */
     private final VTreePageMutator pageMutator;
 
-    // Static-structure navigation state (memory components only). Threading contract: this group is
-    // written exactly once by setStaticStructure() (idempotent via the `initialized` guard) while a
-    // memory component is being allocated or recycled — i.e. before that component is published for
-    // operations — and is read-only thereafter until resetInitialization() clears it for the next
-    // recycle. Publication to the threads that later run searches/inserts on the component is provided
-    // by the LSM harness's operation-tracker happens-before (a thread must enter the component through
-    // the tracker before touching it), the same mechanism that publishes all other in-memory component
-    // state (e.g. BTree memory frames). These fields are therefore intentionally NOT volatile: adding
-    // volatility would tax the per-navigation read of staticBufferCache without adding a guarantee the
-    // harness does not already give. Do not read this group outside that established happens-before.
-    private boolean initialized = false;
-
-    // For memory components: reference to static structure for navigation
-    private IBufferCache staticBufferCache;
-    private int staticFileId;
-    private int staticRootPage;
-
-    // Centroid-to-directory-page mapping (memory components only)
-    private int[] centroidDirPageMap; // centroidIndex -> VBC directory page ID
-    private int firstLeafCentroidIdMem;
-    private int numLeafCentroidMem;
+    /**
+     * The static structure a memory component navigates, or {@code null} for a disk component and for a
+     * recycled memory component. Volatile, so a reader sees either no attachment or a complete one.
+     */
+    private volatile StaticStructureRef staticStructure;
 
     public VTree(IBufferCache bufferCache, IPageManager freePageManager, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, ITreeIndexFrameFactory metadataFrameFactory,
@@ -277,7 +260,8 @@ public class VTree extends AbstractTreeIndex {
 
     @Override
     public void validate() throws HyracksDataException {
-        // Validation logic specific to vector clustering tree
+        // An empty body would report every structure as valid, so the missing check is refused as RTree does.
+        throw new UnsupportedOperationException("Validation not implemented for V-Trees.");
     }
 
     /**
@@ -302,25 +286,26 @@ public class VTree extends AbstractTreeIndex {
     public ClusterSearchResult findClosestClusterFromRoot(double[] queryVector, IVTreeDistanceFunction distanceFunction,
             double[] quantizedQueryVector, IVTreeQuantizer quantizer) throws HyracksDataException {
 
-        // For memory components: navigate via static structure reference
-        IBufferCache navBC = (staticBufferCache != null) ? staticBufferCache : bufferCache;
-        int navFileId = (staticBufferCache != null) ? staticFileId : getFileId();
-        int navRoot = (staticBufferCache != null) ? staticRootPage : rootPage;
+        // Read the attachment once: a memory component navigates the static structure it borrowed, a
+        // disk component its own tree. Re-reading the volatile per use could otherwise mix the two.
+        StaticStructureRef ref = staticStructure;
+        IBufferCache navBC = ref != null ? ref.bufferCache() : bufferCache;
+        int navFileId = ref != null ? ref.fileId() : getFileId();
+        int navRoot = ref != null ? ref.rootPageId() : rootPage;
 
         LOGGER.log(Level.TRACE, "Starting findClosestClusterFromRoot with navRoot={}, isMemoryComponent={}", navRoot,
-                staticBufferCache != null);
+                ref != null);
 
         ClusterSearchResult result =
                 VTreeNavigationUtils.findClosestCentroid(navBC, navFileId, navRoot, getInteriorFrameFactory(),
                         getLeafFrameFactory(), queryVector, distanceFunction, quantizedQueryVector, quantizer);
 
         // For memory components: replace directoryPageId with VBC mapping
-        if (centroidDirPageMap != null) {
-            int centroidIndex = result.centroidId - firstLeafCentroidIdMem;
-            if (centroidIndex >= 0 && centroidIndex < centroidDirPageMap.length) {
+        if (ref != null) {
+            long dirPageId = ref.directoryPageFor(result.centroidId);
+            if (dirPageId != StaticStructureRef.NO_DIRECTORY_PAGE) {
                 result = ClusterSearchResult.create(result.leafPageId, result.clusterIndex, result.centroid,
-                        result.distance, result.centroidId, centroidDirPageMap[centroidIndex],
-                        result.quantizedDistance);
+                        result.distance, result.centroidId, dirPageId, result.quantizedDistance);
             }
         }
 
@@ -337,7 +322,8 @@ public class VTree extends AbstractTreeIndex {
      * For disk components, this returns the component's own buffer cache.
      */
     public IBufferCache getNavigationBufferCache() {
-        return (staticBufferCache != null) ? staticBufferCache : bufferCache;
+        StaticStructureRef ref = staticStructure;
+        return ref != null ? ref.bufferCache() : bufferCache;
     }
 
     /**
@@ -346,7 +332,8 @@ public class VTree extends AbstractTreeIndex {
      * For disk components, this returns the component's own file ID.
      */
     public int getNavigationFileId() {
-        return (staticBufferCache != null) ? staticFileId : getFileId();
+        StaticStructureRef ref = staticStructure;
+        return ref != null ? ref.fileId() : getFileId();
     }
 
     /**
@@ -355,7 +342,8 @@ public class VTree extends AbstractTreeIndex {
      * For disk components, this returns the component's own root page.
      */
     public int getNavigationRootPageId() {
-        return (staticBufferCache != null) ? staticRootPage : rootPage;
+        StaticStructureRef ref = staticStructure;
+        return ref != null ? ref.rootPageId() : rootPage;
     }
 
     /**
@@ -366,10 +354,10 @@ public class VTree extends AbstractTreeIndex {
     public List<ClusterSearchResult> findCloseCentroidsLevelWiseGlobalSortFromRoot(double[] queryVector,
             IVTreeDistanceFunction distanceFunction, double ep) throws HyracksDataException {
 
-        // For memory components: navigate via static structure reference
-        IBufferCache navBC = (staticBufferCache != null) ? staticBufferCache : bufferCache;
-        int navFileId = (staticBufferCache != null) ? staticFileId : getFileId();
-        int navRoot = (staticBufferCache != null) ? staticRootPage : rootPage;
+        StaticStructureRef ref = staticStructure;
+        IBufferCache navBC = ref != null ? ref.bufferCache() : bufferCache;
+        int navFileId = ref != null ? ref.fileId() : getFileId();
+        int navRoot = ref != null ? ref.rootPageId() : rootPage;
 
         LOGGER.log(Level.TRACE, "Starting findCloseCentroidsLevelWiseFromRoot with navRoot={}", navRoot);
 
@@ -377,15 +365,13 @@ public class VTree extends AbstractTreeIndex {
                 navRoot, getInteriorFrameFactory(), getLeafFrameFactory(), queryVector, distanceFunction, ep);
 
         // For memory components: replace directoryPageId with VBC mapping
-        if (centroidDirPageMap != null) {
+        if (ref != null) {
             for (int r = 0; r < results.size(); r++) {
                 ClusterSearchResult result = results.get(r);
-                int centroidIndex = result.centroidId - firstLeafCentroidIdMem;
-                if (centroidIndex >= 0 && centroidIndex < centroidDirPageMap.length) {
-                    results.set(r,
-                            ClusterSearchResult.create(result.leafPageId, result.clusterIndex, result.centroid,
-                                    result.distance, result.centroidId, centroidDirPageMap[centroidIndex],
-                                    result.quantizedDistance));
+                long dirPageId = ref.directoryPageFor(result.centroidId);
+                if (dirPageId != StaticStructureRef.NO_DIRECTORY_PAGE) {
+                    results.set(r, ClusterSearchResult.create(result.leafPageId, result.clusterIndex, result.centroid,
+                            result.distance, result.centroidId, dirPageId, result.quantizedDistance));
                 }
             }
         }
@@ -402,59 +388,53 @@ public class VTree extends AbstractTreeIndex {
     }
 
     public boolean isInitialized() {
-        return initialized;
+        return staticStructure != null;
     }
 
-    /**
-     * Reset initialization state so that static structure directory pages
-     * can be re-created after a memory component flush/recycle.
-     */
+    /** Detaches from the static structure, so its directory pages are re-created at the next allocation. */
     public void resetInitialization() {
-        initialized = false;
-        centroidDirPageMap = null;
+        staticStructure = null;
     }
 
     /**
-     * Initialize this memory component's static-structure navigation state (see the field-group comment
-     * above for the full threading contract). Called by the LSM layer during memory-component allocation
-     * or post-flush recycle, before the component is published for operations; {@code synchronized} plus
-     * the {@code initialized} guard make it a safe, idempotent single write. Reads of the fields it sets
-     * rely on the LSM harness's operation-tracker happens-before for visibility, so callers must not read
-     * them concurrently with this method outside that ordering.
+     * Attaches this memory component to the static structure it navigates. Called during allocation or
+     * post-flush recycle while the component is unpublished; idempotent, and the attachment is published by
+     * one volatile write.
      */
     public synchronized void setStaticStructure(VTreeAccessor staticAccessor) throws HyracksDataException {
-        if (initialized) {
-            return; // Already initialized, skip
+        if (staticStructure != null) {
+            return; // Already attached, skip
         }
 
-        VTree staticStructure = staticAccessor.getIndex();
+        VTree source = staticAccessor.getIndex();
         ITreeIndexMetadataFrame metaFrame = staticAccessor.getOpContext().getMetaFrame();
 
-        // Store references to static structure for read-only navigation
-        this.staticBufferCache = staticStructure.getBufferCache();
-        this.staticFileId = staticStructure.getFileId();
-        this.staticRootPage = staticStructure.rootPage;
+        // Captured into locals and published as one object at the end of this method, so no thread can
+        // observe a partly-attached component.
+        IBufferCache staticCache = source.getBufferCache();
+        int staticFileId = source.getFileId();
+        int staticRootPage = source.rootPage;
 
         // Pin the static structure's metadata page onto metaFrame before reading
         // (getMaxPageId internally calls metaFrame.setPage() which initializes the frame's buffer)
-        staticStructure.getPageManager().getMaxPageId(metaFrame);
+        source.getPageManager().getMaxPageId(metaFrame);
 
         // Read metadata from static structure
         LongPointable value1 = LongPointable.FACTORY.createPointable();
         LongPointable value2 = LongPointable.FACTORY.createPointable();
         metaFrame.get(VTreeMetadataKeys.NUM_LEAF_CENTROIDS, value1);
         metaFrame.get(VTreeMetadataKeys.FIRST_LEAF_CENTROID_ID, value2);
-        this.numLeafCentroidMem = value1.intValue();
-        this.firstLeafCentroidIdMem = value2.intValue();
+        int numLeafCentroids = value1.intValue();
+        int firstLeafCentroidId = value2.intValue();
 
         // Create empty directory pages in VBC (using takePage() directly)
         ITreeIndexMetadataFrame vbcMetaFrame = freePageManager.createMetadataFrame();
         ITreeIndexFrame directoryFrame = metadataFrameFactory.createFrame();
-        centroidDirPageMap = new int[numLeafCentroidMem];
+        int[] dirPageMap = new int[numLeafCentroids];
 
-        for (int i = 0; i < numLeafCentroidMem; i++) {
+        for (int i = 0; i < numLeafCentroids; i++) {
             int dirPageId = freePageManager.takePage(vbcMetaFrame);
-            centroidDirPageMap[i] = dirPageId;
+            dirPageMap[i] = dirPageId;
 
             ICachedPage targetPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), dirPageId), NEW);
             try {
@@ -469,7 +449,8 @@ public class VTree extends AbstractTreeIndex {
             LOGGER.log(Level.TRACE, "Created directory page {} for leaf centroid {}", dirPageId, i);
         }
 
-        initialized = true;
+        this.staticStructure = new StaticStructureRef(staticCache, staticFileId, staticRootPage, dirPageMap,
+                firstLeafCentroidId, numLeafCentroids);
     }
 
     /**
@@ -494,28 +475,28 @@ public class VTree extends AbstractTreeIndex {
      * away or, worse, a silent "no centroids to copy". Both hide the actual fault, which is a caller
      * using the component before it was attached or after it was recycled.
      */
-    private void requireAttachedStaticStructure(String what) throws HyracksDataException {
-        if (!initialized) {
+    private StaticStructureRef requireAttachedStaticStructure(String what) throws HyracksDataException {
+        StaticStructureRef ref = staticStructure;
+        if (ref == null) {
             throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
                     "read of " + what
                             + " on a VTree with no attached static structure: setStaticStructure() has not run, or"
                             + " resetInitialization() has already recycled this component");
         }
+        return ref;
     }
 
-    public int[] getCentroidDirPageMap() throws HyracksDataException {
-        requireAttachedStaticStructure("centroidDirPageMap");
-        return centroidDirPageMap;
+    /** The attachment, for same-package collaborators that need more than one part of it. */
+    StaticStructureRef requireStaticStructure() throws HyracksDataException {
+        return requireAttachedStaticStructure("staticStructure");
     }
 
     public int getFirstLeafCentroidIdMem() throws HyracksDataException {
-        requireAttachedStaticStructure("firstLeafCentroidIdMem");
-        return firstLeafCentroidIdMem;
+        return requireAttachedStaticStructure("firstLeafCentroidIdMem").firstLeafCentroidId();
     }
 
     public int getNumLeafCentroidMem() throws HyracksDataException {
-        requireAttachedStaticStructure("numLeafCentroidMem");
-        return numLeafCentroidMem;
+        return requireAttachedStaticStructure("numLeafCentroidMem").numLeafCentroids();
     }
 
     /**
@@ -580,14 +561,14 @@ public class VTree extends AbstractTreeIndex {
      * Prepare data-page access for a single (already resolved) cluster: pin/latch the leaf page when needed
      * and resolve the metadata page id. Used by insert, delete, and update once per replica cluster.
      * <ul>
-     *   <li>Memory components ({@code centroidDirPageMap != null}): the metadata page is taken straight from
+     *   <li>Memory components (an attached static structure): the metadata page is taken straight from
      *       the VBC centroid→directory mapping carried on {@code clusterResult}; no leaf page is pinned.</li>
      *   <li>Disk components: the leaf page is write-latched and the metadata pointer read from its frame.</li>
      * </ul>
      */
     private ClusterAccessResult prepareClusterAccess(ClusterSearchResult clusterResult, VTreeOpContext ctx)
             throws HyracksDataException {
-        if (centroidDirPageMap != null) {
+        if (staticStructure != null) {
             return new ClusterAccessResult(clusterResult, null, clusterResult.directoryPageId, bufferCache);
         }
 
@@ -682,12 +663,13 @@ public class VTree extends AbstractTreeIndex {
         }
 
         private void configureCursor(VTreeSearchCursor cursor) {
-            if (tree.staticBufferCache != null) {
-                cursor.setBufferCache(tree.staticBufferCache);
-                cursor.setFileId(tree.staticFileId);
-                cursor.setRootPageId(tree.staticRootPage);
+            StaticStructureRef ref = tree.staticStructure;
+            if (ref != null) {
+                cursor.setBufferCache(ref.bufferCache());
+                cursor.setFileId(ref.fileId());
+                cursor.setRootPageId(ref.rootPageId());
                 cursor.setDataBufferCache(tree.bufferCache, tree.getFileId());
-                cursor.setCentroidDirPageMap(tree.centroidDirPageMap, tree.firstLeafCentroidIdMem);
+                cursor.setStaticStructure(ref);
             } else {
                 cursor.setBufferCache(tree.bufferCache);
                 cursor.setFileId(tree.getFileId());
@@ -746,9 +728,9 @@ public class VTree extends AbstractTreeIndex {
         private VTreeCursorInitialState buildInitialState(double[] queryVector,
                 IVTreeDistanceFunction distanceFunction) {
             VTreeCursorInitialState initialState = new VTreeCursorInitialState(ctx.getAccessor());
-            // For memory components, use staticRootPage (the static structure's root);
-            // for disk components, use the tree's own rootPage
-            initialState.setRootPageId(tree.staticBufferCache != null ? tree.staticRootPage : tree.rootPage);
+            // For memory components, the borrowed static structure's root; for disk components, our own
+            StaticStructureRef ref = tree.staticStructure;
+            initialState.setRootPageId(ref != null ? ref.rootPageId() : tree.rootPage);
             if (queryVector != null) {
                 initialState.setQueryVector(queryVector);
             }
@@ -825,14 +807,15 @@ public class VTree extends AbstractTreeIndex {
             ctx.destroy();
         }
 
+        /** Refuses, like {@link #diskOrderScan}, since a VTree's pages are not a single ordered sequence. */
         @Override
         public ITreeIndexCursor createDiskOrderScanCursor() {
-            return new TreeIndexDiskOrderScanCursor(leafFrameFactory.createFrame());
+            throw new UnsupportedOperationException(
+                    "Disk-order scan not implemented for " + VTree.class.getSimpleName());
         }
 
         @Override
         public void diskOrderScan(ITreeIndexCursor cursor) throws HyracksDataException {
-            ctx.setOperation(IndexOperation.DISKORDERSCAN);
             throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, "diskOrderScan",
                     VTree.class.getSimpleName());
         }

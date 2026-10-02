@@ -74,15 +74,6 @@ import org.apache.logging.log4j.Logger;
  */
 public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVectorSearchCursor {
 
-    /**
-     * Index-access-parameters key — set {@code Boolean.TRUE} under this key to route search to
-     * this cursor (the quantized top-K window cursor used by production ANN queries). When absent
-     * or false, {@link LSMVTreeIndexAccessor#createSearchCursor(boolean)} returns the streaming
-     * {@link LSMVTreeSearchCursor} — also the cursor used by component merges and by test
-     * fixtures that verify inserts/deletes through full-scan iteration.
-     */
-    public static final String IAP_KEY = "USE_TOPK_SEARCH";
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     // Operation context
@@ -191,14 +182,11 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
         this.identityFields = lsmInitialState.getIdentityFields();
         this.identityCmp = lsmInitialState.getIdentityCmp();
 
-        // This cursor is quantized-only: dataAccessor is fixed to the quantized layout, so it reads field 3
-        // as the quantized embedding. It is selected purely by the USE_TOPK_SEARCH access parameter, which
-        // is independent of the index's quantization — so check the assumption instead of inheriting it. On
-        // a non-quantized index field 3 is a key or value field and the whole read would be silent garbage.
+        // dataAccessor reads field 3 as the quantized embedding, while the caller choosing this cursor does
+        // not make the index quantized. On a non-quantized index field 3 is a key or value field.
         if (!lsmInitialState.isQuantized()) {
             throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                    "LSMVTreeTopKSearchCursor requires a quantized VTree index (USE_TOPK_SEARCH was requested for a "
-                            + "non-quantized index)");
+                    "LSMVTreeTopKSearchCursor requires a quantized VTree index, but this index is not quantized");
         }
         // Extract tuple filter from search predicate for INCLUDE field predicates
         this.tupleFilter = vectorPred.getTupleFilter();

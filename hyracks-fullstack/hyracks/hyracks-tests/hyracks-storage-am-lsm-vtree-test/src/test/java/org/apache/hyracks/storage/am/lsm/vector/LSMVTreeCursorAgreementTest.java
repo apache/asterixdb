@@ -39,8 +39,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTree;
-import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeTopKSearchCursor;
 import org.apache.hyracks.storage.am.lsm.vector.util.LSMVTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.vector.util.LSMVTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.vector.util.QuantizedSearchTestDriver;
@@ -268,13 +268,13 @@ public class LSMVTreeCursorAgreementTest {
 
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        iap.getParameters().put(LSMVTreeTopKSearchCursor.IAP_KEY, Boolean.TRUE);
         if (!HyracksConstants.HYRACKS_TASK_CONTEXT.equals(omittedKey)) {
             iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx.getHyracksTaskContext());
         }
 
         IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
-        IIndexCursor cursor = accessor.createSearchCursor(false);
+        IIndexCursor cursor =
+                ((LSMVTree) ctx.getIndex()).createTopKSearchCursor(((LSMTreeIndexAccessor) accessor).getOpContext());
         try {
             accessor.search(cursor, predicate);
         } finally {
@@ -320,12 +320,10 @@ public class LSMVTreeCursorAgreementTest {
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx.getHyracksTaskContext());
-        if (useTopK) {
-            iap.getParameters().put(LSMVTreeTopKSearchCursor.IAP_KEY, Boolean.TRUE);
-        }
-
         IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
-        IIndexCursor cursor = accessor.createSearchCursor(false);
+        IIndexCursor cursor = useTopK
+                ? ((LSMVTree) ctx.getIndex()).createTopKSearchCursor(((LSMTreeIndexAccessor) accessor).getOpContext())
+                : accessor.createSearchCursor(false);
         Set<String> primaryKeys = new LinkedHashSet<>();
         try {
             accessor.search(cursor, predicate);

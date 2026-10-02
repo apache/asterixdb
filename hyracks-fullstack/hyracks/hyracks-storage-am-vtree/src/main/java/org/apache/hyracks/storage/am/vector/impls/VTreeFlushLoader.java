@@ -92,7 +92,7 @@ public class VTreeFlushLoader extends PageWriteFailureCallback implements IIndex
     /**
      * Copy static structure pages to end of file with pointer adjustment.
      * Interior child pointers are offset by staticBasePageId.
-     * Leaf metadata pointers are set from the source memory tree's centroidDirPageMap
+     * Leaf metadata pointers are set from the source memory tree's centroid&rarr;directory mapping
      * (identity mapping: VBC page IDs = disk page IDs).
      * Leaf next-page pointers are offset by staticBasePageId.
      * <p>
@@ -131,9 +131,7 @@ public class VTreeFlushLoader extends PageWriteFailureCallback implements IIndex
         IVTreeInteriorFrame intFrame = (IVTreeInteriorFrame) treeIndex.getInteriorFrameFactory().createFrame();
         IVTreeLeafFrame lfFrame = (IVTreeLeafFrame) treeIndex.getLeafFrameFactory().createFrame();
 
-        int[] centroidDirPageMap = sourceMemoryTree.getCentroidDirPageMap();
-        int numLeafCentroid = sourceMemoryTree.getNumLeafCentroidMem();
-        int firstLeafCid = sourceMemoryTree.getFirstLeafCentroidIdMem();
+        StaticStructureRef staticStructure = sourceMemoryTree.requireStaticStructure();
 
         // Copy one source/destination page pair at a time: pin source, copy into the confiscated
         // destination page, release the source, patch pointers, write, then move on.
@@ -165,16 +163,14 @@ public class VTreeFlushLoader extends PageWriteFailureCallback implements IIndex
                     intFrame.setNextPage(intFrame.getNextPage() + staticBasePageId);
                 }
             } else {
-                // Leaf page: set metadata pointers to VBC directory page IDs
-                // (identity mapping means VBC page IDs = disk page IDs). Index
-                // centroidDirPageMap by the slot's centroid_id (cid - firstLeafCid), not by
-                // traversal order, since physical page-id order need not match the nextLeaf chain.
+                // Leaf page: metadata pointers come from the VBC directory mapping (VBC page ids equal disk
+                // page ids), looked up by each slot's centroid id since page-id order need not match the
+                // nextLeaf chain. A centroid the mapping does not cover keeps the static structure's pointer.
                 lfFrame.setPage(page);
                 for (int t = 0; t < lfFrame.getTupleCount(); t++) {
-                    int cid = lfFrame.getCentroidId(t);
-                    int idx = cid - firstLeafCid;
-                    if (idx >= 0 && idx < numLeafCentroid) {
-                        lfFrame.setMetadataPagePointer(t, centroidDirPageMap[idx]);
+                    long dirPageId = staticStructure.directoryPageFor(lfFrame.getCentroidId(t));
+                    if (dirPageId != StaticStructureRef.NO_DIRECTORY_PAGE) {
+                        lfFrame.setMetadataPagePointer(t, (int) dirPageId);
                     }
                 }
                 // Offset the next-leaf pointer. The next-leaf field is dual-purpose: with the overflow flag

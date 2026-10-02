@@ -46,6 +46,7 @@
     <module>hyracks-storage-common-test</module>
     <module>hyracks-storage-am-btree-test</module>
     <module>hyracks-storage-am-rtree-test</module>
+    <module>hyracks-storage-am-vtree-test</module>
     <module>hyracks-storage-am-lsm-common-test</module>
     <module>hyracks-storage-am-lsm-btree-test</module>
     <module>hyracks-storage-am-lsm-vtree-test</module>

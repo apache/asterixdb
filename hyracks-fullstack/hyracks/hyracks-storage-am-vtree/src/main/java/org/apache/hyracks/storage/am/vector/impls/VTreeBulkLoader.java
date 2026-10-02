@@ -194,6 +194,35 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
         return IntegerPointable.getInteger(tuple.getFieldData(cidField), tuple.getFieldStart(cidField));
     }
 
+    /**
+     * The cluster index of a centroid id, rejecting an id outside the static structure's leaf range. The first
+     * tuple of a load sets {@link #currentLeafClusterIndex} without passing {@link #loadToNextLeafCluster}.
+     */
+    private int clusterIndexOf(int centroidId) throws HyracksDataException {
+        int clusterIndex = centroidId - firstLeafCentroidId;
+        if (clusterIndex < 0 || clusterIndex >= numLeafCentroid) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "Centroid id " + centroidId + " is outside the static structure's leaf centroid range ["
+                            + firstLeafCentroidId + ", " + (firstLeafCentroidId + numLeafCentroid - 1) + "]");
+        }
+        return clusterIndex;
+    }
+
+    /**
+     * Enforces that tuples arrive grouped by centroid id in non-decreasing order, which the producer's sort on
+     * {@code sortFields = {1, 0}} provides. Returning to a loaded cluster would open a second directory chain
+     * and leave the first unreachable. Distance order within a group is not checked, since
+     * {@code insertSorted} places each tuple by distance.
+     */
+    private void requireNonDecreasing(int tupleCentroidId) throws HyracksDataException {
+        if (tupleCentroidId < currentCentroidId) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "Bulk-load input is not grouped by centroid id: received " + tupleCentroidId + " after "
+                            + currentCentroidId
+                            + ". Input must arrive grouped by centroid id, in non-decreasing id order.");
+        }
+    }
+
     @Override
     public void add(ITupleReference tuple) throws HyracksDataException {
         sampler.addTuple(tuple);
@@ -202,15 +231,15 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
             // First tuple being added - initialize for first cluster
             LOGGER.log(Level.TRACE, "Starting bulk load with first centroid cluster: {}", tupleCentroidId);
             currentCentroidId = tupleCentroidId;
-            currentLeafClusterIndex = tupleCentroidId - firstLeafCentroidId;
+            currentLeafClusterIndex = clusterIndexOf(tupleCentroidId);
             createDirectoryPage();
             createNewDataPage();
         } else if (currentCentroidId != tupleCentroidId) {
+            requireNonDecreasing(tupleCentroidId);
             // Moved to a new centroid cluster
             LOGGER.log(Level.TRACE, "Switching from centroid {} to centroid {}", currentCentroidId, tupleCentroidId);
             currentCentroidId = tupleCentroidId;
-            int targetClusterIndex = tupleCentroidId - firstLeafCentroidId;
-            loadToNextLeafCluster(targetClusterIndex);
+            loadToNextLeafCluster(clusterIndexOf(tupleCentroidId));
         }
         try {
             int spaceNeeded = currentDataFrame.getBytesRequiredToWriteTuple(tuple);
@@ -251,9 +280,8 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
      */
     public void loadToNextLeafCluster(int targetClusterIndex) throws HyracksDataException {
         if (targetClusterIndex < 0 || targetClusterIndex >= numLeafCentroid) {
-            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE,
-                    "Target cluster index out of bounds: " + targetClusterIndex + " (valid range: 0-"
-                            + (numLeafCentroid - 1) + ")");
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "Target cluster index out of bounds: "
+                    + targetClusterIndex + " (valid range: 0-" + (numLeafCentroid - 1) + ")");
         }
 
         if (currentLeafClusterIndex == targetClusterIndex) {
@@ -424,7 +452,16 @@ public class VTreeBulkLoader extends PageWriteFailureCallback implements IIndexB
             write(dirPage);
         }
 
-        // Record first directory page ID for this cluster
+        // Record the cluster's first directory page exactly once, since a second head would orphan the first
+        // chain; loadToNextLeafCluster is public, so a caller can jump backwards without passing add().
+        if (clusterFirstDirPageId[currentLeafClusterIndex] != VTreeDataTupleAccessor.UNASSIGNED_DIR_PAGE) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "Cluster " + currentLeafClusterIndex + " (centroid id "
+                            + (firstLeafCentroidId + currentLeafClusterIndex)
+                            + ") already has a directory chain starting at page "
+                            + clusterFirstDirPageId[currentLeafClusterIndex]
+                            + "; recording a second one would orphan the first");
+        }
         clusterFirstDirPageId[currentLeafClusterIndex] = dirPageIds[0];
         pendingDirectoryPages.clear();
 

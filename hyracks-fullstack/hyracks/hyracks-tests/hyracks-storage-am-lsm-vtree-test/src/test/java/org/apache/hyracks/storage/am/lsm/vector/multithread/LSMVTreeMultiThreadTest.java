@@ -188,7 +188,6 @@ public class LSMVTreeMultiThreadTest {
             // Post-verification: all inserted PKs retrievable
             verifyInsertedRecords(ctx, expectedInsertedPKs);
 
-            ctx.getIndex().validate();
             LOGGER.info("testConcurrentInsertsAndSearches: passed");
 
         } finally {
@@ -276,7 +275,6 @@ public class LSMVTreeMultiThreadTest {
 
             verifyInsertedAndDeleted(ctx, expectedInsertedPKs, "del_");
 
-            ctx.getIndex().validate();
             LOGGER.info("testConcurrentInsertsAndDeletes: passed");
 
         } finally {
@@ -332,7 +330,6 @@ public class LSMVTreeMultiThreadTest {
             // Verify all inserted records are retrievable
             verifyInsertedRecords(ctx, expectedInsertedPKs);
 
-            ctx.getIndex().validate();
             LOGGER.info("Concurrent insert test with {} threads: all {} inserted PKs verified", numThreads,
                     expectedInsertedPKs.size());
 

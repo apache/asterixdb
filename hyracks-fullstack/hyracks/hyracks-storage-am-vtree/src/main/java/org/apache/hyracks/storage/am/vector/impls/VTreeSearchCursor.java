@@ -70,13 +70,10 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
     private IBufferCache dataBufferCache;
     private int dataFileId;
     // Centroid-to-directory-page mapping (memory components only, null for disk)
-    private int[] centroidDirPageMap;
-    private int firstLeafCentroidIdForMap;
-    // Lazily-built centroid→directoryPageId map for disk components.
-    // When centroidDirPageMap is null and openClusterByResult() is called,
-    // the ClusterSearchResult's directoryPageId may be from a DIFFERENT component
-    // (e.g., static structure with predicted IDs). This map resolves the correct
-    // directory page ID by scanning this component's own leaf pages.
+    /** Set for memory components only; null for a disk component, which resolves locally. */
+    private StaticStructureRef staticStructure;
+    // Lazily-built centroid→directoryPageId map for a disk component, built from its own leaf pages, since
+    // a ClusterSearchResult's directoryPageId may come from a different component.
     private Map<Integer, Long> localCentroidDirPageMap;
 
     // Cursor state fields
@@ -192,9 +189,8 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
      * Set centroid-to-directory-page mapping for memory components.
      * When set, the cursor resolves directory pages from the map instead of reading leaf pages.
      */
-    public void setCentroidDirPageMap(int[] map, int firstLeafCentroidId) {
-        this.centroidDirPageMap = map;
-        this.firstLeafCentroidIdForMap = firstLeafCentroidId;
+    public void setStaticStructure(StaticStructureRef staticStructure) {
+        this.staticStructure = staticStructure;
     }
 
     public void setRootPageId(int rootPageId) {
@@ -658,11 +654,8 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
             return false;
         }
 
-        // Always resolve directoryPageId locally for this component.
-        // The cluster's directoryPageId may come from a different LSM component
-        // (e.g., memory component VBC page IDs vs disk component page IDs).
-        // getMetadataPageIdFromCluster handles both memory (centroidDirPageMap)
-        // and disk (leaf page traversal) correctly.
+        // Resolve directoryPageId for this component, since the cluster's may come from a different LSM
+        // component (memory VBC page ids vs disk page ids).
         long localDirPageId = getMetadataPageIdFromCluster(cluster);
         openClusterByDirectoryPage(localDirPageId, cluster.centroidId);
         this.currentClusterResult = cluster;
@@ -841,8 +834,8 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
     /**
      * Get metadata page ID from cluster search result.
      *
-     * For memory components: uses centroidDirPageMap for O(1) lookup (the map
-     * translates centroid IDs to VBC directory page IDs).
+     * For memory components: uses the borrowed static structure's centroid&rarr;directory-page
+     * mapping for an O(1) lookup.
      *
      * For disk components: builds a lazy local map by scanning this component's
      * own leaf pages. This is necessary because the ClusterSearchResult's
@@ -851,11 +844,11 @@ public class VTreeSearchCursor extends EnforcedIndexCursor {
      * directory page IDs that don't match this disk component's actual IDs).
      */
     private long getMetadataPageIdFromCluster(ClusterSearchResult clusterResult) throws HyracksDataException {
-        // Memory components: use centroidDirPageMap for O(1) lookup
-        if (centroidDirPageMap != null) {
-            int centroidIndex = clusterResult.centroidId - firstLeafCentroidIdForMap;
-            if (centroidIndex >= 0 && centroidIndex < centroidDirPageMap.length) {
-                return centroidDirPageMap[centroidIndex];
+        // Memory components: the borrowed static structure's mapping gives an O(1) lookup
+        if (staticStructure != null) {
+            long dirPageId = staticStructure.directoryPageFor(clusterResult.centroidId);
+            if (dirPageId != StaticStructureRef.NO_DIRECTORY_PAGE) {
+                return dirPageId;
             }
         }
 

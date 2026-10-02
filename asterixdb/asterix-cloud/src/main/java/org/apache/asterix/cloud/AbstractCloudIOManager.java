@@ -249,15 +249,20 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     }
 
     @Override
-    public final int localWriteOnly(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
-        // Local copy only; the long-term (cloud) upload is intentionally deferred to a later pass.
+    public final long localWriter(IFileHandle fHandle, long offset, ByteBuffer[] data) throws HyracksDataException {
+        // Using syncWrite here to avoid closing the file channel when the thread is interrupted
         return localIoManager.syncWrite(fHandle, offset, data);
+    }
+
+    /** The local-only write for callers that see this manager only as an {@code IOManager}. */
+    @Override
+    public final int localWriteOnly(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+        return localWriter(fHandle, offset, data);
     }
 
     @Override
     public final long localWriteOnly(IFileHandle fHandle, long offset, ByteBuffer[] data) throws HyracksDataException {
-        // Local copy only; the long-term (cloud) upload is intentionally deferred to a later pass.
-        return localIoManager.syncWrite(fHandle, offset, data);
+        return localWriter(fHandle, offset, data);
     }
 
     @Override

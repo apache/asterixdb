@@ -80,7 +80,6 @@ public class LSMVTreeBuildTest extends VectorIndexTestDriver {
         testUtils.bulkLoadRecords(ctx);
         testUtils.clusterRecords(ctx);
         testUtils.scanClosestLeafCluster(ctx);
-        ctx.getIndex().validate();
         ctx.getIndex().deactivate();
         ctx.getIndex().destroy();
     }

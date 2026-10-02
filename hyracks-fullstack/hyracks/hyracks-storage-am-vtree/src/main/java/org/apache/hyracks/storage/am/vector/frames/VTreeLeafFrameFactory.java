@@ -42,6 +42,7 @@ import org.apache.hyracks.storage.am.vector.utils.VTreeStaticTupleAccessor;
 public class VTreeLeafFrameFactory implements ITreeIndexFrameFactory {
 
     private static final long serialVersionUID = 1L;
+    private final ITreeIndexTupleWriterFactory tupleWriterFactory;
     private final ITreeIndexTupleWriter tupleWriter;
     private final int centroidDimensions;
 
@@ -49,8 +50,8 @@ public class VTreeLeafFrameFactory implements ITreeIndexFrameFactory {
             INullIntrospector nullIntrospector) {
         this.centroidDimensions = centroidDimensions;
         ITypeTraits[] schema = VTreeStaticTupleAccessor.leafTypeTraits(quantized);
-        this.tupleWriter =
-                new TypeAwareTupleWriterFactory(schema, nullTypeTraits, nullIntrospector).createTupleWriter();
+        this.tupleWriterFactory = new TypeAwareTupleWriterFactory(schema, nullTypeTraits, nullIntrospector);
+        this.tupleWriter = tupleWriterFactory.createTupleWriter();
     }
 
     @Override
@@ -60,7 +61,7 @@ public class VTreeLeafFrameFactory implements ITreeIndexFrameFactory {
 
     @Override
     public ITreeIndexTupleWriterFactory getTupleWriterFactory() {
-        return null;
+        return tupleWriterFactory;
     }
 
     public ITreeIndexTupleWriter getTupleWriter() {

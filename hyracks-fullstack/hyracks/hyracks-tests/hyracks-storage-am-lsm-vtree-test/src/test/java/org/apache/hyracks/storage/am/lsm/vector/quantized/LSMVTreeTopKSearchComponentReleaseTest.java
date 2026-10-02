@@ -106,8 +106,8 @@ public class LSMVTreeTopKSearchComponentReleaseTest extends QuantizedSearchTestD
             assertTrue("precondition: the memory component should be modified after inserts",
                     memComponent.isModified());
 
-            // Opts in to LSMVTreeTopKSearchCursor via IAP_KEY. No expected PKs: the inserts above change
-            // which records win, and this test covers component release rather than ranking.
+            // No expected PKs: the inserts above change which records win, and this test covers only
+            // component release.
             QueryCase qc = queryCases.get(0);
             ctx.setQueryVector(qc.queryVector);
             ctx.setQueryK(qc.queryK);

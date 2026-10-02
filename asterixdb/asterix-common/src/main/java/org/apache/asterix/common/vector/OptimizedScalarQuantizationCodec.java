@@ -21,6 +21,7 @@ package org.apache.asterix.common.vector;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.vector.utils.VTreeScalarQuantization;
 
 /**
  * Optimized scalar quantization (OSQ) utilities for vector indexes.
@@ -181,25 +182,13 @@ public final class OptimizedScalarQuantizationCodec {
     }
 
     /*
-     * Per-dimension scalar encode/decode contract (used by quantizeToByte, quantizeToShort, quantizeToInt).
-     *
-     * Parameter source: minQ, maxQ, alpha, and bits come from Params (minQuantile, maxQuantile, alpha, bits),
-     * populated at index creation by QuantizationConstantsAggregate:
-     *   levels = 2^bits
-     *   alpha = (levels - 1) / (maxQ - minQ)
-     *
-     * Encode (dimension i):
-     *   v = clamp(x[i], minQ, maxQ)
-     *   q = clamp(round((v - minQ) * alpha), 0, levels - 1)
-     *
-     * Decode (inverse, see dequantizeToDoubleArray):
-     *   x_hat[i] = q / alpha + minQ   (minQ = Params.minQuantile)
-     *
-     * Endpoints: v = minQ -> q = 0; v = maxQ -> q = levels - 1 (after clamp and round).
-     * Rounding: Math.round selects the nearest integer code (standard nearest-bin scalar quant).
+     * The per-dimension formula is VTreeScalarQuantization, shared with the DML insert path; this class
+     * owns the validation, the Params/SimilarityFunction types and the choice of storage width.
      *
      * Storage by bits: bits <= 8 -> byte[] (SQ4 uses codes 0..15 in byte[]); <= 16 -> short[]; <= 32 -> int[].
      * Java byte/short are signed; codes above 127 or 32767 appear negative unless read with & 0xFF / & 0xFFFF.
+     * VectorQuantization offers SQ4 and SQ8 only and VTree leaf storage is byte[], so the short[] and int[]
+     * widths have no VTree reader.
      *
      * Debugging: log params.bits, levels, minQ, maxQ, alpha; check min/max q across dims; compare
      * dequantizeToDoubleArray(quantizeVector(x)) against x for round-trip error on sample vectors.
@@ -221,11 +210,7 @@ public final class OptimizedScalarQuantizationCodec {
     private static byte[] quantizeToByte(double[] vector, float minQ, float maxQ, float alpha, int levels) {
         byte[] quantized = new byte[vector.length];
         for (int i = 0; i < vector.length; i++) {
-            // clamp to global quantile range, then map to integer code in [0, levels - 1]
-            double value = Math.max(minQ, Math.min(maxQ, vector[i]));
-            long quantizedValue = Math.round((value - minQ) * alpha);
-            quantizedValue = Math.max(0, Math.min(levels - 1, quantizedValue));
-            quantized[i] = (byte) quantizedValue;
+            quantized[i] = (byte) VTreeScalarQuantization.encodeDimension(vector[i], minQ, maxQ, alpha, levels);
         }
         return quantized;
     }
@@ -243,11 +228,7 @@ public final class OptimizedScalarQuantizationCodec {
     private static short[] quantizeToShort(double[] vector, float minQ, float maxQ, float alpha, int levels) {
         short[] quantized = new short[vector.length];
         for (int i = 0; i < vector.length; i++) {
-            // clamp to global quantile range, then map to integer code in [0, levels - 1]
-            double value = Math.max(minQ, Math.min(maxQ, vector[i]));
-            long quantizedValue = Math.round((value - minQ) * alpha);
-            quantizedValue = Math.max(0, Math.min(levels - 1, quantizedValue));
-            quantized[i] = (short) quantizedValue;
+            quantized[i] = (short) VTreeScalarQuantization.encodeDimension(vector[i], minQ, maxQ, alpha, levels);
         }
         return quantized;
     }
@@ -268,11 +249,7 @@ public final class OptimizedScalarQuantizationCodec {
     private static int[] quantizeToInt(double[] vector, float minQ, float maxQ, float alpha, int levels) {
         int[] quantized = new int[vector.length];
         for (int i = 0; i < vector.length; i++) {
-            // clamp to global quantile range, then map to integer code in [0, levels - 1]
-            double value = Math.max(minQ, Math.min(maxQ, vector[i]));
-            long quantizedValue = Math.round((value - minQ) * alpha);
-            quantizedValue = Math.max(0, Math.min(levels - 1, quantizedValue));
-            quantized[i] = (int) quantizedValue;
+            quantized[i] = (int) VTreeScalarQuantization.encodeDimension(vector[i], minQ, maxQ, alpha, levels);
         }
         return quantized;
     }
@@ -325,7 +302,7 @@ public final class OptimizedScalarQuantizationCodec {
                 throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, bytes.length);
             }
             for (int i = 0; i < dims; i++) {
-                result[i] = ((double) (bytes[i] & 0xFF)) / params.alpha + params.minQuantile;
+                result[i] = VTreeScalarQuantization.decodeDimension(bytes[i] & 0xFF, params.alpha, params.minQuantile);
             }
         } else if (bits <= 16) {
             // short[] - treat as unsigned
@@ -338,7 +315,8 @@ public final class OptimizedScalarQuantizationCodec {
                 throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, shorts.length);
             }
             for (int i = 0; i < dims; i++) {
-                result[i] = ((double) (shorts[i] & 0xFFFF)) / params.alpha + params.minQuantile;
+                result[i] =
+                        VTreeScalarQuantization.decodeDimension(shorts[i] & 0xFFFF, params.alpha, params.minQuantile);
             }
         } else if (bits <= 32) {
             // int[] - treat as unsigned
@@ -351,7 +329,8 @@ public final class OptimizedScalarQuantizationCodec {
                 throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, ints.length);
             }
             for (int i = 0; i < dims; i++) {
-                result[i] = ((double) (ints[i] & 0xFFFFFFFFL)) / params.alpha + params.minQuantile;
+                result[i] = VTreeScalarQuantization.decodeDimension(ints[i] & 0xFFFFFFFFL, params.alpha,
+                        params.minQuantile);
             }
         } else {
             throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE,

@@ -50,9 +50,9 @@ import org.apache.hyracks.storage.am.common.TestOperationCallback;
 import org.apache.hyracks.storage.am.common.TreeIndexTestUtils;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTree;
 import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeDiskComponent;
-import org.apache.hyracks.storage.am.lsm.vector.impls.LSMVTreeTopKSearchCursor;
 import org.apache.hyracks.storage.am.vector.api.IVTreeDistanceFunction;
 import org.apache.hyracks.storage.am.vector.impls.VTree;
 import org.apache.hyracks.storage.am.vector.impls.VTreeSearchPredicate;
@@ -343,19 +343,16 @@ public class VectorTreeTestUtils extends TreeIndexTestUtils {
         // 3. Create the index accessor.
         IndexAccessParameters iap =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
-        // Opt in to LSMVTreeTopKSearchCursor — this test exercises the production top-K search
-        // path. Other test verification paths (e.g. verifyInsertedRecords) leave the flag unset
-        // and get the streaming LSMVTreeSearchCursor.
-        iap.getParameters().put(LSMVTreeTopKSearchCursor.IAP_KEY, Boolean.TRUE);
         // LSMVTreeTopKSearchCursor's SpillableTopKBuffer requires a real IHyracksTaskContext for
         // frame allocation and disk spill. Tests must populate ctx.setHyracksTaskContext(...)
         // from the test harness; otherwise SpillableTopKBuffer's ctor will NPE on getInitialFrameSize().
         iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx.getHyracksTaskContext());
 
         IIndexAccessor accessor = ctx.getIndex().createAccessor(iap);
-        IIndexCursor cursor = accessor.createSearchCursor(false);
+        // The cursor production search uses; createSearchCursor() returns the streaming one.
+        IIndexCursor cursor =
+                ((LSMVTree) ctx.getIndex()).createTopKSearchCursor(((LSMTreeIndexAccessor) accessor).getOpContext());
 
-        // Verify we got the naive blocked cursor
         LOGGER.info("Created cursor type: {}", cursor.getClass().getSimpleName());
 
         try {
