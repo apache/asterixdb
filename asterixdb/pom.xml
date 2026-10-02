@@ -123,7 +123,7 @@
     <io.opencensus.version>0.31.1</io.opencensus.version>
     <protobuf-java.version>4.36.2</protobuf-java.version>
 
-    <icebergjavasdk.version>1.11.0</icebergjavasdk.version>
+    <icebergjavasdk.version>1.12.0</icebergjavasdk.version>
 
     <!-- The org.apache.iceberg.gcp.gcs package is forked into asterix-external-data,
          under util/google/iceberg/fileio. This records the release those files were
@@ -134,10 +134,10 @@
          The marker below is a one-line comment adjacent to the property on purpose:
          the updater looks only one line back for it. -->
     <!-- @pinned-with: ${icebergjavasdk.version} -->
-    <iceberg-gcs-fork.version>1.11.0</iceberg-gcs-fork.version>
+    <iceberg-gcs-fork.version>1.12.0</iceberg-gcs-fork.version>
 
     <!-- @derived-from: org.apache.iceberg:iceberg-nessie:${icebergjavasdk.version}#dep:nessie-client -->
-    <nessieproject.version>0.107.5</nessieproject.version>
+    <nessieproject.version>0.108.8</nessieproject.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>

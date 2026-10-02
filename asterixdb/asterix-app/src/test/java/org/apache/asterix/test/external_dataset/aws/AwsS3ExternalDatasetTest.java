@@ -62,19 +62,18 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.iceberg.DataFile;
-import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileFormat;
 import org.apache.iceberg.PartitionSpec;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.TableProperties;
 import org.apache.iceberg.Tables;
-import org.apache.iceberg.data.GenericAppenderFactory;
 import org.apache.iceberg.data.GenericRecord;
 import org.apache.iceberg.data.Record;
-import org.apache.iceberg.hadoop.HadoopInputFile;
+import org.apache.iceberg.encryption.EncryptedFiles;
+import org.apache.iceberg.formats.FormatModelRegistry;
 import org.apache.iceberg.hadoop.HadoopTables;
-import org.apache.iceberg.io.FileAppender;
+import org.apache.iceberg.io.DataWriter;
 import org.apache.iceberg.relocated.com.google.common.base.Preconditions;
 import org.apache.iceberg.relocated.com.google.common.collect.ImmutableList;
 import org.apache.iceberg.relocated.com.google.common.collect.ImmutableMap;
@@ -227,14 +226,15 @@ public class AwsS3ExternalDatasetTest {
         FileFormat fileFormat = FileFormat.fromFileName(filename);
         Preconditions.checkNotNull(fileFormat, "Cannot determine format for file: %s", filename);
 
-        FileAppender<Record> fileAppender = new GenericAppenderFactory(AwsS3ExternalDatasetTest.SCHEMA)
-                .newAppender(fromPath(path, CONF), fileFormat);
-        try (FileAppender<Record> appender = fileAppender) {
-            appender.addAll(records);
+        DataWriter<Record> writer = FormatModelRegistry
+                .<Record, Object> dataWriteBuilder(fileFormat, Record.class,
+                        EncryptedFiles.plainAsEncryptedOutput(fromPath(path, CONF)))
+                .schema(AwsS3ExternalDatasetTest.SCHEMA).spec(PartitionSpec.unpartitioned()).build();
+        try (DataWriter<Record> w = writer) {
+            w.write(records);
         }
 
-        return DataFiles.builder(PartitionSpec.unpartitioned()).withInputFile(HadoopInputFile.fromPath(path, CONF))
-                .withMetrics(fileAppender.metrics()).build();
+        return writer.toDataFile();
     }
 
     private static void prepareIcebergConfiguration() {
