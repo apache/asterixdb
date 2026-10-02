@@ -546,6 +546,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                         new VariableReferenceExpression(deepCopyVariable(op.getPoolVariable()))),
                 deepCopyVariable(op.getCandidateVariable()), op.getCandidateVarType(), op.getTopCount(), op.getMode(),
                 op.getSeed(), op.getLoopRounds(), op.getDimension(), op.getMetric());
+        opCopy.setVectorStoreVariable(deepCopyVariable(op.getVectorStoreVariable()));
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

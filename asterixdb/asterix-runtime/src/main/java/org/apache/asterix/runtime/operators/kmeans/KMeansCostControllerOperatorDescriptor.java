@@ -68,6 +68,8 @@ import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
  * pool and emits it as {@link KMeansVectorCodec.PoolEnvelopeWriter KIND_POOL envelopes} on <b>output 0</b>.
  * Output 0 is idle during the loop, so the blocking consumer cannot back-pressure the iteration.</li>
  * </ul>
+ * With {@code handOffVectors} the vector run file outlives the stage: the Lloyd loop reads and deletes it.
+ * <p>
  * The loop is acyclic in the job graph, since Release's feedback to CostLoop is the shared permit plus the
  * pool run file and not a data edge. The per-round seed lives in Sample, so the draws depend only on the
  * data. The sub-graph works on any topology: the co-located Op1/Op3/Op5 share an NC's joblet state, and the
@@ -84,6 +86,8 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
     private static final int OUT_SIGMA = 1; // per-round local potential -> PhiMerge (SCALAR_RD)
 
     private final String loopKey;
+    // Leave the vector run file for the Lloyd loop (KMeansStageOperator#getVectorStoreVariable).
+    private final boolean handOffVectors;
     private final int vectorColumn; // vector column in input 0
     private final int seedColumn; // vector column in input 1 (the seed)
     private final int loopRounds; // N oversampling rounds
@@ -95,10 +99,12 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
     private final VectorSimilarityMetric metric;
 
     public KMeansCostControllerOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            RecordDescriptor poolEnvelopeRecDesc, RecordDescriptor sigmaRecDesc, String loopKey, int vectorColumn,
-            int seedColumn, int loopRounds, int framesLimit, int dimension, VectorSimilarityMetric metric) {
+            RecordDescriptor poolEnvelopeRecDesc, RecordDescriptor sigmaRecDesc, String loopKey, boolean handOffVectors,
+            int vectorColumn, int seedColumn, int loopRounds, int framesLimit, int dimension,
+            VectorSimilarityMetric metric) {
         super(spec, 2, 2);
         this.loopKey = loopKey;
+        this.handOffVectors = handOffVectors;
         this.vectorColumn = vectorColumn;
         this.seedColumn = seedColumn;
         this.loopRounds = loopRounds;
@@ -277,6 +283,8 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                     // successful one -- otherwise they stay on disk until joblet cleanup.
                     MaterializerTaskState poolState = null;
                     MaterializerTaskState vectorState = null;
+                    // Handed off only on success.
+                    boolean vectorsHandedOff = false;
                     try {
                         // Registered by StoreActivity, which addBlockingEdge (contributeActivities) joins ahead
                         // of this activity -- so these are already present; no wait is warranted.
@@ -288,6 +296,7 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                                 LoopControlState.vectorsStateId(loopKey, partition));
                         runLoop(control, poolState, vectorState, sigmaWriter);
                         emitWeighPartials(poolState, vectorState, poolWriter);
+                        vectorsHandedOff = handOffVectors;
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         poolWriter.fail();
@@ -300,12 +309,15 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                     } finally {
                         // Release has appended every round and Sample has read for the last time (the final
                         // awaitTurn orders both before this), and the terminal weigh was their last reader here, so
-                        // the pool and vector run files are dead: delete them now rather than at joblet cleanup.
+                        // the pool run file is dead, and the vector run file too unless handed off: delete them now
+                        // rather than at joblet cleanup.
                         try {
                             try {
                                 KMeansLoopIO.discard(poolState);
                             } finally {
-                                KMeansLoopIO.discard(vectorState);
+                                if (!vectorsHandedOff) {
+                                    KMeansLoopIO.discard(vectorState);
+                                }
                             }
                         } finally {
                             poolWriter.close();

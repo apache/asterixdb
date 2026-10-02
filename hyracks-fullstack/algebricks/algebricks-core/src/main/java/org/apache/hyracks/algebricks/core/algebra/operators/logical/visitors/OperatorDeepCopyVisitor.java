@@ -251,6 +251,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(op.getPoolVariable())),
                 op.getCandidateVariable(), op.getCandidateVarType(), op.getTopCount(), op.getMode(), op.getSeed(),
                 op.getLoopRounds(), op.getDimension(), op.getMetric());
+        opCopy.setVectorStoreVariable(op.getVectorStoreVariable());
         return opCopy;
     }
 

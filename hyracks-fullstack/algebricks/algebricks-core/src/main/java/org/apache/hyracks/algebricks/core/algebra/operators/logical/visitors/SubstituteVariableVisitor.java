@@ -328,6 +328,9 @@ public class SubstituteVariableVisitor
         if (op.getCandidateVariable().equals(pair.getLeft())) {
             op.setCandidateVariable(pair.getRight());
         }
+        if (pair.getLeft().equals(op.getVectorStoreVariable())) {
+            op.setVectorStoreVariable(pair.getRight());
+        }
         return null;
     }
 

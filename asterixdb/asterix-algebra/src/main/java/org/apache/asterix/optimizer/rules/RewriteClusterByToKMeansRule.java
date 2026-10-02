@@ -387,14 +387,16 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
         Mutable<ILogicalOperator> centroidsIn = seedOf(seedInput.getLeft(), seedInput.getRight(),
                 forgy ? kmeans(cop).getNumClusters() : 1, options(cop).getDimension(), seed, context, loc);
         LogicalVariable centroidsVar = seedInput.getRight();
+        LogicalVariable vectorStore = null;
         if (!forgy) {
             KMeansStageOperator recluster =
                     oversampleAndRecluster(cop, shared, centroidsIn, centroidsVar, seed, context, loc);
             centroidsIn = new MutableObject<>(recluster);
             centroidsVar = recluster.getCandidateVariable();
+            vectorStore = ((KMeansStageOperator) recluster.getInputs().get(0).getValue()).getVectorStoreVariable();
         }
 
-        KMeansStageOperator lloyd = refine(cop, shared, centroidsIn, centroidsVar, context, loc);
+        KMeansStageOperator lloyd = refine(cop, shared, centroidsIn, centroidsVar, vectorStore, context, loc);
         AggregateOperator finalSet = centroidList(lloyd, context, loc);
         LogicalVariable cFinal = finalSet.getVariables().get(0);
 
@@ -420,19 +422,23 @@ public class RewriteClusterByToKMeansRule implements IAlgebraicRewriteRule {
                 ref(oversample.getCandidateVariable()), kmeans(cop).getNumClusters(), seedValue, 0);
         recluster.getInputs().add(new MutableObject<>(oversample));
         finish(recluster, context);
+        // Kept for the refinement loop, which would otherwise write a copy of it.
+        oversample.setVectorStoreVariable(oversample.getCandidateVariable());
         return recluster;
     }
 
     /** The refinement loop: emits the k final centroids and nothing else. */
     private KMeansStageOperator refine(ClusterByOperator cop, ReplicateOperator shared,
-            Mutable<ILogicalOperator> centroidsIn, LogicalVariable centroidsVar, IOptimizationContext context,
-            SourceLocation loc) throws AlgebricksException {
+            Mutable<ILogicalOperator> centroidsIn, LogicalVariable centroidsVar, LogicalVariable vectorStore,
+            IOptimizationContext context, SourceLocation loc) throws AlgebricksException {
         Pair<Mutable<ILogicalOperator>, LogicalVariable> input =
                 branchOf(shared, cop.getVectorVariable(), context, loc);
         KMeansStageOperator lloyd = stage(cop, KMeansStageOperator.Mode.LLOYD_LOOP, context, ref(input.getRight()),
                 ref(centroidsVar), kmeans(cop).getNumClusters(), 0L, lloydIterations(cop));
         lloyd.getInputs().add(input.getLeft());
         lloyd.getInputs().add(centroidsIn);
+        // Null under the random init: the loop keeps its own store.
+        lloyd.setVectorStoreVariable(vectorStore);
         // The execution mode is derived from the input, as GROUP BY's is: a partitioned input gives one loop
         // instance per partition, an unpartitioned input a single instance. The physical operators read it
         // (AbstractKMeansStagePOperator.unpartitioned) to size and place the loop.

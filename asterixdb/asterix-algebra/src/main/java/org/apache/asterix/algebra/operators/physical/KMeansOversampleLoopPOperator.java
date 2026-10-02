@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.KMeansStageOperator;
@@ -53,6 +54,14 @@ public class KMeansOversampleLoopPOperator extends AbstractKMeansLoopPOperator {
         return PhysicalOperatorTag.KMEANS_OVERSAMPLE_LOOP;
     }
 
+    /**
+     * The joblet-state key of the oversampling loop with this candidate variable, which the Lloyd loop also
+     * uses to find its vector store. Unique within a plan, which is enough: joblet state is per job.
+     */
+    static String loopKeyOf(LogicalVariable candidateVar) {
+        return "kmeansSystolicLoop#" + candidateVar.getId();
+    }
+
     @Override
     protected void contributeLoop(IHyracksJobBuilder builder, KMeansStageOperator kop, AbstractLogicalOperator op,
             RecordDescriptor poolEnvelopeRecDesc, int vectorColumn, int seedColumn, String[] clusterLocations,
@@ -60,14 +69,15 @@ public class KMeansOversampleLoopPOperator extends AbstractKMeansLoopPOperator {
         JobSpecification spec = builder.getJobSpec();
         // Unique + stable per loop instance (one per query); baked into all five descriptors so every partition
         // and NC agrees on the joblet-state keys.
-        String loopKey = "kmeansSystolicLoop#" + kop.getCandidateVariable();
+        String loopKey = loopKeyOf(kop.getCandidateVariable());
+        boolean handOffVectors = kop.getVectorStoreVariable() != null;
         int participants = clusterLocations.length;
 
         // Op1 Cost/Controller is the registered descriptor: inputs land here, and output 0 carries the
         // weighed partials the downstream RECLUSTER reduces.
         KMeansCostControllerOperatorDescriptor op1 = new KMeansCostControllerOperatorDescriptor(spec,
-                poolEnvelopeRecDesc, KMeansLoopIO.SIGMA_RD, loopKey, vectorColumn, seedColumn, kop.getLoopRounds(),
-                framesLimit(), kop.getDimension(), metricOf(kop));
+                poolEnvelopeRecDesc, KMeansLoopIO.SIGMA_RD, loopKey, handOffVectors, vectorColumn, seedColumn,
+                kop.getLoopRounds(), framesLimit(), kop.getDimension(), metricOf(kop));
         contributeOpDesc(builder, op, op1);
         builder.contributeGraphEdge(src0, 0, op, 0);
         builder.contributeGraphEdge(src1, 0, op, 1);

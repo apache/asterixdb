@@ -101,6 +101,9 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
     private final int dimension;
     // The metric's canonical name; a String since the metric enum lives above Algebricks.
     private final String metric;
+    // The vector store shared by the two loops of one expansion, named by the OVERSAMPLE_LOOP's candidate
+    // variable: that loop keeps its file, the LLOYD_LOOP reads it. Null when a stage keeps its own store.
+    private LogicalVariable vectorStoreVar;
 
     public KMeansStageOperator(Mutable<ILogicalExpression> vectorRef, Mutable<ILogicalExpression> poolRef,
             LogicalVariable candidateVar, Object candidateVarType, int topCount, Mode mode, long seed, int loopRounds,
@@ -197,6 +200,14 @@ public class KMeansStageOperator extends AbstractLogicalOperator {
 
     public void setCandidateVariable(LogicalVariable v) {
         this.candidateVar = v;
+    }
+
+    public LogicalVariable getVectorStoreVariable() {
+        return vectorStoreVar;
+    }
+
+    public void setVectorStoreVariable(LogicalVariable v) {
+        this.vectorStoreVar = v;
     }
 
     public int getTopCount() {

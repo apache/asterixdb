@@ -48,10 +48,11 @@ import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
+import org.apache.hyracks.dataflow.std.misc.SinkOperatorNodePushable;
 
 /**
- * The Lloyd loop head: materializes this partition's vectors once, then runs every refinement iteration
- * against them without leaving the operator.
+ * The Lloyd loop head: materializes this partition's vectors once (or reads the oversampling loop's file), then
+ * runs every refinement iteration against them without leaving the operator.
  * <p>
  * An iteration is one assignment pass: each resident vector is charged to its nearest current centroid, and the
  * partition emits one {@code (count, sum)} partial per centroid that attracted anything. The reduce that turns
@@ -59,7 +60,7 @@ import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
  * network twice — out as partials, back as centroids — on ordinary pipelined connectors. Iteration is paced by
  * this partition's permit: the head emits, then parks until the tail has published the new centroids.
  * <p>
- * Iterating inside one operator keeps the plan a fixed size: the vectors are written to a single run file and
+ * Iterating inside one operator keeps the plan a fixed size: the vectors sit in a single run file that is
  * re-streamed each round, so neither the graph nor the materialization grows with the iteration count. It also
  * makes a data-dependent count expressible, since the graph is the same however many times it runs, though the
  * count passed in today is a constant.
@@ -75,6 +76,9 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
     private static final int OUT_CENTROIDS = 0; // the final centroid set (plain vectors), downstream
     private static final int OUT_PARTIALS = 1; // per-iteration (count, sum) partials -> CentroidMerge
     private final String loopKey;
+    // Key of the oversampling loop whose vector file this loop reads, or null. Both loops run on the same
+    // locations; each partition file set covers the input once, which is all the update needs.
+    private final String sharedVectorsKey;
     private final int vectorColumn; // vector column in input 0
     private final int centroidColumn; // vector column in input 1 (the initial centroids)
     private final int iterations;
@@ -88,11 +92,13 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
     private final VectorSimilarityMetric metric;
 
     public KMeansLloydControllerOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor centroidRecDesc,
-            RecordDescriptor partialRecDesc, String loopKey, int vectorColumn, int centroidColumn, int iterations,
-            int numClusters, int framesLimit, int dimension, VectorSimilarityMetric metric) {
+            RecordDescriptor partialRecDesc, String loopKey, String sharedVectorsKey, int vectorColumn,
+            int centroidColumn, int iterations, int numClusters, int framesLimit, int dimension,
+            VectorSimilarityMetric metric) {
         super(spec, 2, 2);
         this.metric = metric;
         this.loopKey = loopKey;
+        this.sharedVectorsKey = sharedVectorsKey;
         this.vectorColumn = vectorColumn;
         this.centroidColumn = centroidColumn;
         this.iterations = iterations;
@@ -120,7 +126,10 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
         builder.addBlockingEdge(storeCentroids, loop);
     }
 
-    /** Materializes the partition's resident vectors into a raw-double run file for repeated re-streaming. */
+    /**
+     * Materializes the partition's resident vectors into a raw-double run file for repeated re-streaming. With a
+     * shared vector file, the input is drained unread.
+     */
     private final class StoreVectorsActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
@@ -131,6 +140,9 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
         @Override
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
+            if (sharedVectorsKey != null) {
+                return new SinkOperatorNodePushable();
+            }
             final RecordDescriptor inRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private final FrameTupleAccessor accessor = new FrameTupleAccessor(inRecDesc);
@@ -346,8 +358,9 @@ public class KMeansLloydControllerOperatorDescriptor extends AbstractOperatorDes
                         // ahead of this activity -- so these are already present; no wait is warranted.
                         control = (LoopControlState) LoopControlState.required(ctx,
                                 LoopControlState.controlStateId(loopKey, partition));
-                        vectorState = (MaterializerTaskState) LoopControlState.required(ctx,
-                                LoopControlState.vectorsStateId(loopKey, partition));
+                        // A shared file is complete: the oversampling loop finished before it seeded this loop.
+                        vectorState = (MaterializerTaskState) LoopControlState.required(ctx, LoopControlState
+                                .vectorsStateId(sharedVectorsKey != null ? sharedVectorsKey : loopKey, partition));
                         runLoop(control, vectorState, partialWriter);
                         // The last iteration was the vectors' last reader; the final emit reads only the
                         // centroid store, so the (input-sized) vector file can go before it.
