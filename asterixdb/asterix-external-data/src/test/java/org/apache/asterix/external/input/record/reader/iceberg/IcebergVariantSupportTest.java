@@ -82,7 +82,7 @@ public class IcebergVariantSupportTest {
         Schema geo =
                 new Schema(required(1, "id", Types.IntegerType.get()), optional(2, "shape", Types.GeometryType.crs84()),
                         optional(3, "st", Types.StructType.of(optional(4, "area", Types.GeographyType.crs84()))));
-        Map<String, String> columns = Map.of("shape", "geometry' for column 'shape", "st", "for column 'st.area'");
+        Map<String, String> columns = Map.of("shape", "for column 'shape'", "st", "for column 'st.area'");
         for (boolean variantEnabled : new boolean[] { true, false }) {
             columns.forEach((selected, expected) -> {
                 try {

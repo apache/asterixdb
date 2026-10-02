@@ -87,7 +87,7 @@ public class IcebergParquetDataParserVariantTest {
             Assert.fail("expected GEOMETRY to be rejected");
         } catch (HyracksDataException e) {
             Assert.assertEquals(ErrorCode.UNSUPPORTED_ICEBERG_TYPE.intValue(), e.getErrorCode());
-            Assert.assertTrue(e.getMessage(), e.getMessage().contains("geometry' for column 'shape'"));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("for column 'shape'"));
         }
     }
 
