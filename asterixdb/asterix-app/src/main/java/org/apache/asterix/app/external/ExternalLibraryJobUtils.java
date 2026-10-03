@@ -126,12 +126,17 @@ public class ExternalLibraryJobUtils {
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 
-    private static FileSplit[] getSplits(IClusterStateManager clusterStateManager) {
+    static FileSplit[] getSplits(IClusterStateManager clusterStateManager) {
         ClusterPartition[] clusterPartitions = clusterStateManager.getClusterPartitons();
         Arrays.sort(clusterPartitions,
                 Comparator.comparing(ClusterPartition::getNodeId).thenComparingInt(ClusterPartition::getIODeviceNum));
         List<FileSplit> splits = new ArrayList<>();
         for (ClusterPartition partition : clusterPartitions) {
+            // a failed node's partitions stay registered, deactivated, until it is removed or rejoins; when
+            // compute partitions are fixed (cloud) nothing takes them over, so a job sent there cannot start
+            if (!partition.isActive()) {
+                continue;
+            }
             String activeNodeId = partition.getActiveNodeId();
             int n = splits.size();
             if (n > 0 && splits.get(n - 1).getNodeName().equals(activeNodeId)) {
