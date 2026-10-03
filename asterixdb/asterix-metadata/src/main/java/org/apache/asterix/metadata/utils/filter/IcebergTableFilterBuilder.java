@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.IcebergTableFilterEvaluatorFactory;
 import org.apache.asterix.external.util.MillisecondChronon;
+import org.apache.asterix.external.util.StringOrder;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.ADouble;
@@ -318,6 +319,11 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
                 tryGetLiteralTypeTag(flipped ? left : right));
     }
 
+    private static boolean isRange(FunctionIdentifier fid) {
+        return fid.equals(AlgebricksBuiltinFunctions.LT) || fid.equals(AlgebricksBuiltinFunctions.LE)
+                || fid.equals(AlgebricksBuiltinFunctions.GT) || fid.equals(AlgebricksBuiltinFunctions.GE);
+    }
+
     /** @return the type tag behind a constant literal, or {@code null} if the expression is not one. */
     private ATypeTag tryGetLiteralTypeTag(ILogicalExpression expression) {
         if (expression.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
@@ -350,6 +356,11 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
                 return null;
             }
             return buildTruncatedTemporalComparison(fid, columnName, (Long) value, literalTag == ATypeTag.TIME);
+        }
+        if (value instanceof String && isRange(fid) && StringOrder.rangeOrdersDifferently((String) value)) {
+            // Iceberg prunes files and row groups by code point; the engine compares by UTF-16 code unit
+            LOGGER.debug("String range literal holds a character the engine orders differently; skipping pushdown");
+            return null;
         }
         if (fid.equals(AlgebricksBuiltinFunctions.EQ)) {
             return Expressions.equal(columnName, value);

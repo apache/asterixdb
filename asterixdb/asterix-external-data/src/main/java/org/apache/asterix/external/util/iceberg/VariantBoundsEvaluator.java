@@ -24,6 +24,7 @@ import java.nio.ByteOrder;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.util.StringOrder;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.util.LogRedactionUtil;
@@ -35,6 +36,7 @@ import org.apache.iceberg.expressions.Not;
 import org.apache.iceberg.expressions.Or;
 import org.apache.iceberg.expressions.UnboundExtract;
 import org.apache.iceberg.expressions.UnboundPredicate;
+import org.apache.iceberg.types.Comparators;
 import org.apache.iceberg.types.Types.NestedField;
 import org.apache.iceberg.variants.PhysicalType;
 import org.apache.iceberg.variants.Variant;
@@ -194,6 +196,10 @@ public final class VariantBoundsEvaluator {
             return true; // no usable bounds for this sub-field (not shredded here, or stats absent)
         }
 
+        if (literal instanceof CharSequence && isRange(predicate.op())
+                && StringOrder.rangeOrdersDifferently((CharSequence) literal)) {
+            return true; // bounds are in code-point order, the engine compares UTF-16 code units
+        }
         switch (predicate.op()) {
             case EQ:
                 // cannot match if literal is strictly outside [lower, upper]
@@ -276,6 +282,11 @@ public final class VariantBoundsEvaluator {
         }
     }
 
+    private static boolean isRange(Expression.Operation op) {
+        return op == Expression.Operation.LT || op == Expression.Operation.LT_EQ || op == Expression.Operation.GT
+                || op == Expression.Operation.GT_EQ;
+    }
+
     // ---- comparisons: every helper returns false when the pair cannot be compared, so callers keep the file ----
 
     private static boolean isLess(Object a, Object b) {
@@ -335,7 +346,9 @@ public final class VariantBoundsEvaluator {
             return Long.compare(na.longValue(), nb.longValue());
         }
         if (a instanceof CharSequence && b instanceof CharSequence) {
-            return a.toString().compareTo(b.toString());
+            // the order the bounds were written in; String.compareTo is UTF-16 order and misplaces supplementary
+            // characters against U+E000..U+FFFF
+            return Comparators.charSequences().compare((CharSequence) a, (CharSequence) b);
         }
         if (a instanceof Boolean && b instanceof Boolean) {
             return Boolean.compare((Boolean) a, (Boolean) b);

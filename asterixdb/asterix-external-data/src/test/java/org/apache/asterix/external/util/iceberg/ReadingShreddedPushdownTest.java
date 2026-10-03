@@ -1315,6 +1315,60 @@ public class ReadingShreddedPushdownTest {
         }
     }
 
+    /**
+     * TODO(iceberg-15384): tripwire for the second defect — Iceberg's own evaluator cannot read variant bounds once they
+     * have round-tripped through a manifest, because it does not force little-endian. The same file evaluates fine
+     * straight from the writer's metrics (see {@link #scanWorkaround_fullExpressionStillPrunesViaEvaluator}); only the
+     * manifest copy fails. Starts failing when the fix ships, which is the signal to retire VariantBoundsEvaluator.
+     */
+    @Test
+    public void scanWorkaround_icebergCannotReadVariantBoundsFromManifest() throws Exception {
+        org.apache.iceberg.Schema schema = new org.apache.iceberg.Schema(
+                org.apache.iceberg.types.Types.NestedField.required(1, "id",
+                        org.apache.iceberg.types.Types.IntegerType.get()),
+                org.apache.iceberg.types.Types.NestedField.optional(2, COLUMN,
+                        org.apache.iceberg.types.Types.VariantType.get()));
+        java.io.File dir = java.nio.file.Files.createTempDirectory("scan-workaround-manifest").toFile();
+        org.apache.iceberg.Table table =
+                new org.apache.iceberg.hadoop.HadoopTables(new org.apache.hadoop.conf.Configuration()).create(schema,
+                        org.apache.iceberg.PartitionSpec.unpartitioned(),
+                        java.util.Map.of(org.apache.iceberg.TableProperties.FORMAT_VERSION, "3"),
+                        new java.io.File(dir, "t").getAbsolutePath());
+        table.newAppend().appendFile(writeShreddedBucketFile(schema, 20, 50)).commit();
+        org.apache.iceberg.expressions.Expression outOfRange = VariantPredicateRewriter.rewriteAssumingNesting(
+                org.apache.iceberg.expressions.Expressions.greaterThan(COLUMN + ".amount", 999999), schema);
+        int evaluated = 0;
+        try (org.apache.iceberg.io.CloseableIterable<org.apache.iceberg.FileScanTask> tasks =
+                table.newScan().includeColumnStats().planFiles()) {
+            for (org.apache.iceberg.FileScanTask task : tasks) {
+                evaluated++;
+                try {
+                    new org.apache.iceberg.expressions.InclusiveMetricsEvaluator(schema, outOfRange).eval(task.file());
+                    Assert.fail("expected Iceberg to fail reading variant bounds back from the manifest");
+                } catch (IllegalArgumentException expected) {
+                    Assert.assertTrue(expected.getMessage(),
+                            expected.getMessage().contains("Unsupported byte order: big endian"));
+                }
+            }
+        }
+        Assert.assertEquals(1, evaluated);
+    }
+
+    /**
+     * TODO(iceberg-15384): tripwire for the third defect — Iceberg rejects bracket paths, so a sub-field whose name
+     * contains a dot cannot be expressed and VariantPredicateRewriter declines it. Starts failing when bracket
+     * support ships, which is the signal to switch path building to the bracket form.
+     */
+    @Test
+    public void scanWorkaround_icebergRejectsBracketPath() {
+        try {
+            org.apache.iceberg.expressions.Expressions.extract(COLUMN, "$['a.b']", "int");
+            Assert.fail("expected Iceberg to reject a bracket path");
+        } catch (IllegalArgumentException expected) {
+            Assert.assertTrue(expected.getMessage(), expected.getMessage().contains("contains bracket"));
+        }
+    }
+
     @Test
     public void scanWorkaround_detectsExtractTerms() {
         org.apache.iceberg.Schema schema = icebergSchema();

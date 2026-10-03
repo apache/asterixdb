@@ -34,6 +34,7 @@ import org.apache.asterix.external.input.filter.ParquetFilterExpression.Operator
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.MillisecondChronon;
+import org.apache.asterix.external.util.StringOrder;
 import org.apache.asterix.external.util.TimestampZoneProjector;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hadoop.conf.Configuration;
@@ -281,7 +282,7 @@ public class ParquetFilterConverter {
                     return drop(comparison, "string column compared against " + tag);
                 }
                 String literal = (String) value;
-                if (operator != Operator.EQ && ordersDifferentlyFromParquet(literal)) {
+                if (operator != Operator.EQ && StringOrder.rangeOrdersDifferently(literal)) {
                     return drop(comparison, "string range literal holds a character the engine orders differently");
                 }
                 return compare(FilterApi.binaryColumn(path), Binary.fromString(literal), operator);
@@ -346,25 +347,6 @@ public class ParquetFilterConverter {
             }
         }
         return compare(column, literal, operator);
-    }
-
-    /**
-     * Whether a string range literal could be ordered differently by the engine and by parquet-mr.
-     * <p>
-     * The engine orders strings by UTF-16 code unit, parquet-mr by unsigned UTF-8 byte, which is code-point order.
-     * The two disagree only where a character in U+E000..U+FFFF meets a supplementary character, whose UTF-16 form
-     * begins with a surrogate below U+E000. A literal holding no character at or above U+D800 is on the same side
-     * of every stored value in both orders -- at the first position they differ its character is below every
-     * surrogate -- so only a literal that does hold one needs declining. Equality is unaffected: a row group
-     * holding a value always spans it in parquet's own order.
-     */
-    private static boolean ordersDifferentlyFromParquet(String literal) {
-        for (int i = 0; i < literal.length(); i++) {
-            if (literal.charAt(i) >= '\uD800') {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static FilterPredicate intComparison(Comparison comparison, String path, Long value, Operator operator) {
