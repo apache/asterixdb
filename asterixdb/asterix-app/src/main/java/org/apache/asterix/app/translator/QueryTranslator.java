@@ -6340,7 +6340,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             } catch (Exception e) {
                 jobIdFuture.completeExceptionally(e);
                 synchronized (printed) {
-                    exceptionThrown.setTrue();
+                    // once the handle is out, a failure belongs to the status the client polls, not this response
+                    if (printed.isFalse()) {
+                        exceptionThrown.setTrue();
+                    }
                 }
                 throw new RuntimeException(e);
             }
