@@ -80,7 +80,10 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env, IMetadataProvider<?, ?> mp)
             throws AlgebricksException {
-        return computeRecType((AbstractFunctionCallExpression) expression, (MetadataProvider) mp, null, null, null);
+        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
+        // type inference reaches here before rewrite() validates the arguments
+        validateArgs(f);
+        return computeRecType(f, (MetadataProvider) mp, null, null, null);
     }
 
     @Override
@@ -127,7 +130,7 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
 
     @Override
     protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
-        return args.size() < 3;
+        return args.size() < 3 || args.size() > 4;
     }
 
     private FunctionDataSource createQueryIndexDatasource(MetadataProvider mp, Dataset ds, Index idx,

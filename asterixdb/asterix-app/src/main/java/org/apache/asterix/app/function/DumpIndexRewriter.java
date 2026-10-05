@@ -94,6 +94,6 @@ public class DumpIndexRewriter extends FunctionRewriter {
 
     @Override
     protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
-        return args.size() < 3;
+        return args.size() < 3 || args.size() > 4;
     }
 }

@@ -71,6 +71,6 @@ public class StorageComponentsRewriter extends FunctionRewriter {
 
     @Override
     protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
-        return args.size() < 2;
+        return args.size() < 2 || args.size() > 3;
     }
 }

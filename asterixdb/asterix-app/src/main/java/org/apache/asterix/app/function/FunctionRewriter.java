@@ -60,12 +60,8 @@ public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter 
     public final boolean rewrite(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractFunctionCallExpression f = UnnestToDataScanRule.getFunctionCall(opRef);
+        validateArgs(f);
         List<Mutable<ILogicalExpression>> args = f.getArguments();
-        if (invalidArgs(args)) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, f.getSourceLocation(),
-                    "Function " + functionId.getNamespace() + "." + functionId.getName() + " expects "
-                            + functionId.getArity() + " arguments");
-        }
         for (int i = 0; i < args.size(); i++) {
             ILogicalExpression argExpr = args.get(i).getValue();
             if (argExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
@@ -82,6 +78,16 @@ public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter 
         }
         createDataScanOp(opRef, unnest, context, f);
         return true;
+    }
+
+    /**
+     * @throws CompilationException if {@code f} has a number of arguments this function does not accept
+     */
+    protected void validateArgs(AbstractFunctionCallExpression f) throws CompilationException {
+        if (invalidArgs(f.getArguments())) {
+            throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, f.getSourceLocation(),
+                    functionId.getName());
+        }
     }
 
     protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
