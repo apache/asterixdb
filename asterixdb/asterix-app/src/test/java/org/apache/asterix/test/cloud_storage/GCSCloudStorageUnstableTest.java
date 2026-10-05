@@ -90,6 +90,7 @@ public class GCSCloudStorageUnstableTest {
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE, "true");
+        SimulatedCloudFailureLogFilter.install();
         Storage storage = StorageOptions.newBuilder().setHost(MOCK_SERVER_HOSTNAME)
                 .setCredentials(NoCredentials.getInstance()).setProjectId(MOCK_SERVER_PROJECT_ID).build().getService();
         cleanup(storage);
@@ -106,6 +107,7 @@ public class GCSCloudStorageUnstableTest {
     public static void tearDown() throws Exception {
         System.clearProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE);
         LangExecutionUtil.tearDown();
+        SimulatedCloudFailureLogFilter.uninstall();
     }
 
     @Parameterized.Parameters(name = "GCSCloudStorageUnstableTest {index}: {0}")
