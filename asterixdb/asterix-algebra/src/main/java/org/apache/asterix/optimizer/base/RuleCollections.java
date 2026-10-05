@@ -317,15 +317,21 @@ public final class RuleCollections {
     }
 
     public static List<IAlgebraicRewriteRule> buildConsolidationRuleCollection() {
+        return buildConsolidationRuleCollection(true);
+    }
+
+    public static List<IAlgebraicRewriteRule> buildConsolidationRuleCollection(boolean introduceCombiners) {
         List<IAlgebraicRewriteRule> consolidation = new LinkedList<>();
         consolidation.add(new ConsolidateSelectsRule());
         consolidation.add(new ConsolidateAssignsRule(false));
         consolidation.add(new InlineAssignIntoAggregateRule());
         consolidation.add(new RewriteCountDistinctToHashRule());
         consolidation.add(new RewriteDistinctAggregateRule());
-        // The following rule should run after RewriteDistinctAggregateRule
-        consolidation.add(new AsterixIntroduceGroupByCombinerRule());
-        consolidation.add(new IntroduceAggregateCombinerRule());
+        if (introduceCombiners) {
+            // The following rule should run after RewriteDistinctAggregateRule
+            consolidation.add(new AsterixIntroduceGroupByCombinerRule());
+            consolidation.add(new IntroduceAggregateCombinerRule());
+        }
         // Re-infer all types after introducing aggregate combiners
         consolidation.add(new ReinferAllTypesRule());
         consolidation.add(new CountVarToCountOneRule());

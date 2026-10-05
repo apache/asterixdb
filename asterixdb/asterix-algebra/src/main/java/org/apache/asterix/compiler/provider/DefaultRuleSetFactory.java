@@ -46,7 +46,9 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
     public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites(IRuleSetKind ruleSetKind,
             ICcApplicationContext appCtx) {
         if (ruleSetKind == RuleSetKind.SAMPLING) {
-            return buildLogicalSampling();
+            return buildLogicalSampling(true);
+        } else if (ruleSetKind == RuleSetKind.RANGE_MAP_SAMPLING) {
+            return buildLogicalSampling(false);
         } else if (ruleSetKind == RuleSetKind.QUERY) {
             return getLogicalRewrites(appCtx);
         } else if (ruleSetKind == RuleSetKind.LOGICAL_ADVISOR) {
@@ -67,7 +69,7 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
             ICcApplicationContext appCtx) {
         if (ruleSetKind == RuleSetKind.QUERY) {
             return buildPhysical(appCtx, CostMethods::new);
-        } else if (ruleSetKind == RuleSetKind.SAMPLING) {
+        } else if (ruleSetKind == RuleSetKind.SAMPLING || ruleSetKind == RuleSetKind.RANGE_MAP_SAMPLING) {
             return buildPhysical(appCtx, CostMethods::new);
         } else {
             return Collections.emptyList();
@@ -107,10 +109,12 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         return defaultLogicalRewrites;
     }
 
-    public static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildLogicalSampling() {
+    public static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildLogicalSampling(
+            boolean introduceCombiners) {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites = new ArrayList<>();
         SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(false);
-        logicalRewrites.add(Pair.of(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
+        logicalRewrites
+                .add(Pair.of(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection(introduceCombiners)));
         logicalRewrites.add(Pair.of(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
         return logicalRewrites;
     }

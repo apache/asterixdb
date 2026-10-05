@@ -275,7 +275,8 @@ public final class RangeMapUtil {
 
         List<List<IAObject>> val;
         try {
-            val = AnalysisUtil.runQuery(topRef, rangeMapResultVar, newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
+            val = AnalysisUtil.runQuery(topRef, rangeMapResultVar, newCtx,
+                    IRuleSetFactory.RuleSetKind.RANGE_MAP_SAMPLING);
             return org.apache.asterix.optimizer.rules.cbo.RangeMapUtil.deserializeRangeMap(val);
         } catch (Throwable t) {
             LOGGER.warn("Failed to compute static RangeMap, falling back to stable sort", t);

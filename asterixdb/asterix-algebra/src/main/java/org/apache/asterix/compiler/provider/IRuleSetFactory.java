@@ -31,7 +31,13 @@ public interface IRuleSetFactory {
     enum RuleSetKind implements IRuleSetKind {
         QUERY,
         LOGICAL_ADVISOR,
-        SAMPLING
+        SAMPLING,
+        /**
+         * Samples a copy of a subplan that has already been through the logical rewrites, to compute a range map
+         * at compile time. Unlike {@link #SAMPLING}, it does not introduce aggregate combiners: the subplan already
+         * has them, and splitting an aggregate twice feeds one local step's output into another.
+         */
+        RANGE_MAP_SAMPLING
     }
 
     /**

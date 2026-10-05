@@ -12963,6 +12963,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch-sql-sugar">
+      <compilation-unit name="nest_aggregate_parallel_sort">
+        <output-dir compare="Text">nest_aggregate_parallel_sort</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch-sql-sugar">
       <compilation-unit name="query-issue638">
         <output-dir compare="Text">query-issue638</output-dir>
       </compilation-unit>
