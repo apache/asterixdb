@@ -112,7 +112,12 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                     sessionOutput, resultProperties, param, optionalParameters, statementParameters, ncCtx,
                     responseFuture, queryLanguage, handleUrl, stmtCategoryRestrictionMask, false);
             executionState.start();
-            ncMb.sendMessageToPrimaryCC(requestMsg);
+            try {
+                ncMb.sendMessageToPrimaryCC(requestMsg);
+            } catch (IPCException e) {
+                // the request never reached the CC, e.g. because it is down or restarting
+                throw new RuntimeDataException(ErrorCode.REJECT_CC_UNREACHABLE, e);
+            }
             try {
                 responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
