@@ -308,7 +308,7 @@ public class ATypeHierarchy {
             int typeTagPosition, boolean strictDemote) throws HyracksDataException {
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
         if (sourceTypeTag == null) {
-            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
+            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, ATypeTag.INTEGER, name);
         }
         switch (sourceTypeTag) {
             case INTEGER:
@@ -345,7 +345,7 @@ public class ATypeHierarchy {
             int typeTagPosition, boolean strictDemote) throws HyracksDataException {
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
         if (sourceTypeTag == null) {
-            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
+            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, ATypeTag.BIGINT, name);
         }
         switch (sourceTypeTag) {
             case BIGINT:
@@ -376,7 +376,7 @@ public class ATypeHierarchy {
             int offset, int typeTagPosition) throws HyracksDataException {
         ATypeTag sourceTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[typeTagPosition]];
         if (sourceTypeTag == null) {
-            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, name, argIndex);
+            throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, ATypeTag.DOUBLE, name);
         }
         switch (sourceTypeTag) {
             case DOUBLE:

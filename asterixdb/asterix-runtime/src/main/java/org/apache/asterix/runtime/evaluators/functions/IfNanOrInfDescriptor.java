@@ -103,7 +103,7 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
                 argEvals[i].evaluate(tuple, argPtr);
                 ATypeTag argTypeTag = PointableHelper.getTypeTag(argPtr);
                 if (argTypeTag == null) {
-                    throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, getIdentifier(), i);
+                    throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, "number", getIdentifier().getName());
                 }
                 switch (argTypeTag) {
                     case DOUBLE:

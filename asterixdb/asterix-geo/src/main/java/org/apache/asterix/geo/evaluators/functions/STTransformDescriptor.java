@@ -224,8 +224,8 @@ public class STTransformDescriptor extends AbstractScalarFunctionDynamicDescript
             } catch (IOException e) {
                 IWarningCollector wc = ctx.getWarningCollector();
                 if (wc.shouldWarn()) {
-                    wc.warn(Warning.of(sourceLoc, ErrorCode.INVALID_FORMAT, getIdentifier().getName(),
-                            ATypeTag.GEOMETRY));
+                    wc.warn(Warning.of(sourceLoc, ErrorCode.INVALID_FORMAT, ATypeTag.GEOMETRY,
+                            getIdentifier().getName()));
                 }
                 PointableHelper.setNull(result);
             }

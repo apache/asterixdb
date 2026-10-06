@@ -127,7 +127,7 @@ public class AMutableUUID extends AUUID {
             case 'F':
                 return 15;
             default:
-                throw new RuntimeDataException(ErrorCode.INVALID_FORMAT);
+                throw new RuntimeDataException(ErrorCode.INVALID_FORMAT, "uuid", String.valueOf((char) val));
         }
     }
 }

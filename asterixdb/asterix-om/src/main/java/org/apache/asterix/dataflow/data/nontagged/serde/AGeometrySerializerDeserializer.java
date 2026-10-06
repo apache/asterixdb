@@ -97,9 +97,11 @@ public class AGeometrySerializerDeserializer implements ISerializerDeserializer<
         WKBReader wkbReader = new WKBReader();
         int size = AInt32SerializerDeserializer.getInt(bytes, startOffset);
 
-        if (bytes.length < startOffset + size + 4)
-            // TODO(mmahin): this error code takes 5 parameters, and this is passing none, so I suspect this isn't right
-            throw RuntimeDataException.create(ErrorCode.VALUE_OUT_OF_RANGE);
+        if (bytes.length < startOffset + size + 4) {
+            // the stored size runs past the end of the buffer: the value is truncated or corrupt, not out of range
+            throw RuntimeDataException.create(ErrorCode.ILLEGAL_STATE, "serialized geometry of " + size
+                    + " bytes at offset " + startOffset + " exceeds the buffer length " + bytes.length);
+        }
         try {
             // Skip the size of the geometry in first 4 bytes
             byte[] bytes1 = Arrays.copyOfRange(bytes, startOffset + 4, startOffset + size + 4);

@@ -10886,7 +10886,7 @@
         <expected-error>ASX1169: Unable to do subquery coercion. Subquery returns more than one field (in line 32, at column 29)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 32, at column 20)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 35, at column 4)</expected-error>
-        <expected-error>ASX1169: Unable to do subquery coercion.  (in line 34, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. A set operation input is a parenthesized subquery (in line 34, at column 3)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="sql-compat">
@@ -10901,7 +10901,7 @@
         <expected-error>ASX1169: Unable to do subquery coercion. Subquery returns more than one field (in line 35, at column 21)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 37, at column 3)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 38, at column 3)</expected-error>
-        <expected-error>ASX1169: Unable to do subquery coercion.  (in line 36, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. A set operation input is a parenthesized subquery (in line 36, at column 3)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 35, at column 20)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 36, at column 11)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 37, at column 11)</expected-error>
@@ -10919,7 +10919,7 @@
         <expected-error>ASX1169: Unable to do subquery coercion. Subquery returns more than one field (in line 37, at column 17)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 38, at column 3)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 39, at column 3)</expected-error>
-        <expected-error>ASX1169: Unable to do subquery coercion.  (in line 37, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. A set operation input is a parenthesized subquery (in line 37, at column 3)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 36, at column 21)</expected-error>
         <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 37, at column 25)</expected-error>
       </compilation-unit>

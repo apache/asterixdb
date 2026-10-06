@@ -70,7 +70,8 @@ public class RangeMapBuilder {
 
     public static RangeMap parseHint(Expression expression) throws CompilationException {
         if (expression.getKind() != Kind.LIST_CONSTRUCTOR_EXPRESSION) {
-            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, expression.getSourceLocation());
+            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, expression.getSourceLocation(),
+                    "expected a list of split points but found " + expression.getKind());
         }
 
         ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
@@ -89,7 +90,8 @@ public class RangeMapBuilder {
                 parseExpressionToBytes((CallExpr) item, out);
                 offsets[i] = abvs.getLength();
             } else {
-                throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, expression.getSourceLocation());
+                throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, expression.getSourceLocation(),
+                        "split point must be a literal or a constructor call but found " + item.getKind());
             }
             // TODO Add support for composite fields.
         }
@@ -107,13 +109,15 @@ public class RangeMapBuilder {
 
         //Check if Literal
         if (!(item.getExprList().get(0).getKind() == Kind.LITERAL_EXPRESSION)) {
-            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, item.getSourceLocation());
+            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, item.getSourceLocation(),
+                    "argument of " + item.getFunctionSignature().getName() + " must be a literal");
         }
         LiteralExpr argumentLiteralExpr = (LiteralExpr) item.getExprList().get(0);
 
         //Make Sure Literal is String Type
         if (!(argumentLiteralExpr.getValue().getLiteralType() == Literal.Type.STRING)) {
-            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, item.getSourceLocation());
+            throw new CompilationException(ErrorCode.RANGE_MAP_ERROR, item.getSourceLocation(),
+                    "argument of " + item.getFunctionSignature().getName() + " must be a string");
         }
         String value = argumentLiteralExpr.getValue().toString();
 

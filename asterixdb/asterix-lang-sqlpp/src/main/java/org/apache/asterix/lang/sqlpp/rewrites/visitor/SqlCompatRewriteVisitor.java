@@ -308,7 +308,7 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
         selectExprAnalyzer.analyze(subqueryExpr.getSelectSetOperation(), true);
         if (selectExprAnalyzer.subqueryExists) {
             throw new CompilationException(ErrorCode.COMPILATION_SUBQUERY_COERCION_ERROR,
-                    subqueryExpr.getSourceLocation(), "");
+                    subqueryExpr.getSourceLocation(), "A set operation input is a parenthesized subquery");
         }
         if (selectExprAnalyzer.selectRegularExists) {
             if (selectExprAnalyzer.selectElementExists) {

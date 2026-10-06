@@ -25,6 +25,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -88,7 +89,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
                     argPtrThreshold.getByteArray(), argPtrThreshold.getStartOffset());
             if (edThresh < 0) {
                 throw new RuntimeDataException(ErrorCode.NEGATIVE_VALUE, BuiltinFunctions.EDIT_DISTANCE_CHECK.getName(),
-                        3, edThresh);
+                        ExceptionUtil.indexToPosition(2), edThresh);
             }
             editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
             writeResult(editDistance);

@@ -29,6 +29,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.utils.IdentifierUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -214,7 +215,9 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
                     MetadataUtil.dataverseName(dbName, dvName, mp.isUsingDatabase()));
         }
         if (dataset.isCorrelated()) {
-            throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED_ON_PRIMARY_INDEX, loc, dsName);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, loc,
+                    QUERY_INDEX.getName() + " is not supported on " + IdentifierUtil.dataset() + " " + dsName
+                            + " since it uses the correlated-prefix merge policy");
         }
         return dataset;
     }
