@@ -283,25 +283,25 @@ public class WriterValidationUtil {
     private static void validateDelimiter(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
         String delimiter = configuration.get(KEY_DELIMITER);
-        unitByteCondition(delimiter, sourceLocation, ErrorCode.INVALID_DELIMITER);
+        unitByteCondition(delimiter, KEY_DELIMITER, sourceLocation, ErrorCode.INVALID_DELIMITER);
     }
 
     private static void validateEscape(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
         String escape = configuration.get(KEY_ESCAPE);
-        unitByteCondition(escape, sourceLocation, ErrorCode.CSV_INVALID_ESCAPE);
+        unitByteCondition(escape, KEY_ESCAPE, sourceLocation, ErrorCode.CSV_INVALID_ESCAPE);
     }
 
     private static void validateRecordDelimiter(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
         String recordDel = configuration.get(KEY_RECORD_DELIMITER);
-        unitByteCondition(recordDel, sourceLocation, ErrorCode.CSV_INVALID_FORCE_QUOTE);
+        unitByteCondition(recordDel, KEY_RECORD_DELIMITER, sourceLocation, ErrorCode.INVALID_CHAR_LENGTH);
     }
 
-    private static void unitByteCondition(String param, SourceLocation sourceLocation, ErrorCode errorCode)
-            throws CompilationException {
+    private static void unitByteCondition(String param, String paramName, SourceLocation sourceLocation,
+            ErrorCode errorCode) throws CompilationException {
         if (param != null && param.length() > 1 && param.getBytes().length != 1) {
-            throw CompilationException.create(errorCode, sourceLocation, param);
+            throw CompilationException.create(errorCode, sourceLocation, param, paramName);
         }
     }
 

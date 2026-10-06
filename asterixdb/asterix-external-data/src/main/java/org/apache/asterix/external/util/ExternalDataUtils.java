@@ -598,11 +598,10 @@ public class ExternalDataUtils {
         if (icebergTable instanceof BaseTable) {
             BaseTable baseTable = (BaseTable) icebergTable;
 
-            if (baseTable.operations().current()
-                    .formatVersion() != ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION) {
-                throw new AsterixException(ErrorCode.UNSUPPORTED_ICEBERG_FORMAT_VERSION,
-                        "AsterixDB only supports Iceberg version up to "
-                                + ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION);
+            int formatVersion = baseTable.operations().current().formatVersion();
+            if (formatVersion != ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION) {
+                throw new AsterixException(ErrorCode.UNSUPPORTED_ICEBERG_FORMAT_VERSION, formatVersion,
+                        ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION);
             }
 
             try (CloseableIterable<FileScanTask> fileScanTasks = baseTable.newScan().planFiles()) {
