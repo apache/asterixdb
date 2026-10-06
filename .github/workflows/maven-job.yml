@@ -1,0 +1,115 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: maven-job
+
+on:
+  workflow_call:
+    inputs:
+      build:
+        description: Script that builds what the tests need, run from the repository root
+        type: string
+        default: ''
+      test:
+        description: Script that runs the tests, run from the repository root
+        type: string
+        required: true
+      timeout-minutes:
+        description: >-
+          Job timeout. JVMs are thread-dumped and killed 5 minutes before it expires, so the dumps and logs
+          can still be archived.
+        type: number
+        required: true
+      idle-timeout-minutes:
+        description: Thread-dump and kill JVMs once the build log has been silent this long (0 disables)
+        type: number
+        default: 0
+      artifacts:
+        description: Paths to archive whatever the outcome, one per line
+        type: string
+        default: |
+          target/threaddumps/**
+          **/*.log
+          **/*.out
+          **/*.log.gz
+      artifact-name:
+        description: Name of the uploaded artifact; must be unique within the calling workflow run
+        type: string
+        default: logs
+
+permissions:
+  contents: read
+
+env:
+  MAVEN_ARGS: -B -ntp
+  BUILD_LOG: ${{ github.workspace }}/../build.log
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  maven:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Start watchdog
+        env:
+          TIMEOUT: ${{ inputs.timeout-minutes }}
+          IDLE_TIMEOUT: ${{ inputs.idle-timeout-minutes }}
+        run: |
+          setsid nohup .github/scripts/watchdog.sh $((TIMEOUT - 5)) "$IDLE_TIMEOUT" "$BUILD_LOG" \
+            > "$RUNNER_TEMP/watchdog.log" 2>&1 < /dev/null &
+
+      - name: Build
+        if: inputs.build != ''
+        env:
+          SCRIPT: ${{ inputs.build }}
+        run: bash -eo pipefail -c "$SCRIPT" 2>&1 | tee -a "$BUILD_LOG"
+
+      - name: Test
+        env:
+          SCRIPT: ${{ inputs.test }}
+        run: bash -eo pipefail -c "$SCRIPT" 2>&1 | tee -a "$BUILD_LOG"
+
+      - name: Compress large logs
+        if: always()
+        run: find . -name '*.log' -size +50M -print0 | xargs -0 -r -n1 gzip
+
+      - name: Report timeouts and fork errors
+        if: always()
+        run: |
+          cat "$RUNNER_TEMP/watchdog.log"
+          if grep -qE 'There was a timeout or other error in the fork|Error occurred in starting fork' "$BUILD_LOG"; then
+            echo "::warning::Surefire reported a fork timeout or startup error; results may be incomplete"
+          fi
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.artifacts }}
+          if-no-files-found: ignore
+          retention-days: 3

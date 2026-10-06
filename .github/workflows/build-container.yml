@@ -1,0 +1,53 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: build
+
+on:
+  schedule:
+    - cron: "15 4,5 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Compile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+           persist-credentials: false
+      - name: Setup Java & Maven
+        uses: ./.github/actions/setup-maven
+        with:
+          java-version: 21
+          cache: maven
+      - name: Compile
+        run: mvn clean install -DskipTests -Drat.skip
+      - name: Set up buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: ./.containerfiles/Containerfile
+          platforms: linux/amd64
+          push: false
+          tags: apache-asterixdb-test-amd64
+          labels: 
+            org.opencontainers.image.title=Apache AsterixDB
+            org.opencontainers.image.description=Apache AsterixDB (AMD64)
+            org.opencontainers.image.vendor=Apache AsterixDB PMC
+
+
