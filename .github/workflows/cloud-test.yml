@@ -1,0 +1,50 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Converted from the Jenkins job asterix-gerrit-cloud-test
+name: cloud-test
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # The profile's classes take over 4 hours back to back, so each long one gets its own runner.
+  cloud-test:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - shard: storage
+            tests: CloudStorageTest
+          - shard: storage-sparse
+            tests: CloudStorageSparseTest
+          - shard: storage-cancellation
+            tests: CloudStorageCancellationTest
+          - shard: lookup-and-s3
+            tests: SqlppSinglePointLookupExecutionTest,AwsS3*
+    uses: ./.github/workflows/maven-job.yml
+    with:
+      build: mvn -pl asterixdb/asterix-app -am clean install -DskipTests -Dskip.npm=true
+      #HERE BE DRAGONS: -Dtest will override what is specified in the profile. we have to do this because the suites take so long
+      test: mvn -f asterixdb/asterix-app/pom.xml -Pasterix-gerrit-cloud-tests test -Dtest='${{ matrix.tests }}'
+      timeout-minutes: 240
+      artifact-name: logs-${{ matrix.shard }}
