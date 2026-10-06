@@ -51,6 +51,7 @@ import org.apache.asterix.optimizer.cost.Cost;
 import org.apache.asterix.optimizer.cost.CostMethods;
 import org.apache.asterix.optimizer.cost.ICost;
 import org.apache.asterix.optimizer.cost.ICostMethods;
+import org.apache.asterix.optimizer.rules.PushLimitIntoOrderByRule;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -1244,22 +1245,31 @@ public class JoinEnum {
         return this.numberOfTerms;
     }
 
+    /**
+     * @return the limit plus its offset, or -1 if no limit will be pushed into the scan
+     */
     private int findLimitValue(AbstractLogicalOperator oper) {
         ILogicalOperator op = oper;
         int limit = -1;
         while (op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            if (op.getOperatorTag() == LogicalOperatorTag.LIMIT) {
-                LimitOperator lop = (LimitOperator) op;
-                ILogicalExpression expr = lop.getMaxObjects().getValue();
-                if (expr != null) {
-                    if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) { // must be a constant
-                        limit = Integer.parseInt(lop.getMaxObjects().getValue().toString());
+            switch (op.getOperatorTag()) {
+                case LIMIT:
+                    Integer outputLimit = PushLimitIntoOrderByRule.getOutputLimit((LimitOperator) op);
+                    if (outputLimit == null) {
+                        return -1; // not a constant, so it will not be pushed
                     }
-                }
-            } else if (op.getOperatorTag() == LogicalOperatorTag.ORDER) {
-                return -1; // This is because we cant reduce the selectivity of a scan operator when an order by is present.
-            } else if (op.getOperatorTag() == LogicalOperatorTag.GROUP) {
-                return -1; // This is because we cant reduce the selectivity of a scan operator when a group by is present.
+                    limit = outputLimit; // the innermost limit is the one pushed into the scan
+                    break;
+                case DISTRIBUTE_RESULT:
+                case EXCHANGE:
+                case PROJECT:
+                case ASSIGN:
+                case SELECT:
+                    break;
+                case DATASOURCESCAN:
+                    return limit;
+                default:
+                    return -1;
             }
             op = op.getInputs().get(0).getValue();
         }

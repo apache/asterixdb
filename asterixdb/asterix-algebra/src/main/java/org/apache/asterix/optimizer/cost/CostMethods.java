@@ -39,6 +39,11 @@ import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConf
 
 public class CostMethods implements ICostMethods {
 
+    // Measured against secondary-index plans, a scan that a limit stops early runs several times slower than
+    // the rows it reads suggest, so it is costed as reading this many times further. Without this weight it
+    // undercuts an index plan on selective predicates with large limits, where the index plan runs faster.
+    private static final double LIMITED_SCAN_WEIGHT = 8.0;
+
     protected IOptimizationContext optCtx;
     protected PhysicalOptimizationConfig physOptConfig;
     protected long blockSize;
@@ -87,9 +92,27 @@ public class CostMethods implements ICostMethods {
         return physOptConfig.getMaxFramesExternalSort() * physOptConfig.getFrameSize();
     }
 
-    public Cost costFullScan(JoinNode jn) {
+    /**
+     * Rows an operator reads before a limit pushed into it is reached, across all partitions. Each
+     * partition stops once it has produced {@code limit} rows, so the cluster reads until
+     * {@code DOP * limit} rows qualify.
+     *
+     * @param jn the dataset being read
+     * @param readCard rows the operator reads when there is no limit
+     * @param readSel selectivity of the predicates already applied to the rows being read
+     */
+    private double limitedReadCard(JoinNode jn, double readCard, double readSel) {
         int limit = jn.getLimitVal();
-        double factor = 1.0;
+        double origCard = jn.getOrigCardinality();
+        double outputCard = jn.getCardinality();
+        if (limit <= 0 || origCard <= 0 || outputCard <= 0) {
+            return readCard;
+        }
+        double outputSel = outputCard / origCard; // all the predicates on this dataset
+        return Math.min(readCard, DOP * limit * readSel / outputSel);
+    }
+
+    public Cost costFullScan(JoinNode jn) {
         double inputCard = jn.getOrigCardinality();
         double outputCard = jn.getCardinality();
         double documentSize = jn.getAvgDocSize(); //the entire row will come out
@@ -99,65 +122,80 @@ public class CostMethods implements ICostMethods {
         }
         double outputSize = jn.getOutputSize(); // this is what leaves after the scan; only join and result vars are included here
 
-        if (limit > 0 && limit < outputCard) { // for single tables only
-            factor = limit / outputCard;
-            outputCard = limit;
-        }
-        double docsProcessed = factor * inputCard / DOP * docSizeFactor(inputSize);
-        double docsProduced = outputCard / DOP * docSizeFactor(outputSize);
+        // A limit pushed into the scan stops it early, on each partition, but never makes it dearer than a full scan.
+        double scannedCard = Math.min(inputCard, LIMITED_SCAN_WEIGHT * limitedReadCard(jn, inputCard, 1.0));
+        double producedCard = scannedCard < inputCard ? scannedCard * outputCard / inputCard : outputCard;
+
+        double docsProcessed = scannedCard / DOP * docSizeFactor(inputSize);
+        double docsProduced = producedCard / DOP * docSizeFactor(outputSize);
 
         // Since we do not have exchanges at the logical plan level, docsSent for the exchange above the
         // scan will be computed by the logical operator above the scan which will determine the properties
         // of the exchange operator above the scan in the final physical plan.
         double docsSent = 0;
-        double ioSeq = factor * inputCard / DOP * inputSize / blockSize;
+        double ioSeq = scannedCard / DOP * inputSize / blockSize;
         double ioRand = 0;
 
         return new Cost(docsProcessed, docsProduced, docsSent, 0, ioSeq, ioRand);
     }
 
-    public Cost costIndexScan(JoinNode jn, double indexSel) {
-        int limit = jn.getLimitVal();
-        double inputCard = jn.getOrigCardinality();
-        double outputCard = jn.getCardinality();
+    public Cost costIndexScan(JoinNode jn, Index index, double indexSel) {
         double outputSize = jn.getOutputSize();
 
-        if (limit > 0 && limit < outputCard) {
-            indexSel = limit / inputCard;
+        double scannedCard = jn.getOrigCardinality() * indexSel;
+        if (index.isPrimaryIndex()) {
+            // A limit is pushed into a primary-index search only; a secondary-index search returns every match.
+            scannedCard = limitedReadCard(jn, scannedCard, indexSel);
         }
 
-        double docsProcessed = inputCard * indexSel / DOP * docSizeFactor(outputSize);
-        double docsProduced = inputCard * indexSel / DOP * docSizeFactor(outputSize);
+        double docsProcessed = scannedCard / DOP * docSizeFactor(outputSize);
+        double docsProduced = scannedCard / DOP * docSizeFactor(outputSize);
         double docsSent = 0;
-        double ioSeq = inputCard * indexSel / DOP * outputSize / blockSize;
+        double ioSeq = scannedCard / DOP * outputSize / blockSize;
         double ioRand = 0;
         return new Cost(docsProcessed, docsProduced, docsSent, 0, ioSeq, ioRand);
     }
 
     public Cost costIndexDataScan(JoinNode jn, double indexSel) {
-        int limit = jn.getLimitVal(); // stored earlier
-        double inputCard = jn.getOrigCardinality();
-        double outputCard = jn.getCardinality();
         double inputSize = jn.getInputSize(); // original size of the dataset
         double outputSize = jn.getOutputSize();
 
-        if (limit > 0 && limit < outputCard) {
-            indexSel = limit / inputCard;
-        }
+        double sortedCard = jn.getOrigCardinality() * indexSel; // every RID the index search finds is sorted
+        double fetchedCard = limitedReadCard(jn, sortedCard, indexSel); // the fetch stops at the limit
 
-        return costPrimaryFetch(inputCard * indexSel, jn.getUnnestFactor(), inputSize, outputSize);
+        return costPrimaryFetch(sortedCard, fetchedCard, jn.getUnnestFactor(), inputSize, outputSize);
     }
 
     /**
-     * Fetch of the given number of rows from the primary index, including the sort of their primary
-     * keys that precedes it.
+     * Cost of an index-only plan once its secondary index has been searched: the primary keys the search returns
+     * are sorted and their duplicates removed, and no record is fetched. A limit does not shorten this work,
+     * since the sort is blocking and sees every primary key the search returns.
      *
-     * @param fetchedCard rows reaching the fetch
+     * @param jn the dataset being read
+     * @param indexSel selectivity of the index search
+     */
+    public Cost costIndexOnlyDistinct(JoinNode jn, double indexSel) {
+        double outputSize = jn.getOutputSize();
+        double sortedCardPerPartition = jn.getOrigCardinality() * indexSel / DOP;
+
+        double docsProcessed = sortedCardPerPartition * docSizeFactor(outputSize);
+        docsProcessed += costSort(sortedCardPerPartition, outputSize);
+        double docsProduced = sortedCardPerPartition / jn.getUnnestFactor() * docSizeFactor(outputSize);
+
+        return new Cost(docsProcessed, docsProduced, 0, 0, 0, 0);
+    }
+
+    /**
+     * Fetch of rows from the primary index, including the sort of their primary keys that precedes it.
+     *
+     * @param sortedCard rows whose primary keys are sorted ahead of the fetch
+     * @param fetchedCard rows the fetch reads; fewer than {@code sortedCard} when a limit stops it early
      * @param unnestFactor duplicate RIDs the distinct operator removes; 1.0 for regular indexes
      * @param inputSize original size of the dataset
      * @param outputSize width of the variables leaving the fetch
      */
-    private Cost costPrimaryFetch(double fetchedCard, double unnestFactor, double inputSize, double outputSize) {
+    private Cost costPrimaryFetch(double sortedCard, double fetchedCard, double unnestFactor, double inputSize,
+            double outputSize) {
         // Duplicates RIDs will be removed by the distinct operator in case of array indexes.
         // We account for that with the unnestFactor, which is 1.0 for regular indexes.
         double docsProcessed = fetchedCard / DOP / unnestFactor * docSizeFactor(outputSize);
@@ -171,8 +209,9 @@ public class CostMethods implements ICostMethods {
         double ioRand = 0;
 
         // Need to sort the RIDs before the data access. This happens in the sort operator
-        // between the index scan and the data scan operator, so we cost it here.
-        docsProcessed += costSort(docsProcessed, inputSize);
+        // between the index scan and the data scan operator, so we cost it here. The sort is blocking,
+        // so it sees every RID whatever limit stops the fetch.
+        docsProcessed += costSort(sortedCard / DOP / unnestFactor * docSizeFactor(outputSize), inputSize);
 
         return new Cost(docsProcessed, docsProduced, docsSent, 0, ioSeq, ioRand);
     }
@@ -197,7 +236,7 @@ public class CostMethods implements ICostMethods {
 
         Cost searchCost = new Cost(docsProcessed, docsProduced, 0, 0, geometry.getDataPages() / DOP, 0);
 
-        return (Cost) searchCost.costAdd(costPrimaryFetch(fetchedCard, 1.0, inputSize, outputSize));
+        return (Cost) searchCost.costAdd(costPrimaryFetch(fetchedCard, fetchedCard, 1.0, inputSize, outputSize));
     }
 
     public Cost costHashJoin(JoinNode jn) {
