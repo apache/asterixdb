@@ -12,3 +12,6 @@ github:
         - root
       restrict_deletion: true
       restrict_force_push: true
+      required_status_checks:
+        - name: "ci-passed"
+          app_slug: "github-actions"
