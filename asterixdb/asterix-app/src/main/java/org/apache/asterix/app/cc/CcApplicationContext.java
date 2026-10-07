@@ -180,7 +180,8 @@ public class CcApplicationContext implements ICcApplicationContext {
         requestTracker = new RequestTracker(this);
         configValidator = configValidatorFactory.create();
         this.adapterFactoryService = adapterFactoryService;
-        this.cache = new QueryPlanCache(ccServiceCtx.getAppConfig().getInt(CCConfig.Option.QUERY_PLAN_CACHE_CAPACITY));
+        this.cache = new QueryPlanCache(
+                ccServiceCtx.getAppConfig().getInt(CCConfig.Option.COMPILER_QUERY_PLAN_CACHE_CAPACITY));
         this.namespacePathResolver = namespacePathResolver;
         this.namespaceResolver = namespaceResolver;
         this.globalTxManager = globalTxManager;
