@@ -56,7 +56,7 @@ public class StorageProperties extends AbstractProperties {
         // By default, uses 1/4 of the maximum heap size for read cache, i.e., disk buffer cache.
         STORAGE_BUFFERCACHE_SIZE(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
         STORAGE_BUFFERCACHE_MAXOPENFILES(NONNEGATIVE_INTEGER, Integer.MAX_VALUE),
-        STORAGE_BUFFERCACHE_MAXOPENDESCRIPTORS(NONNEGATIVE_INTEGER, 0),
+        STORAGE_BUFFER_CACHE_MAX_OPEN_DESCRIPTORS(NONNEGATIVE_INTEGER, 0),
         STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
         STORAGE_MEMORYCOMPONENT_PAGESIZE(POSITIVE_INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
@@ -139,7 +139,7 @@ public class StorageProperties extends AbstractProperties {
                             + " of the buffer cache page size.";
                 case STORAGE_BUFFERCACHE_MAXOPENFILES:
                     return "The maximum number of open files in the buffer cache";
-                case STORAGE_BUFFERCACHE_MAXOPENDESCRIPTORS:
+                case STORAGE_BUFFER_CACHE_MAX_OPEN_DESCRIPTORS:
                     return "The number of OS file descriptors the buffer cache aims to hold at most. Beyond it, the"
                             + " descriptors of the least recently used files with no I/O in progress and no unforced"
                             + " writes are closed, and reopened on their next I/O. 0 means half of the process's"
@@ -276,7 +276,7 @@ public class StorageProperties extends AbstractProperties {
      *         limit cannot be determined
      */
     public int getBufferCacheMaxOpenDescriptors() {
-        int configured = accessor.getInt(Option.STORAGE_BUFFERCACHE_MAXOPENDESCRIPTORS);
+        int configured = accessor.getInt(Option.STORAGE_BUFFER_CACHE_MAX_OPEN_DESCRIPTORS);
         if (configured > 0) {
             return configured;
         }
