@@ -729,7 +729,8 @@ public class NodeControllerService implements IControllerService {
 
     protected INetworkSecurityManager createNetworkSecurityManager(IApplicationConfig appConfig,
             INCApplication application) {
-        return new NetworkSecurityManager(NetworkSecurityConfig.of(ncConfig.isSslEnabled(), ncConfig.getKeyStorePath(),
-                ncConfig.getKeyStorePassword(), ncConfig.getTrustStorePath()));
+        return new NetworkSecurityManager(NetworkSecurityConfig.of(ncConfig.isSslEnabled(),
+                ncConfig.isSslClusterVerifyPeerIdentity(), ncConfig.isSslRmiVerifyPeerIdentity(),
+                ncConfig.getKeyStorePath(), ncConfig.getKeyStorePassword(), ncConfig.getTrustStorePath()));
     }
 }
