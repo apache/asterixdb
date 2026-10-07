@@ -406,7 +406,9 @@ public class VectorIndexAccessMethod implements IAccessMethod {
                 // referenced the old PK variable from the DataSourceScan needs to be redirected.
                 List<LogicalVariable> oldVars = dataSourceOp.getVariables();
                 int numPK = dataset.getPrimaryKeys().size();
-                List<LogicalVariable> newPkVars = unnestMap.getVariables().subList(0, numPK);
+                // A copy, not a view: step 4 below rewrites the INCLUDE tail of the search's variable list,
+                // which would invalidate a subList view still read by the cross-pollination dedup after it.
+                List<LogicalVariable> newPkVars = new ArrayList<>(unnestMap.getVariables().subList(0, numPK));
                 Map<LogicalVariable, LogicalVariable> pkSubstitution = new HashMap<>();
                 for (int i = 0; i < numPK; i++) {
                     pkSubstitution.put(oldVars.get(i), newPkVars.get(i));

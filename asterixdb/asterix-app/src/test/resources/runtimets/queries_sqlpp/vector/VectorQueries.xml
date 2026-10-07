@@ -314,4 +314,9 @@
             <output-dir compare="Clean-JSON">vtree-unnest-not-indexable</output-dir>
         </compilation-unit>
     </test-case>
+    <test-case FilePath="vector">
+        <compilation-unit name="vtree-cross-pollination-include">
+            <output-dir compare="Clean-JSON">vtree-cross-pollination-include</output-dir>
+        </compilation-unit>
+    </test-case>
 </test-group>
