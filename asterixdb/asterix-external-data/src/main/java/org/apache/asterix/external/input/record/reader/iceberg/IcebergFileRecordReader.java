@@ -486,7 +486,8 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
 
             @Override
             protected DeleteLoader newDeleteLoader() {
-                return deleteCache != null ? deleteCache.newLoader(this::loadInputFile) : super.newDeleteLoader();
+                return deleteCache != null ? deleteCache.newLoader(this::loadInputFile)
+                        : new FixedKeySafeDeleteLoader(this::loadInputFile);
             }
         };
     }
