@@ -52,6 +52,7 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.external.util.iceberg.IcebergSnapshotUtils;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
+import org.apache.asterix.external.util.iceberg.NumericLiteralPredicateRewriter;
 import org.apache.asterix.external.util.iceberg.TimestampZonePredicateRewriter;
 import org.apache.asterix.external.util.iceberg.VariantBoundsEvaluator;
 import org.apache.asterix.external.util.iceberg.VariantPredicateRewriter;
@@ -302,6 +303,9 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
                         configuration.get(ExternalDataConstants.KEY_TIMEZONE), warningCollector::warn);
                 filterExpression = TimestampZonePredicateRewriter.rewrite(filterExpression, schemaAtSnapshot,
                         timeZone == null ? null : timeZone.toZoneId(), isTimestampAsLong());
+                // Binding rounds a literal to a float or decimal column's type, while the engine compares against the
+                // literal as written, so a rounded literal can skip a file holding a matching row.
+                filterExpression = NumericLiteralPredicateRewriter.rewrite(filterExpression, schemaAtSnapshot);
                 // Predicates on a shredded VARIANT sub-field arrive as a dotted reference (variant_field.status),
                 // which cannot bind against the schema because a variant is one opaque VariantType. Rewrite those
                 // into Iceberg extract terms here — the first point where the Iceberg schema is known — so the

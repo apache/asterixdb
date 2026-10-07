@@ -166,6 +166,7 @@ public class IcebergTest {
     private static final TableIdentifier TEMPORAL_EQ_DELETE_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "temporalEqDelete");
     private static final TableIdentifier TEMPORAL_ZONE_TABLE_ID = TableIdentifier.of(NAMESPACE, "temporalZone");
+    private static final TableIdentifier NUMERIC_PRECISION_TABLE_ID = TableIdentifier.of(NAMESPACE, "numericPrecision");
     private static final TableIdentifier MANY_FILES_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "manyFilesVariant");
     private static final TableIdentifier DOTTED_FIELD_NAME_VARIANT_TABLE_ID =
@@ -319,6 +320,7 @@ public class IcebergTest {
             writeTemporalPrecisionTable(catalog);
             writeTemporalEqDeleteTable(catalog);
             writeTemporalZoneTable(catalog);
+            writeNumericPrecisionTable(catalog);
             writeNestedVariantInStructTable(catalog);
             writePartitionedVariantTable(catalog);
             writeTwoVariantsTable(catalog);
@@ -1508,6 +1510,43 @@ public class IcebergTest {
         rowDelta.commit();
         LOGGER.info("[WRITE] temporalEqDelete committed: {} rows, equality delete on ts={}us", rows.length,
                 deletedMicros);
+    }
+
+    /**
+     * Float and decimal values, <b>one row per data file</b>, each sitting where a pushed literal rounded to the column's
+     * type lands on it: the decimal {@code 1.23} against {@code 1.225}, which rounds to {@code 1.23}, and the float
+     * {@code 0.1f} against the double {@code 0.1}, which rounds to {@code 0.1f}. The engine compares against the literal
+     * as written, so a query whose literal Iceberg rounds must still return these rows. Id 4 holds {@code -0.0f}, which
+     * the engine treats as equal to zero and Iceberg's bounds order below it. Id 5 holds NaN, which the engine orders
+     * above every number and Iceberg's pruning never matches in an ordering comparison.
+     */
+    private static void writeNumericPrecisionTable(NessieCatalog catalog) throws Exception {
+        Schema schema = new Schema(Types.NestedField.optional(1, "id", Types.IntegerType.get()),
+                Types.NestedField.optional(2, "f", Types.FloatType.get()),
+                Types.NestedField.optional(3, "d", Types.DecimalType.of(10, 2)));
+        Table table = createTable(catalog, NUMERIC_PRECISION_TABLE_ID, schema, PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        Object[][] rows = { { 1, 0.1f, "1.22" }, { 2, 0.2f, "1.23" }, { 3, 1.5f, "20.00" }, { 4, -0.0f, "0.00" },
+                { 5, Float.NaN, null } };
+        AppendFiles append = table.newAppend();
+        for (Object[] row : rows) {
+            GenericRecord rec = GenericRecord.create(table.schema());
+            rec.setField("id", row[0]);
+            rec.setField("f", row[1]);
+            rec.setField("d", row[2] == null ? null : new BigDecimal((String) row[2]));
+            String path = table.location() + "/data/np-" + row[0] + ".parquet";
+            OutputFile out = table.io().newOutputFile(path);
+            // the writer's own metrics, which carry the NaN count Iceberg prunes NaN by, as a committing engine's do
+            FileAppender<Record> appender =
+                    Parquet.write(out).forTable(table).createWriterFunc(GenericParquetWriter::create).build();
+            try (FileAppender<Record> writer = appender) {
+                writer.add(rec);
+            }
+            append.appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                    .withFileSizeInBytes(out.toInputFile().getLength()).withMetrics(appender.metrics()).build());
+        }
+        append.commit();
+        LOGGER.info("[WRITE] numericPrecision committed with {} single-row files", rows.length);
     }
 
     private static Table createTable(org.apache.iceberg.nessie.NessieCatalog catalog, TableIdentifier id, Schema schema,
