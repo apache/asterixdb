@@ -46,7 +46,7 @@ class Args4jOption implements Option {
 
     @Override
     public String[] aliases() {
-        return new String[0];
+        return option.cmdlineAliases().toArray(new String[0]);
     }
 
     @Override

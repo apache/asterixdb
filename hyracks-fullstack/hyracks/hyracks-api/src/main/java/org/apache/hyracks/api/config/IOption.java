@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.config;
 
+import java.util.List;
 import java.util.function.Function;
 
 import org.apache.hyracks.util.LogRedactionUtil;
@@ -77,6 +78,27 @@ public interface IOption {
 
     default String camelCase() {
         return StringUtil.toCamelCase(name());
+    }
+
+    /**
+     * @return former names of this option, in the same form as {@link #name()}, that are still accepted wherever an
+     *         option is set by name (ini, command line, lookup by name), but are never emitted. Lets an option be
+     *         renamed without breaking configurations that use its old name.
+     */
+    default List<String> aliases() {
+        return List.of();
+    }
+
+    default List<String> iniAliases() {
+        return aliases().stream().map(IOption::toIni).toList();
+    }
+
+    default List<String> cmdlineAliases() {
+        return aliases().stream().map(alias -> "-" + alias.toLowerCase().replace("_", "-")).toList();
+    }
+
+    default List<String> camelCaseAliases() {
+        return aliases().stream().map(StringUtil::toCamelCase).toList();
     }
 
     default String toIniString() {
