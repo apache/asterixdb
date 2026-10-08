@@ -61,6 +61,7 @@
     "compiler.disjunction.as.join" : false,
     "compiler.disjunction.hash.threshold" : 40,
     "compiler.external.field.pushdown" : true,
+    "compiler.externalscanmemory" : 8192,
     "compiler.extract.common.expression.limit" : 100,
     "compiler.forcejoinorder" : false,
     "compiler\.framesize" : 32768,
