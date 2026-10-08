@@ -173,12 +173,10 @@ public class AtomicNoWALTransactionContext extends AtomicTransactionContext {
         for (ILSMOperationTracker opTrackerRef : modifiedIndexes) {
             PrimaryIndexOperationTracker primaryIndexOpTracker = (PrimaryIndexOperationTracker) opTrackerRef;
             for (IndexInfo indexInfo : primaryIndexOpTracker.getDatasetInfo().getIndexes().values()) {
-                if (indexInfo.getIndex().isPrimaryIndex()) {
-                    try {
-                        indexInfo.getIndex().getMergePolicy().diskComponentAdded(indexInfo.getIndex(), false);
-                    } catch (HyracksDataException e) {
-                        throw new ACIDException(e);
-                    }
+                try {
+                    indexInfo.getIndex().getMergePolicy().diskComponentAdded(indexInfo.getIndex(), false);
+                } catch (HyracksDataException e) {
+                    throw new ACIDException(e);
                 }
             }
         }

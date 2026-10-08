@@ -19,6 +19,11 @@
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp" SourceLocation="true">
   <test-group name="storage">
     <test-case FilePath="storage">
+      <compilation-unit name="atomic-secondary-merge">
+        <output-dir compare="Text">atomic-secondary-merge</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="storage">
       <compilation-unit name="dataset-checkpoint">
         <output-dir compare="Text">dataset-checkpoint</output-dir>
       </compilation-unit>

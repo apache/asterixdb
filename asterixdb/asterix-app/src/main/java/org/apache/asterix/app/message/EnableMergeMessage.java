@@ -40,9 +40,7 @@ public class EnableMergeMessage implements INcAddressedMessage {
     public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
         for (IndexInfo indexInfo : datasetLifecycleManager.getDatasetInfo(datasetId).getIndexes().values()) {
-            if (indexInfo.getIndex().isPrimaryIndex()) {
-                indexInfo.getIndex().getMergePolicy().diskComponentAdded(indexInfo.getIndex(), false);;
-            }
+            indexInfo.getIndex().getMergePolicy().diskComponentAdded(indexInfo.getIndex(), false);
         }
     }
 
