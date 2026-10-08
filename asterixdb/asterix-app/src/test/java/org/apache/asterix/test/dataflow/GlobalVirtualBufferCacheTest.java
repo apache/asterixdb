@@ -266,11 +266,11 @@ public class GlobalVirtualBufferCacheTest {
 
     private void initializeNc() throws Exception {
         List<Pair<IOption, Object>> opts = new ArrayList<>();
-        opts.add(Pair.of(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 128 * 1024L));
-        opts.add(Pair.of(Option.STORAGE_MEMORYCOMPONENT_PAGESIZE, 1 * 1024));
-        opts.add(Pair.of(Option.STORAGE_BUFFERCACHE_PAGESIZE, 1 * 1024));
-        opts.add(Pair.of(Option.STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE, FILTERED_MEMORY_COMPONENT_SIZE));
-        opts.add(Pair.of(Option.STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE, FILTERED_MEMORY_COMPONENT_SIZE));
+        opts.add(Pair.of(Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, 128 * 1024L));
+        opts.add(Pair.of(Option.STORAGE_MEMORY_COMPONENT_PAGE_SIZE, 1 * 1024));
+        opts.add(Pair.of(Option.STORAGE_BUFFER_CACHE_PAGE_SIZE, 1 * 1024));
+        opts.add(Pair.of(Option.STORAGE_FILTERED_MEMORY_COMPONENT_MAX_SIZE, FILTERED_MEMORY_COMPONENT_SIZE));
+        opts.add(Pair.of(Option.STORAGE_FILTERED_MEMORY_COMPONENT_MAX_SIZE, FILTERED_MEMORY_COMPONENT_SIZE));
 
         nc.setOpts(opts);
 

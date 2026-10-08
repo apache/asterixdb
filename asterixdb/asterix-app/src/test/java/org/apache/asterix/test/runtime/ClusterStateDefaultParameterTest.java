@@ -79,19 +79,19 @@ public class ClusterStateDefaultParameterTest {
         int matchCount = 0;
         String[] rows = result.toString().split(",");
         for (String row : rows) {
-            if (row.contains("storage.buffercache.size")) {
+            if (row.contains("storage.buffer.cache.size")) {
                 Assert.assertTrue(getValue(row) == maxHeap / 4);
                 matchCount++;
             }
-            if (row.contains("storage.memorycomponent.globalbudget")) {
+            if (row.contains("storage.memory.component.global.budget")) {
                 Assert.assertTrue(getValue(row) == maxHeap / 4);
                 matchCount++;
             }
-            if (row.contains("storage.memorycomponent.flush.threshold")) {
+            if (row.contains("storage.memory.component.flush.threshold")) {
                 Assert.assertTrue(getDoubleValue(row) == 0.9d);
                 matchCount++;
             }
-            if (row.contains("storage.filtered.memorycomponent.max.size")) {
+            if (row.contains("storage.filtered.memory.component.max.size")) {
                 Assert.assertTrue(getValue(row) == 0);
                 matchCount++;
             }
