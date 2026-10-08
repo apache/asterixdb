@@ -16974,6 +16974,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="filter/double-nan">
+        <output-dir compare="Text">filter/double-nan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/constant-left">
+        <output-dir compare="Text">filter/constant-left</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="filter/return-array">
         <output-dir compare="Text">filter/return-array</output-dir>
       </compilation-unit>

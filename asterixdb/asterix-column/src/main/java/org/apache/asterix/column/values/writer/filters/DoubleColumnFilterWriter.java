@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.values.writer.filters;
 
+import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
+
 public class DoubleColumnFilterWriter extends AbstractColumnFilterWriter {
     private double min;
     private double max;
@@ -28,8 +30,14 @@ public class DoubleColumnFilterWriter extends AbstractColumnFilterWriter {
 
     @Override
     public void addDouble(double value) {
-        min = Math.min(min, value);
-        max = Math.max(max, value);
+        // Math.min and Math.max return NaN once any value is NaN, and the range filter would then skip this mega
+        // leaf node for every predicate. In SQL++ order NaN is above +INF, so it is the max and leaves the min alone.
+        if (ComparatorUtil.compareDoubles(value, min) < 0) {
+            min = value;
+        }
+        if (ComparatorUtil.compareDoubles(value, max) > 0) {
+            max = value;
+        }
     }
 
     @Override
@@ -44,7 +52,7 @@ public class DoubleColumnFilterWriter extends AbstractColumnFilterWriter {
 
     @Override
     public void reset() {
-        min = Double.MIN_VALUE;
-        max = Double.MAX_VALUE;
+        min = Double.POSITIVE_INFINITY;
+        max = Double.NEGATIVE_INFINITY;
     }
 }

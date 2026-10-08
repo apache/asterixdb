@@ -279,6 +279,14 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
+    <compilation-unit name="object_merge_duplicate_fields">
+      <output-dir compare="Text">object_merge_duplicate_fields</output-dir>
+      <expected-error>ASX0013: Duplicate field name 'price' (in line 21, at column 1)</expected-error>
+      <expected-error>ASX0013: Duplicate field name 'city' (in line 21, at column 1)</expected-error>
+      <expected-error>ASX0013: Duplicate field name 'price' (in line 21, at column 1)</expected-error>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
     <compilation-unit name="load-record-fields">
       <output-dir compare="Text">load-record-fields</output-dir>
     </compilation-unit>

@@ -22,6 +22,8 @@ import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.om.types.ATypeTag;
 
 public class ColumnRangeFilterValueAccessor implements IColumnRangeFilterValueAccessor {
+    private static final long NAN_BITS = Double.doubleToLongBits(Double.NaN);
+    private static final long NEGATIVE_INFINITY_BITS = Double.doubleToLongBits(Double.NEGATIVE_INFINITY);
     private final int columnIndex;
     private final ATypeTag typeTag;
     private final boolean min;
@@ -42,6 +44,11 @@ public class ColumnRangeFilterValueAccessor implements IColumnRangeFilterValueAc
     }
 
     public void setNormalizedValue(long normalizedValue) {
+        if (min && typeTag == ATypeTag.DOUBLE && normalizedValue == NAN_BITS) {
+            // Before ASTERIXDB-3944 a NaN made the writer store NaN for both bounds of a mega leaf node, hiding its
+            // real min. The writer no longer stores a NaN min, so one comes only from such older data: read it.
+            normalizedValue = NEGATIVE_INFINITY_BITS;
+        }
         this.normalizedValue = normalizedValue;
     }
 

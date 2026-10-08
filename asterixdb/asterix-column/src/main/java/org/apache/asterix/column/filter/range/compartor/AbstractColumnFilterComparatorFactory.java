@@ -26,6 +26,7 @@ import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
 import org.apache.asterix.column.filter.range.accessor.NoOpColumnRangeFilterValueAccessor;
+import org.apache.asterix.dataflow.data.nontagged.comparators.ComparatorUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -91,6 +92,15 @@ abstract class AbstractColumnFilterComparatorFactory implements IColumnRangeFilt
         AbstractComparator(IColumnRangeFilterValueAccessor left, IColumnRangeFilterValueAccessor right) {
             this.left = left;
             this.right = right;
+        }
+
+        /**
+         * Compares in the order SQL++ predicates compare doubles (NaN above +INF, -0.0 equal to 0.0), so a mega
+         * leaf node that the predicate could match is never skipped.
+         */
+        protected final int compareDoubles() {
+            return ComparatorUtil.compareDoubles(Double.longBitsToDouble(left.getNormalizedValue()),
+                    Double.longBitsToDouble(right.getNormalizedValue()));
         }
     }
 }
