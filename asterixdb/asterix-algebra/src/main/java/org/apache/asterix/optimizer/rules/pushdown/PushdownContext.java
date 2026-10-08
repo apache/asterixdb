@@ -116,7 +116,7 @@ public class PushdownContext {
     public void define(LogicalVariable variable, ILogicalOperator operator, ILogicalExpression expression,
             int expressionIndex) {
         if (defineChain.containsKey(variable)) {
-            LOGGER.warn("Variable {}  declared twice", variable);
+            LOGGER.trace("Variable {} declared twice", variable);
             return;
         } else if (definedVariable.containsKey(expression)) {
             DefineDescriptor defineDescriptor = definedVariable.get(expression);
@@ -147,7 +147,7 @@ public class PushdownContext {
             DefineDescriptor defineDescriptor = defineChain.get(variable);
             if (defineDescriptor == null) {
                 // Log to track any definition that we may have missed
-                LOGGER.warn("Variable {} is not defined", variable);
+                LOGGER.trace("Variable {} is not defined", variable);
                 continue;
             }
 
