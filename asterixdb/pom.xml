@@ -105,14 +105,14 @@
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
-    <awsjavasdk.version>2.55.10</awsjavasdk.version>
+    <awsjavasdk.version>2.55.12</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.48.5</awsjavasdk.crt.version>
 
-    <azureblobjavasdk.version>12.35.1</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.34.1</azurecommonjavasdk.version>
-    <azureidentity.version>1.18.6</azureidentity.version>
-    <azuredatalakejavasdk.version>12.28.1</azuredatalakejavasdk.version>
+    <azureblobjavasdk.version>12.35.2</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.34.2</azurecommonjavasdk.version>
+    <azureidentity.version>1.18.7</azureidentity.version>
+    <azuredatalakejavasdk.version>12.28.2</azuredatalakejavasdk.version>
     <azurecore.version>1.60.0</azurecore.version>
     <azurecorehttpnetty.version>1.16.8</azurecorehttpnetty.version>
 
