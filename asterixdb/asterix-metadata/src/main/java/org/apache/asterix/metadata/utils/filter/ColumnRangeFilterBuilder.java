@@ -177,18 +177,19 @@ public class ColumnRangeFilterBuilder {
         return new ORColumnFilterEvaluatorFactory(left, right);
     }
 
+    // const <op> col is col <op'> const with the operands swapped, so the operator is mirrored, not negated
     private static ComparisonKind invert(ComparisonKind comparisonKind) {
         switch (comparisonKind) {
             case EQ:
                 return ComparisonKind.EQ;
             case LE:
-                return ComparisonKind.GT;
-            case GE:
-                return ComparisonKind.LT;
-            case LT:
                 return ComparisonKind.GE;
-            case GT:
+            case GE:
                 return ComparisonKind.LE;
+            case LT:
+                return ComparisonKind.GT;
+            case GT:
+                return ComparisonKind.LT;
             default:
                 throw new IllegalStateException("Unsupported comparison type: " + comparisonKind);
         }
@@ -199,8 +200,8 @@ public class ColumnRangeFilterBuilder {
             IColumnRangeFilterValueAccessorFactory max) {
 
         /*
-        * For a filter condition of the form col < const, the page will be read only if const >= min(col).
-        *  Similarly, for col <= const, the page will be read only if const > min(col).
+        * For a filter condition of the form col < const, the page will be read only if const > min(col).
+        *  Similarly, for col <= const, the page will be read only if const >= min(col).
         *  for col > const, the page will be read only if const < max(col).
         *  for col >= const, the page will be read only if const <= max(col).
         * */

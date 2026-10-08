@@ -38,8 +38,7 @@ public class GTColumnFilterEvaluatorFactory extends AbstractColumnFilterComparat
             @Override
             public boolean evaluate() {
                 if (left.getTypeTag() == ATypeTag.DOUBLE) {
-                    return Double.longBitsToDouble(left.getNormalizedValue()) > Double
-                            .longBitsToDouble(right.getNormalizedValue());
+                    return compareDoubles() > 0;
                 }
                 return left.getNormalizedValue() > right.getNormalizedValue();
             }
