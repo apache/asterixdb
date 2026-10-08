@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -73,7 +72,6 @@ public class ConfigManager implements IConfigManager, Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Set<String> WARNED_ALIASES = ConcurrentHashMap.newKeySet();
 
     private HashSet<IOption> registeredOptions = new HashSet<>();
     @SuppressWarnings("squid:S1948") // HashMap is serializable, and therefore so is its synchronized map
@@ -84,7 +82,6 @@ public class ConfigManager implements IConfigManager, Serializable {
     private Map<IOption, Object> configurationMap =
             Collections.synchronizedMap(new CompositeMap<>(definedMap, defaultMap, new NoOpMapMutator()));
     private EnumMap<Section, Map<String, IOption>> sectionMap = new EnumMap<>(Section.class);
-    private EnumMap<Section, Map<String, IOption>> aliasMap = new EnumMap<>(Section.class);
     @SuppressWarnings("squid:S1948") // TreeMap is serializable, and therefore so is its synchronized map
     private Map<String, Map<IOption, Object>> nodeSpecificDefinedMap = Collections.synchronizedMap(new TreeMap<>());
     @SuppressWarnings("squid:S1948") // TreeMap is serializable, and therefore so is its synchronized map
@@ -154,11 +151,6 @@ public class ConfigManager implements IConfigManager, Serializable {
             }
             LOGGER.trace("registering option: {}", option::toIniString);
             Map<String, IOption> optionMap = sectionMap.computeIfAbsent(option.section(), section -> new HashMap<>());
-            IOption aliased = aliasMap.getOrDefault(option.section(), Collections.emptyMap()).get(option.ini());
-            if (aliased != null) {
-                throw new IllegalStateException(
-                        "Option " + option.toIniString() + " collides with an alias of " + aliased.toIniString());
-            }
             IOption prev = optionMap.put(option.ini(), option);
             if (prev != null) {
                 if (prev != option) {
@@ -166,7 +158,6 @@ public class ConfigManager implements IConfigManager, Serializable {
                             + option.toIniString() + ": " + Arrays.asList(option.getClass(), prev.getClass()));
                 }
             } else {
-                registerAliases(option, optionMap);
                 registeredOptions.add(option);
                 optionSetters.put(option, (node, value, isDefault) -> correctedMap(node, isDefault).put(option, value));
                 if (LOGGER.isDebugEnabled()) {
@@ -181,38 +172,6 @@ public class ConfigManager implements IConfigManager, Serializable {
                     });
                 }
             }
-        }
-    }
-
-    private void registerAliases(IOption option, Map<String, IOption> optionMap) {
-        Map<String, IOption> aliases = aliasMap.computeIfAbsent(option.section(), section -> new HashMap<>());
-        for (String alias : option.iniAliases()) {
-            IOption existing = optionMap.get(alias);
-            if (existing == null) {
-                existing = aliases.putIfAbsent(alias, option);
-            }
-            if (existing != null) {
-                throw new IllegalStateException("Alias [" + option.section().sectionName() + "] " + alias + " of "
-                        + option.toIniString() + " collides with " + existing.toIniString());
-            }
-        }
-    }
-
-    /**
-     * @return the option that {@code name} is an alias of in {@code section}, or null if it is not one
-     */
-    private IOption resolveAlias(Section section, String name) {
-        Map<String, IOption> aliases = section == null ? null : aliasMap.get(section);
-        IOption option = aliases == null ? null : aliases.get(name);
-        if (option != null) {
-            warnAlias("[" + section.sectionName() + "] " + name, option.toIniString());
-        }
-        return option;
-    }
-
-    private static void warnAlias(String alias, String canonical) {
-        if (WARNED_ALIASES.add(alias)) {
-            LOGGER.warn("option {} is deprecated; use {} instead", alias, canonical);
         }
     }
 
@@ -267,9 +226,8 @@ public class ConfigManager implements IConfigManager, Serializable {
     }
 
     public IOption lookupOption(String section, String key) {
-        Section parsedSection = Section.parseSectionName(section);
-        IOption option = getSectionOptionMap(parsedSection).get(key);
-        return option != null ? option : resolveAlias(parsedSection, key);
+        Map<String, IOption> map = getSectionOptionMap(Section.parseSectionName(section));
+        return map == null ? null : map.get(key);
     }
 
     public void processConfig() throws CmdLineException, IOException {
@@ -325,7 +283,6 @@ public class ConfigManager implements IConfigManager, Serializable {
             }
         }
         commandLineOptions.sort(Comparator.comparing(IOption::cmdline));
-        checkCommandLineAliases(cmdLineParser, commandLineOptions);
 
         commandLineOptions.forEach(option -> cmdLineParser.addOption(new Args4jSetter(option, setAction, false),
                 new Args4jOption(option, this, option.type().targetType())));
@@ -357,26 +314,6 @@ public class ConfigManager implements IConfigManager, Serializable {
             System.exit(0);
         }
         return appArgs;
-    }
-
-    private void checkCommandLineAliases(CmdLineParser cmdLineParser, List<IOption> options) throws CmdLineException {
-        if (args == null) {
-            return;
-        }
-        Set<String> given = Stream.of(args).map(arg -> arg.split("=", 2)[0]).collect(Collectors.toSet());
-        for (IOption option : options) {
-            for (String alias : option.cmdlineAliases()) {
-                if (!given.contains(alias)) {
-                    continue;
-                }
-                if (given.contains(option.cmdline())) {
-                    throw new CmdLineException(cmdLineParser,
-                            "both " + option.cmdline() + " and its deprecated alias " + alias + " were specified",
-                            null);
-                }
-                warnAlias(alias, option.cmdline());
-            }
-        }
     }
 
     private void parseIni() throws IOException {
@@ -413,18 +350,11 @@ public class ConfigManager implements IConfigManager, Serializable {
                 throw new HyracksException("Unknown section in ini: " + section.getName());
             }
             Map<String, IOption> optionMap = getSectionOptionMap(rootSection);
-            Map<IOption, String> setBy = new HashMap<>();
             for (String name : section.keySet()) {
-                final IOption canonical = optionMap.get(name);
-                final IOption option = canonical != null ? canonical : resolveAlias(rootSection, name);
+                final IOption option = optionMap == null ? null : optionMap.get(name);
                 if (option == null) {
                     handleUnknownOption(section, name);
                     return;
-                }
-                final String otherName = setBy.put(option, name);
-                if (otherName != null) {
-                    throw new HyracksException("Both " + otherName + " and " + name + " set " + option.toIniString()
-                            + " in [" + section.getName() + "]; remove the deprecated one");
                 }
                 final List<String> values = section.getAll(name);
                 if (values.size() <= 1) {
@@ -448,7 +378,7 @@ public class ConfigManager implements IConfigManager, Serializable {
     private void handleUnknownOption(Profile.Section section, String name) throws HyracksException {
         Set<String> matches = new HashSet<>();
         for (IOption registeredOption : registeredOptions) {
-            if (registeredOption.ini().equals(name) || registeredOption.iniAliases().contains(name)) {
+            if (registeredOption.ini().equals(name)) {
                 matches.add(registeredOption.section().sectionName());
             }
         }

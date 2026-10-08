@@ -42,10 +42,10 @@ public class ConfigConstraintsTest {
 
     @Before
     public void setUp() {
-        config.put(StorageProperties.Option.STORAGE_BUFFER_CACHE_SIZE, 32 * MB);
-        config.put(StorageProperties.Option.STORAGE_BUFFER_CACHE_PAGE_SIZE, (int) (128 * KB));
-        config.put(StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, 32 * MB);
-        config.put(StorageProperties.Option.STORAGE_MEMORY_COMPONENT_PAGE_SIZE, (int) (128 * KB));
+        config.put(StorageProperties.Option.STORAGE_BUFFERCACHE_SIZE, 32 * MB);
+        config.put(StorageProperties.Option.STORAGE_BUFFERCACHE_PAGESIZE, (int) (128 * KB));
+        config.put(StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 32 * MB);
+        config.put(StorageProperties.Option.STORAGE_MEMORYCOMPONENT_PAGESIZE, (int) (128 * KB));
         config.put(TransactionProperties.Option.TXN_LOG_BUFFER_PAGESIZE, (int) (4 * MB));
         config.put(TransactionProperties.Option.TXN_LOG_BUFFER_NUMPAGES, 8);
         config.put(TransactionProperties.Option.TXN_LOG_PARTITIONSIZE, 256 * MB);
@@ -68,17 +68,17 @@ public class ConfigConstraintsTest {
 
     @Test
     public void memoryComponentBudgetBelowOnePageIsFatal() {
-        config.put(StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, 64 * KB);
+        config.put(StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 64 * KB);
         List<ConfigConstraints.Violation> violations = ConfigConstraints.check(config::get);
         assertEquals(1, violations.size());
         assertTrue(violations.get(0).isFatalAtStartup());
         assertTrue(violations.get(0).getMessage(),
-                violations.get(0).getMessage().contains("storage.memory.component.global.budget"));
+                violations.get(0).getMessage().contains("storage.memorycomponent.globalbudget"));
     }
 
     @Test
     public void bufferCacheBelowOnePageIsFatal() {
-        config.put(StorageProperties.Option.STORAGE_BUFFER_CACHE_SIZE, 128 * KB);
+        config.put(StorageProperties.Option.STORAGE_BUFFERCACHE_SIZE, 128 * KB);
         List<ConfigConstraints.Violation> violations = ConfigConstraints.check(config::get);
         assertEquals(1, violations.size());
         assertTrue(violations.get(0).isFatalAtStartup());
@@ -153,22 +153,22 @@ public class ConfigConstraintsTest {
     @Test
     public void validatorRejectsViolationsTheChangeIntroduces() {
         Map<IOption, Object> proposed = new HashMap<>(config);
-        proposed.put(StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, 0L);
+        proposed.put(StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 0L);
         proposed.put(CompilerProperties.Option.COMPILER_SORTMEMORY, KB);
         IConfigValidator validator = (option, value) -> {
         };
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateChange(config::get, proposed::get));
-        assertTrue(e.getMessage(), e.getMessage().contains("storage.memory.component.global.budget"));
+        assertTrue(e.getMessage(), e.getMessage().contains("storage.memorycomponent.globalbudget"));
         assertTrue(e.getMessage(), e.getMessage().contains("compiler.sortmemory"));
     }
 
     @Test
     public void validatorAllowsCorrectingOneOfSeveralViolations() {
-        config.put(StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, 0L);
+        config.put(StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 0L);
         config.put(CompilerProperties.Option.COMPILER_SORTMEMORY, KB);
         Map<IOption, Object> proposed = new HashMap<>(config);
-        proposed.put(StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, 32 * MB);
+        proposed.put(StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 32 * MB);
         IConfigValidator validator = (option, value) -> {
         };
         validator.validateChange(config::get, proposed::get);

@@ -138,7 +138,7 @@ public class MultiPartitionLSMIndexTest {
                 + File.separator + "resources" + File.separator + "cc-multipart.conf";
         nc = new TestNodeController(configPath, false);
         List<Pair<IOption, Object>> opts = new ArrayList<>();
-        opts.add(Pair.of(Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, 16 * 1024 * 1024L));
+        opts.add(Pair.of(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 16 * 1024 * 1024L));
         nc.setOpts(opts);
         nc.init();
         ncAppCtx = nc.getAppRuntimeContext();

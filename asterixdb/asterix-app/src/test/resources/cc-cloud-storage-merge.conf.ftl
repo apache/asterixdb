@@ -39,8 +39,8 @@ address=127.0.0.1
 command=asterixnc
 app.class=org.apache.asterix.hyracks.bootstrap.NCApplication
 jvm.args=-Xmx4096m --add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED --add-opens=java.management/sun.management=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Dnode.Resolver="org.apache.asterix.external.util.IdentitiyResolverFactory"
-storage.buffer.cache.size=128MB
-storage.memory.component.global.budget=8MB
+storage.buffercache.size=128MB
+storage.memorycomponent.globalbudget=8MB
 storage.max.columns.in.zeroth.segment=800
 storage.page.zero.writer=default
 
@@ -65,7 +65,7 @@ compiler.internal.sanitycheck=true
 messaging.frame.size=4096
 messaging.frame.count=512
 cloud.deployment=true
-storage.buffer.cache.page.size=2KB
+storage.buffercache.pagesize=2KB
 storage.column.max.tuple.count=200
 storage.partitioning=static
 cloud.storage.scheme=s3

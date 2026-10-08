@@ -35,7 +35,6 @@ import static org.apache.hyracks.control.common.config.OptionTypes.getRangedLong
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -53,18 +52,18 @@ import org.apache.hyracks.util.StorageUtil;
 public class StorageProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        STORAGE_BUFFER_CACHE_PAGE_SIZE(POSITIVE_INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
+        STORAGE_BUFFERCACHE_PAGESIZE(POSITIVE_INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         // By default, uses 1/4 of the maximum heap size for read cache, i.e., disk buffer cache.
-        STORAGE_BUFFER_CACHE_SIZE(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
-        STORAGE_BUFFER_CACHE_MAX_OPEN_FILES(NONNEGATIVE_INTEGER, Integer.MAX_VALUE),
+        STORAGE_BUFFERCACHE_SIZE(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
+        STORAGE_BUFFERCACHE_MAXOPENFILES(NONNEGATIVE_INTEGER, Integer.MAX_VALUE),
         STORAGE_BUFFER_CACHE_MAX_OPEN_DESCRIPTORS(NONNEGATIVE_INTEGER, 0),
-        STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
-        STORAGE_MEMORY_COMPONENT_PAGE_SIZE(POSITIVE_INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
-        STORAGE_MEMORY_COMPONENT_NUM_COMPONENTS(POSITIVE_INTEGER, 2),
-        STORAGE_MEMORY_COMPONENT_FLUSH_THRESHOLD(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.9d),
-        STORAGE_MEMORY_COMPONENT_MAX_SCHEDULED_FLUSHES(NONNEGATIVE_INTEGER, 0),
-        STORAGE_FILTERED_MEMORY_COMPONENT_MAX_SIZE(LONG_BYTE_UNIT, 0L),
-        STORAGE_LSM_BLOOM_FILTER_FALSE_POSITIVE_RATE(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.01d),
+        STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(POSITIVE_LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
+        STORAGE_MEMORYCOMPONENT_PAGESIZE(POSITIVE_INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
+        STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
+        STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.9d),
+        STORAGE_MEMORYCOMPONENT_MAX_SCHEDULED_FLUSHES(NONNEGATIVE_INTEGER, 0),
+        STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE(LONG_BYTE_UNIT, 0L),
+        STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.01d),
         STORAGE_COMPRESSION_BLOCK(STRING, "snappy"),
         STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE)),
         STORAGE_IO_SCHEDULER(STRING, "greedy"),
@@ -111,9 +110,9 @@ public class StorageProperties extends AbstractProperties {
         @Override
         public Section section() {
             switch (this) {
-                case STORAGE_BUFFER_CACHE_PAGE_SIZE:
+                case STORAGE_BUFFERCACHE_PAGESIZE:
                 case STORAGE_COMPRESSION_BLOCK:
-                case STORAGE_LSM_BLOOM_FILTER_FALSE_POSITIVE_RATE:
+                case STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE:
                 case STORAGE_GLOBAL_CLEANUP:
                 case STORAGE_GLOBAL_CLEANUP_TIMEOUT:
                 case STORAGE_PARTITIONING:
@@ -131,43 +130,14 @@ public class StorageProperties extends AbstractProperties {
         }
 
         @Override
-        public List<String> aliases() {
-            // the names these options were released under, before their words were separated
-            switch (this) {
-                case STORAGE_BUFFER_CACHE_PAGE_SIZE:
-                    return List.of("STORAGE_BUFFERCACHE_PAGESIZE");
-                case STORAGE_BUFFER_CACHE_SIZE:
-                    return List.of("STORAGE_BUFFERCACHE_SIZE");
-                case STORAGE_BUFFER_CACHE_MAX_OPEN_FILES:
-                    return List.of("STORAGE_BUFFERCACHE_MAXOPENFILES");
-                case STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET:
-                    return List.of("STORAGE_MEMORYCOMPONENT_GLOBALBUDGET");
-                case STORAGE_MEMORY_COMPONENT_PAGE_SIZE:
-                    return List.of("STORAGE_MEMORYCOMPONENT_PAGESIZE");
-                case STORAGE_MEMORY_COMPONENT_NUM_COMPONENTS:
-                    return List.of("STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS");
-                case STORAGE_MEMORY_COMPONENT_FLUSH_THRESHOLD:
-                    return List.of("STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD");
-                case STORAGE_MEMORY_COMPONENT_MAX_SCHEDULED_FLUSHES:
-                    return List.of("STORAGE_MEMORYCOMPONENT_MAX_SCHEDULED_FLUSHES");
-                case STORAGE_FILTERED_MEMORY_COMPONENT_MAX_SIZE:
-                    return List.of("STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE");
-                case STORAGE_LSM_BLOOM_FILTER_FALSE_POSITIVE_RATE:
-                    return List.of("STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE");
-                default:
-                    return List.of();
-            }
-        }
-
-        @Override
         public String description() {
             switch (this) {
-                case STORAGE_BUFFER_CACHE_PAGE_SIZE:
+                case STORAGE_BUFFERCACHE_PAGESIZE:
                     return "The page size in bytes for pages in the buffer cache";
-                case STORAGE_BUFFER_CACHE_SIZE:
+                case STORAGE_BUFFERCACHE_SIZE:
                     return "The size of memory allocated to the disk buffer cache.  The value should be a multiple"
                             + " of the buffer cache page size.";
-                case STORAGE_BUFFER_CACHE_MAX_OPEN_FILES:
+                case STORAGE_BUFFERCACHE_MAXOPENFILES:
                     return "The maximum number of open files in the buffer cache";
                 case STORAGE_BUFFER_CACHE_MAX_OPEN_DESCRIPTORS:
                     return "The number of OS file descriptors the buffer cache aims to hold at most. Beyond it, the"
@@ -175,22 +145,22 @@ public class StorageProperties extends AbstractProperties {
                             + " writes are closed, and reopened on their next I/O. 0 means half of the process's"
                             + " maximum number of open files, or unbounded where that limit cannot be determined. Not"
                             + " applied on cloud storage";
-                case STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET:
+                case STORAGE_MEMORYCOMPONENT_GLOBALBUDGET:
                     return "The size of memory allocated to the memory components.  The value should be a multiple "
                             + "of the memory component page size";
-                case STORAGE_MEMORY_COMPONENT_PAGE_SIZE:
+                case STORAGE_MEMORYCOMPONENT_PAGESIZE:
                     return "The page size in bytes for pages allocated to memory components";
-                case STORAGE_MEMORY_COMPONENT_NUM_COMPONENTS:
+                case STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS:
                     return "The number of memory components to be used per lsm index";
-                case STORAGE_MEMORY_COMPONENT_MAX_SCHEDULED_FLUSHES:
+                case STORAGE_MEMORYCOMPONENT_MAX_SCHEDULED_FLUSHES:
                     return "The maximum number of scheduled flush operations. 0 means that the value will be "
                             + "calculated as the number of partitions";
-                case STORAGE_MEMORY_COMPONENT_FLUSH_THRESHOLD:
+                case STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD:
                     return "The memory usage threshold when memory components should be flushed";
-                case STORAGE_FILTERED_MEMORY_COMPONENT_MAX_SIZE:
+                case STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE:
                     return "The maximum size of a filtered memory component. 0 means that the memory component "
                             + "does not have a maximum size";
-                case STORAGE_LSM_BLOOM_FILTER_FALSE_POSITIVE_RATE:
+                case STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE:
                     return "The maximum acceptable false positive rate for bloom filters associated with LSM indexes";
                 case STORAGE_COMPRESSION_BLOCK:
                     return "The default compression scheme for the storage";
@@ -289,15 +259,15 @@ public class StorageProperties extends AbstractProperties {
     }
 
     public int getBufferCachePageSize() {
-        return accessor.getInt(Option.STORAGE_BUFFER_CACHE_PAGE_SIZE);
+        return accessor.getInt(Option.STORAGE_BUFFERCACHE_PAGESIZE);
     }
 
     public long getBufferCacheSize() {
-        return accessor.getLong(Option.STORAGE_BUFFER_CACHE_SIZE);
+        return accessor.getLong(Option.STORAGE_BUFFERCACHE_SIZE);
     }
 
     public int getBufferCacheMaxOpenFiles() {
-        return accessor.getInt(Option.STORAGE_BUFFER_CACHE_MAX_OPEN_FILES);
+        return accessor.getInt(Option.STORAGE_BUFFERCACHE_MAXOPENFILES);
     }
 
     /**
@@ -315,28 +285,28 @@ public class StorageProperties extends AbstractProperties {
     }
 
     public int getMemoryComponentPageSize() {
-        return accessor.getInt(Option.STORAGE_MEMORY_COMPONENT_PAGE_SIZE);
+        return accessor.getInt(Option.STORAGE_MEMORYCOMPONENT_PAGESIZE);
     }
 
     public double getMemoryComponentFlushThreshold() {
-        return accessor.getDouble(Option.STORAGE_MEMORY_COMPONENT_FLUSH_THRESHOLD);
+        return accessor.getDouble(Option.STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD);
     }
 
     public int getFilteredMemoryComponentMaxNumPages() {
-        return (int) (accessor.getLong(Option.STORAGE_FILTERED_MEMORY_COMPONENT_MAX_SIZE)
+        return (int) (accessor.getLong(Option.STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE)
                 / getMemoryComponentPageSize());
     }
 
     public int getMemoryComponentsNum() {
-        return accessor.getInt(Option.STORAGE_MEMORY_COMPONENT_NUM_COMPONENTS);
+        return accessor.getInt(Option.STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS);
     }
 
     public long getMemoryComponentGlobalBudget() {
-        return accessor.getLong(Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET);
+        return accessor.getLong(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET);
     }
 
     public double getBloomFilterFalsePositiveRate() {
-        return accessor.getDouble(Option.STORAGE_LSM_BLOOM_FILTER_FALSE_POSITIVE_RATE);
+        return accessor.getDouble(Option.STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE);
     }
 
     public int getMaxSampleLeafAttempts() {
@@ -379,7 +349,7 @@ public class StorageProperties extends AbstractProperties {
     }
 
     public int getMaxScheduledFlushes() {
-        return accessor.getInt(Option.STORAGE_MEMORY_COMPONENT_MAX_SCHEDULED_FLUSHES);
+        return accessor.getInt(Option.STORAGE_MEMORYCOMPONENT_MAX_SCHEDULED_FLUSHES);
     }
 
     public long getJobExecutionMemoryBudget(INcApplicationContext runtimeContext) {

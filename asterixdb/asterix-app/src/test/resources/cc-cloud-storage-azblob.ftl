@@ -39,8 +39,8 @@ address=127.0.0.1
 command=asterixnc
 app.class=org.apache.asterix.hyracks.bootstrap.NCApplication
 jvm.args=-Xmx4096m -Dnode.Resolver="org.apache.asterix.external.util.IdentitiyResolverFactory"
-storage.buffer.cache.size=128MB
-storage.memory.component.global.budget=512MB
+storage.buffercache.size=128MB
+storage.memorycomponent.globalbudget=512MB
 storage.max.columns.in.zeroth.segment=800
 
 [cc]
@@ -64,7 +64,7 @@ compiler.internal.sanitycheck=true
 messaging.frame.size=4096
 messaging.frame.count=512
 cloud.deployment=true
-storage.buffer.cache.page.size=32KB
+storage.buffercache.pagesize=32KB
 storage.partitioning=static
 cloud.storage.scheme=azblob
 cloud.storage.bucket=cloud-storage-container

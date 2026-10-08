@@ -134,8 +134,8 @@ public class LSMFlushRecoveryTest {
         // right now we've inserted 1000 records to the index, and each record is at least 12 bytes.
         // thus, the memory component size is at least 12KB.
         List<Pair<IOption, Object>> opts = new ArrayList<>();
-        opts.add(Pair.of(Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, 20 * 1024 * 1024L));
-        opts.add(Pair.of(Option.STORAGE_MEMORY_COMPONENT_PAGE_SIZE, 1 * 1024));
+        opts.add(Pair.of(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, 20 * 1024 * 1024L));
+        opts.add(Pair.of(Option.STORAGE_MEMORYCOMPONENT_PAGESIZE, 1 * 1024));
         nc.setOpts(opts);
         initializeNc(false);
         initializeTestCtx();

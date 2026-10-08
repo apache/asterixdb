@@ -325,13 +325,13 @@ The following parameters for slave processes, under "[nc]" sections.
 |   nc    | result.sweep.threshold                    | The duration within which an instance of the result cleanup should be invoked in milliseconds | 60000 |
 |   nc    | result.ttl                                | Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds | 86400000 |
 |   nc    | storage.buffer.cache.max.open.descriptors | The number of OS file descriptors the buffer cache aims to hold at most. Beyond it, the descriptors of the least recently used files with no I/O in progress and no unforced writes are closed, and reopened on their next I/O. 0 means half of the process's maximum number of open files, or unbounded where that limit cannot be determined. Not applied on cloud storage | 0 |
-|   nc    | storage.buffer.cache.max.open.files       | The maximum number of open files in the buffer cache | 2147483647 |
-|   nc    | storage.buffer.cache.page.size            | The page size in bytes for pages in the buffer cache | 131072 (128 kB) |
-|   nc    | storage.buffer.cache.size                 | The size of memory allocated to the disk buffer cache.  The value should be a multiple of the buffer cache page size. | 1/4 of the JVM allocated memory |
-|   nc    | storage.lsm.bloom.filter.false.positive.rate | The maximum acceptable false positive rate for bloom filters associated with LSM indexes | 0.01 |
-|   nc    | storage.memory.component.global.budget    | The size of memory allocated to the memory components.  The value should be a multiple of the memory component page size | 1/4 of the JVM allocated memory |
-|   nc    | storage.memory.component.num.components   | The number of memory components to be used per lsm index | 2 |
-|   nc    | storage.memory.component.page.size        | The page size in bytes for pages allocated to memory components | 131072 (128 kB) |
+|   nc    | storage.buffercache.maxopenfiles          | The maximum number of open files in the buffer cache | 2147483647 |
+|   nc    | storage.buffercache.pagesize              | The page size in bytes for pages in the buffer cache | 131072 (128 kB) |
+|   nc    | storage.buffercache.size                  | The size of memory allocated to the disk buffer cache.  The value should be a multiple of the buffer cache page size. | 1/4 of the JVM allocated memory |
+|   nc    | storage.lsm.bloomfilter.falsepositiverate | The maximum acceptable false positive rate for bloom filters associated with LSM indexes | 0.01 |
+|   nc    | storage.memorycomponent.globalbudget      | The size of memory allocated to the memory components.  The value should be a multiple of the memory component page size | 1/4 of the JVM allocated memory |
+|   nc    | storage.memorycomponent.numcomponents     | The number of memory components to be used per lsm index | 2 |
+|   nc    | storage.memorycomponent.pagesize          | The page size in bytes for pages allocated to memory components | 131072 (128 kB) |
 |   nc    | storage.metadata.memorycomponent.numpages | The number of pages to allocate for a metadata memory component | 8 |
 |   nc    | txn.log.dir                               | The directory where transaction logs should be stored | ${java.io.tmpdir}/asterixdb/txn-log |
 

@@ -138,39 +138,40 @@ public final class ConfigConstraints {
     }
 
     private static void checkBufferCache(Function<IOption, Object> config, List<Violation> violations) {
-        Long size = longValue(config, StorageProperties.Option.STORAGE_BUFFER_CACHE_SIZE);
-        Long pageSize = longValue(config, StorageProperties.Option.STORAGE_BUFFER_CACHE_PAGE_SIZE);
+        Long size = longValue(config, StorageProperties.Option.STORAGE_BUFFERCACHE_SIZE);
+        Long pageSize = longValue(config, StorageProperties.Option.STORAGE_BUFFERCACHE_PAGESIZE);
         if (size == null || pageSize == null || pageSize <= 0) {
             return;
         }
         // StorageProperties.getBufferCacheNumPages
-        checkPageCount(violations, StorageProperties.Option.STORAGE_BUFFER_CACHE_SIZE, size,
-                StorageProperties.Option.STORAGE_BUFFER_CACHE_PAGE_SIZE, pageSize + IBufferCache.RESERVED_HEADER_BYTES,
+        checkPageCount(violations, StorageProperties.Option.STORAGE_BUFFERCACHE_SIZE, size,
+                StorageProperties.Option.STORAGE_BUFFERCACHE_PAGESIZE, pageSize + IBufferCache.RESERVED_HEADER_BYTES,
                 true);
     }
 
     private static void checkMemoryComponents(Function<IOption, Object> config, List<Violation> violations) {
-        Long budget = longValue(config, StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET);
-        Long pageSize = longValue(config, StorageProperties.Option.STORAGE_MEMORY_COMPONENT_PAGE_SIZE);
+        Long budget = longValue(config, StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET);
+        Long pageSize = longValue(config, StorageProperties.Option.STORAGE_MEMORYCOMPONENT_PAGESIZE);
         if (budget == null || pageSize == null || pageSize <= 0) {
             return;
         }
         // GlobalVirtualBufferCache: VirtualBufferCache rejects a page budget of 0
-        checkPageCount(violations, StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET, budget,
-                StorageProperties.Option.STORAGE_MEMORY_COMPONENT_PAGE_SIZE, pageSize, true);
+        checkPageCount(violations, StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, budget,
+                StorageProperties.Option.STORAGE_MEMORYCOMPONENT_PAGESIZE, pageSize, true);
     }
 
     static void checkHeap(Function<IOption, Object> config, List<Violation> violations, long maxHeapBytes) {
-        Long cacheSize = longValue(config, StorageProperties.Option.STORAGE_BUFFER_CACHE_SIZE);
-        Long budget = longValue(config, StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET);
+        Long cacheSize = longValue(config, StorageProperties.Option.STORAGE_BUFFERCACHE_SIZE);
+        Long budget = longValue(config, StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET);
         if (cacheSize == null || budget == null) {
             return;
         }
         // StorageProperties.getJobExecutionMemoryBudget fails node startup when nothing is left for jobs
         if (cacheSize + budget >= maxHeapBytes) {
-            violations.add(new Violation(String.format("%s (%d) plus %s (%d) must be less than the maximum heap (%d)",
-                    StorageProperties.Option.STORAGE_BUFFER_CACHE_SIZE.ini(), cacheSize,
-                    StorageProperties.Option.STORAGE_MEMORY_COMPONENT_GLOBAL_BUDGET.ini(), budget, maxHeapBytes),
+            violations.add(new Violation(
+                    String.format("%s (%d) plus %s (%d) must be less than the maximum heap (%d)",
+                            StorageProperties.Option.STORAGE_BUFFERCACHE_SIZE.ini(), cacheSize,
+                            StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET.ini(), budget, maxHeapBytes),
                     true));
         }
     }
