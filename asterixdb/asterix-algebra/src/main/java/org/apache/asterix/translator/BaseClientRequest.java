@@ -33,7 +33,7 @@ public abstract class BaseClientRequest implements IClientRequest {
     private final IRequestReference requestReference;
     private boolean cancellable = false;
     private volatile long completionTime = -1;
-    protected volatile State state = State.RECEIVED;
+    protected State state = State.RECEIVED;
 
     public BaseClientRequest(IRequestReference requestReference) {
         this.requestReference = requestReference;
@@ -95,8 +95,11 @@ public abstract class BaseClientRequest implements IClientRequest {
         return cancellable;
     }
 
-    public void setRunning() {
-        state = State.RUNNING;
+    /** Marks the request as running, unless it has already been cancelled or completed. */
+    public synchronized void setRunning() {
+        if (state == State.RECEIVED) {
+            state = State.RUNNING;
+        }
     }
 
     @Override
@@ -114,7 +117,13 @@ public abstract class BaseClientRequest implements IClientRequest {
         return putJson();
     }
 
-    private ObjectNode putJson() {
+    // Synchronized so that state and cancellable are read as one consistent pair.
+    // The monitor is also what cancel() holds while doCancel() waits for the job manager to abort the request's
+    // jobs, and the job manager's thread is the one delivering jobCreated/jobStarted/jobFinished. So this must
+    // never be reached from those notifications (e.g. by logging toJson() there): the cancel would wait on that
+    // thread while that thread waits here. Nor may it be reached while holding ClientRequest's jobsLock, as
+    // ClientRequest.addJob() takes the monitor and then jobsLock.
+    private synchronized ObjectNode putJson() {
         ObjectNode json = JSONUtil.createObject();
         json.put("uuid", requestReference.getUuid());
         json.put("requestTime", new ADateTime(requestReference.getTime()).toSimpleString());

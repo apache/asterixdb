@@ -78,6 +78,7 @@ import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INamespaceResolver;
+import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.cache.CompiledPlan;
@@ -262,6 +263,7 @@ import org.apache.asterix.runtime.operators.DatasetStreamStats;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.transaction.management.service.transaction.GlobalTxInfo;
 import org.apache.asterix.translator.AbstractLangTranslator;
+import org.apache.asterix.translator.BaseClientRequest;
 import org.apache.asterix.translator.ClientRequest;
 import org.apache.asterix.translator.CompiledStatements;
 import org.apache.asterix.translator.CompiledStatements.CompiledCopyFromFileStatement;
@@ -1944,7 +1946,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 bActiveTxn = false; // doCreateIndexImpl() takes over the current transaction
                 EntityDetails entityDetails =
                         EntityDetails.newIndex(databaseName, dataverseName, datasetName, indexName);
-                doCreateIndexImpl(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc, creator, entityDetails);
+                doCreateIndexImpl(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc, creator, entityDetails,
+                        requestParameters);
                 return;
             }
 
@@ -2019,7 +2022,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             bActiveTxn = false; // doCreateIndexImpl() takes over the current transaction
             EntityDetails entityDetails = EntityDetails.newIndex(databaseName, dataverseName, datasetName, indexName);
-            doCreateIndexImpl(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc, creator, entityDetails);
+            doCreateIndexImpl(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc, creator, entityDetails,
+                    requestParameters);
 
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -2165,7 +2169,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     private void doCreateIndexImpl(IHyracksClientConnection hcc, MetadataProvider metadataProvider, Dataset ds,
             Index index, EnumSet<JobFlag> jobFlags, SourceLocation sourceLoc, Creator creator,
-            EntityDetails entityDetails) throws Exception {
+            EntityDetails entityDetails, IRequestParameters requestParameters) throws Exception {
+        setRequestRunning(requestParameters);
         ProgressState progress = ProgressState.NO_PROGRESS;
         boolean bActiveTxn = true;
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
@@ -3013,6 +3018,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected boolean doDropIndex(MetadataProvider metadataProvider, IndexDropStatement stmtIndexDrop,
             String databaseName, DataverseName dataverseName, String datasetName, IHyracksClientConnection hcc,
             IRequestParameters requestParameters) throws Exception {
+        setRequestRunning(requestParameters);
         SourceLocation sourceLoc = stmtIndexDrop.getSourceLocation();
         String indexName = stmtIndexDrop.getIndexName().getValue();
         ProgressState progress = ProgressState.NO_PROGRESS;
@@ -5540,6 +5546,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             } else {
                 throw createAnalyzeNotSupportedException(ds, sourceLoc);
             }
+            setRequestRunning(requestParameters);
 
             IndexType sampleIndexType = IndexType.SAMPLE;
             Pair<String, String> sampleIndexNames = IndexUtil.getSampleIndexNames(datasetName);
@@ -5848,7 +5855,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
-
+            setRequestRunning(requestParams);
             for (JobSpecification jobSpec : jobsToExecute) {
                 runJob(hcc, jobSpec);
             }
@@ -6769,6 +6776,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void validateDatasetState(MetadataProvider metadataProvider, Dataset dataset, SourceLocation sourceLoc)
             throws Exception {
         validateIfResourceIsActiveInFeed(metadataProvider.getApplicationContext(), dataset, sourceLoc);
+    }
+
+    private void setRequestRunning(IRequestParameters requestParams) {
+        IRequestReference request = requestParams.getRequestReference();
+        BaseClientRequest clientRequest = (BaseClientRequest) appCtx.getRequestTracker().get(request.getUuid());
+        if (clientRequest != null) {
+            clientRequest.setRunning();
+        }
     }
 
     private static void ensureNotCancelled(ClientRequest clientRequest, String reqId) throws RuntimeDataException {

@@ -57,6 +57,9 @@ public class ClientRequest extends BaseClientRequest {
      * Guarded by {@link #jobsLock}, not by the request monitor: {@link #doCancel} holds the monitor while
      * it waits on the job manager to abort a job, and the job manager's own thread reports that job's
      * outcome back here - taking the monitor for that would deadlock.
+     * <p>
+     * Where both are needed the monitor is taken first, as {@link #addJob} does: never take the monitor while
+     * holding {@link #jobsLock}.
      */
     private final List<RequestJob> jobs = new ArrayList<>();
     private final Object jobsLock = new Object();
@@ -271,6 +274,10 @@ public class ClientRequest extends BaseClientRequest {
         return asJson(json, true);
     }
 
+    // Takes jobsLock (putJobDetails, requestPlan), so it must run only after super.asJson() or
+    // super.asRedactedJson() has returned: those take the request monitor, and addJob takes the monitor and
+    // then jobsLock. Holding jobsLock around the call to super would take the two in the opposite order, and a
+    // listing of the requests would then deadlock against a statement submitting its job.
     private ObjectNode asJson(ObjectNode json, boolean redact) {
         putJobDetails(json, redact);
         json.put("statement", redact ? LogRedactionUtil.statement(statement) : statement);
