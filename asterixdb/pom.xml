@@ -93,7 +93,7 @@
     <hadoop.version>3.4.3</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
-    <awsjavasdk.version>2.55.12</awsjavasdk.version>
+    <awsjavasdk.version>2.55.13</awsjavasdk.version>
     <s3mock.version>5.2.3</s3mock.version>
     <parquet.version>1.18.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
@@ -1718,7 +1718,7 @@
       <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.7.13</version>
+        <version>42.7.14</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
@@ -1880,14 +1880,14 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
-        <version>1.84.0</version>
+        <version>1.84.2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
-        <version>1.84.0</version>
+        <version>1.84.2</version>
         <exclusions>
           <exclusion>
             <groupId>io.grpc</groupId>
