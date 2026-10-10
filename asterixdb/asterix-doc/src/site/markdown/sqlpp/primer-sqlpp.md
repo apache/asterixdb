@@ -852,7 +852,7 @@ The expected result for this fuzzy join query is:
         { "chirp": { "chirpId": "5", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": { “type”: “Point”, “coordinates”:[40.09,92.69] }, "sendTime": "2006-08-04T10:10:00.000", "referredTopics": [ "product-w", "speed" ], "messageText": " can't stand product-w its speed is terrible:(" }, "similarChirps": [  ] }
         { "chirp": { "chirpId": "8", "user": { "screenName": "NathanGiesen@211", "lang": "en", "friendsCount": 39339, "statusesCount": 473, "name": "Nathan Giesen", "followersCount": 49416 }, "senderLocation": { “type”: “Point”, “coordinates”:[46.05,93.34] }, "sendTime": "2005-10-14T10:10:00.000", "referredTopics": [ "product-z", "shortcut-menu" ], "messageText": " like product-z the shortcut-menu is awesome:)" }, "similarChirps": [  ] }
 
-## Inserting New Data  ###
+### Inserting New Data  ###
 In addition to loading and querying data, AsterixDB supports incremental additions to datasets via the SQL++ _INSERT_ statement.
 
 The following example adds a new chirp by user "NathanGiesen@211" to the ChirpMessages dataset.
