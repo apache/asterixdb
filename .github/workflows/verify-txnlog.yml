@@ -1,0 +1,77 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Converted from the Jenkins job asterix-verify-txnlog
+# Builds the change and its parent commit, writes data with the parent's build, then checks the change can read it.
+name: verify-txnlog
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAVEN_ARGS: -B -ntp
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify-txnlog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: patch
+          fetch-depth: 2
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          cache-dependency-path: patch/**/pom.xml
+
+      - name: Check out the parent commit
+        run: |
+          cp -r patch patch-parent
+          git -C patch-parent checkout HEAD~1
+
+      - name: Build the change
+        run: mvn -Pskip-dashboard,-include-dashboard clean package -DskipTests -f patch/pom.xml
+
+      - name: Build the parent commit
+        run: mvn -Pskip-dashboard,-include-dashboard clean package -DskipTests -f patch-parent/pom.xml
+
+      - name: Upgrade from the parent commit
+        run: bash patch/.github/scripts/verify-txnlog.sh
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: installations
+          path: patch*/asterixdb/asterix-server/target/**/opt/local/**
+          if-no-files-found: ignore
+          retention-days: 3
