@@ -23,6 +23,7 @@ public class Servlets {
     public static final String QUERY_STATUS = "/query/service/status/*";
     public static final String QUERY_RESULT = "/query/service/result/*";
     public static final String QUERY_SERVICE = "/query/service";
+    public static final String NL2SQL_SERVICE = "/query/nl2sql";
     public static final String CONNECTOR = "/connector";
     public static final String REBALANCE = "/admin/rebalance";
     public static final String SHUTDOWN = "/admin/shutdown";
