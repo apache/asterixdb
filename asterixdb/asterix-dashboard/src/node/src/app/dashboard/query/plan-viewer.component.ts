@@ -54,6 +54,40 @@ export class PlanViewerComponent {
   update$: Subject<boolean> = new Subject();
   panToNode$: Subject<any> = new Subject();
 
+  // ngx-graph viewport. Driven by the actual container width instead of a fixed
+  // 850px so the plan rescales when the layout changes (e.g. MCP panel opens).
+  @ViewChild('navBar') navBar: ElementRef;
+  viewDims: [number, number] = [850, 800];
+
+  // The plan graph's available width changes when the MCP side panel opens,
+  // closes, or is dragged (each fires a window resize). Re-fit on resize.
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.refit();
+  }
+
+  // Measure the true graph area: the component's own width minus the Plan
+  // Explorer sidebar. (.plan sizes to the graph itself, so it can't be used.)
+  private measureViewport(): void {
+    const hostWidth = this.host && this.host.nativeElement ? this.host.nativeElement.clientWidth : 0;
+    const sideWidth = this.navBar && this.navBar.nativeElement ? this.navBar.nativeElement.offsetWidth : 0;
+    const width = hostWidth - sideWidth - 30;
+    if (width > 200) {
+      this.viewDims = [width, this.viewDims[1]];
+    }
+  }
+
+  // Re-measure then recompute layout + zoom-to-fit + center. Deferred so the
+  // DOM has settled to its new size before ngx-graph re-reads dimensions.
+  refit(): void {
+    setTimeout(() => {
+      this.measureViewport();
+      this.update$.next(true);
+      this.zoomToFit$.next(true);
+      this.center$.next(true);
+    }, 60);
+  }
+
   //drop down variables
   planOrientation = "BT";
   selectedNode = "n11";
@@ -119,11 +153,13 @@ export class PlanViewerComponent {
   variablesDeclarations: any = {};
   variables: any[];
 
-  constructor() {}
+  constructor(private host: ElementRef) {}
 
   ngOnInit() {}
 
   ngAfterViewInit() {
+    // Auto-fit once the view exists (covers the first PLAN render).
+    this.refit();
   }
 
   ngOnChanges() {
@@ -175,6 +211,8 @@ export class PlanViewerComponent {
       }
 
       this.jsonVisible = false;
+      // Auto-fit the freshly-built graph to the available width.
+      this.refit();
     } else {
       this.jsonVisible = true;
     }
@@ -184,6 +222,7 @@ export class PlanViewerComponent {
   Function that makes the entire graph to fit the view
    */
   fitGraph() {
+    this.measureViewport();
     this.zoomToFit$.next(true);
     this.center$.next(true);
   }

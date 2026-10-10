@@ -11,4 +11,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-// Place holder for future expansion
+// Fixed-height app shell: the viewport never scrolls as a whole; the main
+// content scrolls internally and the MCP side panel fills the remaining height
+// exactly (so its composer stays pinned at the bottom).
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+// Main content and the MCP side panel sit side by side; the panel is in-flow
+// (not floating) so it reflows the content rather than overlaying it.
+.awc-body {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.awc-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    overflow: auto;
+}

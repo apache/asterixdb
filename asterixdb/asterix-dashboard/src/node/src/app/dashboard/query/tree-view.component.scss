@@ -44,7 +44,7 @@ limitations under the License.
     flex-flow: row;
     font-size: 0.80rem;
     font-weight: 500;
-    border-bottom: 1px solid blue;
+    border-bottom: 1px solid gray;
 }
 
 .divider {
@@ -82,11 +82,11 @@ limitations under the License.
 }
 
 .button-json {
-    color: blue !important;
+    color: #25428d !important;
 }
 
 .selected {
-    border: 2px solid blue !important;
+    border: 2px solid #25428d !important;
 }
 
 .navi-data {
@@ -104,7 +104,7 @@ limitations under the License.
     flex-flow: row;
     align-items: center;
     font-size: 14px;
-    color: blue;
+    color: #25428d;
     border-radius: 4px;
     height: 40px;
 }
