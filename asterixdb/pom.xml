@@ -93,15 +93,18 @@
     <hadoop.version>3.4.3</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
-    <awsjavasdk.version>2.55.13</awsjavasdk.version>
+    <awsjavasdk.version>2.55.14</awsjavasdk.version>
     <s3mock.version>5.2.3</s3mock.version>
     <parquet.version>1.18.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
-    <azureblobjavasdk.version>12.35.2</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.34.2</azurecommonjavasdk.version>
+    <!-- azure-storage-blob vendors relocated Apache Arrow (arrow-format) and FlatBuffers
+         (flatbuffers-java) sources, listed in its shade-apache-arrow-format profile; review the
+         license accounting for them whenever this version changes. -->
+    <azureblobjavasdk.version>12.36.0</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.35.0</azurecommonjavasdk.version>
     <azureidentity.version>1.18.7</azureidentity.version>
-    <azuredatalakejavasdk.version>12.28.2</azuredatalakejavasdk.version>
+    <azuredatalakejavasdk.version>12.29.0</azuredatalakejavasdk.version>
     <azurecore.version>1.60.0</azurecore.version>
     <azurecorehttpnetty.version>1.16.8</azurecorehttpnetty.version>
 
@@ -1224,7 +1227,7 @@
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
         <artifactId>stax2-api</artifactId>
-        <version>4.3.1</version>
+        <version>4.3.2</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.woodstox</groupId>
