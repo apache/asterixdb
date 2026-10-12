@@ -77,6 +77,7 @@ public class CloudStorageUnstableTest {
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE, "true");
+        SimulatedCloudFailureLogFilter.install();
         S3MockContainer s3Mock = LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
         fillConfigTemplate(MOCK_SERVER_HOSTNAME_FRAGMENT + s3Mock.getHttpServerPort(), CONFIG_FILE_TEMPLATE,
                 CONFIG_FILE_NAME);
@@ -95,6 +96,7 @@ public class CloudStorageUnstableTest {
     public static void tearDown() throws Exception {
         System.clearProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE);
         LangExecutionUtil.tearDown();
+        SimulatedCloudFailureLogFilter.uninstall();
         LocalCloudUtilAdobeMock.shutdownSilently();
     }
 

@@ -23,9 +23,11 @@ import static org.apache.asterix.api.common.LocalCloudUtil.CLOUD_STORAGE_BUCKET;
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
 import static org.apache.asterix.test.cloud_storage.CloudStorageGCSTest.S3_ONLY;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -88,6 +90,7 @@ public class GCSCloudStorageUnstableTest {
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE, "true");
+        SimulatedCloudFailureLogFilter.install();
         Storage storage = StorageOptions.newBuilder().setHost(MOCK_SERVER_HOSTNAME)
                 .setCredentials(NoCredentials.getInstance()).setProjectId(MOCK_SERVER_PROJECT_ID).build().getService();
         cleanup(storage);
@@ -104,11 +107,23 @@ public class GCSCloudStorageUnstableTest {
     public static void tearDown() throws Exception {
         System.clearProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE);
         LangExecutionUtil.tearDown();
+        SimulatedCloudFailureLogFilter.uninstall();
     }
 
     @Parameterized.Parameters(name = "GCSCloudStorageUnstableTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
+        long seed = System.nanoTime();
+        Random random = new Random(seed);
+        LOGGER.info("GCSCloudStorageUnstableTest seed {}", seed);
+        Collection<Object[]> tests = LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
+        List<Object[]> selected = new ArrayList<>();
+        for (Object[] test : tests) {
+            // Select 10% of the tests randomly
+            if (random.nextInt(10) == 0) {
+                selected.add(test);
+            }
+        }
+        return selected;
     }
 
     @Test

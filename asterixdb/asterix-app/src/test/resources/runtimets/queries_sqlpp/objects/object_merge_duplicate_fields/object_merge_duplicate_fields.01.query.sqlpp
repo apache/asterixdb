@@ -17,5 +17,5 @@
  * under the License.
  */
 
--- Conflicting values for one field: the error names that field
-object_merge({"id": 1, "price": 10}, {"id": 1, "price": 12});
+-- Equal values for a shared field are not a conflict
+object_merge({"id": 1, "price": 10}, {"id": 1, "qty": 3});

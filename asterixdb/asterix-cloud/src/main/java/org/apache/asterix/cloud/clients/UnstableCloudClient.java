@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class UnstableCloudClient implements ICloudClient {
+    public static final String SIMULATED_ERROR_MESSAGE = "Simulated error";
     // 10% error rate
     public static final AtomicReference<Double> ERROR_RATE = new AtomicReference<>(0.11d);
     private static final Random RANDOM = new Random(0);
@@ -164,7 +165,7 @@ public class UnstableCloudClient implements ICloudClient {
     private static void fail() throws HyracksDataException {
         double prob = RANDOM.nextInt(100) / 100.0d;
         if (prob < ERROR_RATE.get()) {
-            throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, new IOException("Simulated error"));
+            throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, new IOException(SIMULATED_ERROR_MESSAGE));
         }
     }
 

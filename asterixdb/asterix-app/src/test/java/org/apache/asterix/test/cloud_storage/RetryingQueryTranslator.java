@@ -20,6 +20,7 @@
 package org.apache.asterix.test.cloud_storage;
 
 import static org.apache.asterix.cloud.clients.UnstableCloudClient.ERROR_RATE;
+import static org.apache.asterix.cloud.clients.UnstableCloudClient.SIMULATED_ERROR_MESSAGE;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -149,7 +150,7 @@ public class RetryingQueryTranslator extends QueryTranslator {
     private boolean retryOnFailure(Exception e) {
         if (e instanceof HyracksDataException) {
             return ((HyracksDataException) e).getErrorCode() == ErrorCode.FAILED_IO_OPERATION.intValue()
-                    && ExceptionUtils.getRootCause(e).getMessage().contains("Simulated error");
+                    && ExceptionUtils.getRootCause(e).getMessage().contains(SIMULATED_ERROR_MESSAGE);
         }
         return false;
     }
