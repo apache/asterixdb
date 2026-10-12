@@ -90,7 +90,7 @@
          together: advancing hadoop alone throws NoSuchFieldError on the thread
          compiling the query, which halts the JVM. -->
     <!-- @pinned-with: ${awsjavasdk.version} -->
-    <hadoop.version>3.4.3</hadoop.version>
+    <hadoop.version>3.5.0</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
     <awsjavasdk.version>2.55.14</awsjavasdk.version>
