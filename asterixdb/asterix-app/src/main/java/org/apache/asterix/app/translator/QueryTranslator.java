@@ -663,15 +663,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                     stmt.getSourceLocation(), "Unexpected statement: " + kind);
                     }
                 } catch (Exception e) {
-                    endStatement(statementInfo, statsBeforeStatement, stats, e);
-                    throw e;
+                    Exception failure = asCancellation(e, clientRequest, reqId);
+                    endStatement(statementInfo, statsBeforeStatement, stats, failure);
+                    throw failure;
                 }
                 endStatement(statementInfo, statsBeforeStatement, stats, null);
                 if (shouldInvalidateQueryPlanCache(stmt)) {
                     queryPlanCache.clear();
                 }
             }
-        } catch (Exception ex) {
+        } catch (Exception e) {
+            Exception ex = asCancellation(e, clientRequest, reqId);
             // need to handle job and request clean-ups in case of failures
             this.appCtx.getRequestTracker().incrementFailedRequests();
             exception = ex;
@@ -6784,6 +6786,22 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (clientRequest != null) {
             clientRequest.setRunning();
         }
+    }
+
+    /**
+     * What a request's failure is to be reported as. A cancel that finds none of the request's jobs unfinished
+     * interrupts the executing thread instead, and that interrupt can land while a statement still waits on a
+     * job that has just finished - so a cancelled request may fail with a bare {@link InterruptedException}.
+     * That is the cancellation, and is reported as one; an interrupt with any other cause is reported as is.
+     */
+    private static Exception asCancellation(Exception e, IClientRequest clientRequest, String reqId) {
+        if (clientRequest.isCancelled() && ExceptionUtils.causedByInterrupt(e, true)) {
+            Thread.currentThread().interrupt();
+            RuntimeDataException cancelled = new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, reqId);
+            cancelled.addSuppressed(e);
+            return cancelled;
+        }
+        return e;
     }
 
     private static void ensureNotCancelled(ClientRequest clientRequest, String reqId) throws RuntimeDataException {

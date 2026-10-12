@@ -55,7 +55,7 @@ public abstract class BaseClientRequest implements IClientRequest {
             // it should also be true that the request has already been untracked by the RequestTracker
             return false;
         }
-        if (cancellable) {
+        if (cancellable && !isStatementJobFinished()) {
             complete();
             state = State.CANCELLED;
             doCancel(appCtx);
@@ -152,4 +152,13 @@ public abstract class BaseClientRequest implements IClientRequest {
     }
 
     protected abstract void doCancel(ICcApplicationContext appCtx) throws HyracksDataException;
+
+    /**
+     * @return true if the job of the statement being executed has finished. Such a statement is done but for
+     *         committing its job and sending its result, which a cancel must not interrupt: its job's work stands,
+     *         and the request is not cancelled.
+     */
+    protected boolean isStatementJobFinished() {
+        return false;
+    }
 }

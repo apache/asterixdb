@@ -88,13 +88,52 @@ public class ClientRequestTest {
             }
         });
         ClientRequest request = newRequestOn(executor);
+        request.setStatementPosition(1);
         runJob(request, JOB_1, JobStatus.TERMINATED, null);
+        // the next statement has started, and has not submitted its job yet
+        request.setStatementPosition(2);
         executor.start();
         request.markCancellable();
 
         assertTrue(request.cancel(appCtx(mock(IHyracksClientConnection.class))));
 
         assertTrue("the executor thread was not interrupted", interrupted.await(30, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Once a statement's job has finished, the statement is done but for committing that job and sending its
+     * result. A cancel arriving before the statement gets as far as marking the request uncancellable must be
+     * refused, not interrupt the wait for the job: that failed a statement whose job had done its work.
+     */
+    @Test
+    public void cancelIsRefusedOnceTheStatementsJobHasFinished() throws Exception {
+        CountDownLatch released = new CountDownLatch(1);
+        CountDownLatch interrupted = new CountDownLatch(1);
+        Thread executor = new Thread(() -> {
+            try {
+                released.await();
+            } catch (InterruptedException e) {
+                interrupted.countDown();
+            }
+        });
+        executor.start();
+        ClientRequest request = newRequestOn(executor);
+        IHyracksClientConnection hcc = mock(IHyracksClientConnection.class);
+        request.setStatementPosition(1);
+        request.addJob(JOB_1);
+        request.jobStarted(JOB_1);
+        // what a statement does once it has submitted its job, before it waits for it
+        request.markCancellable();
+        request.jobFinished(JOB_1, JobStatus.TERMINATED, null);
+
+        assertFalse(request.cancel(appCtx(hcc)));
+
+        assertFalse(request.isCancelled());
+        assertTrue("the statement could not go on to commit its job", request.markUncancellable());
+        verify(hcc, never()).cancelJob(JOB_1);
+        released.countDown();
+        executor.join(TimeUnit.SECONDS.toMillis(30));
+        assertEquals("the executor thread was interrupted", 1, interrupted.getCount());
     }
 
     /**

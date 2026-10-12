@@ -63,6 +63,8 @@ public class ClientRequest extends BaseClientRequest {
      */
     private final List<RequestJob> jobs = new ArrayList<>();
     private final Object jobsLock = new Object();
+    /** The job of the statement being executed, once it has submitted one. Guarded by {@link #jobsLock}. */
+    private RequestJob statementJob;
     private volatile long compileTimeNanos;
     private volatile int statementPosition;
     private volatile boolean multiStatement;
@@ -111,6 +113,7 @@ public class ClientRequest extends BaseClientRequest {
             RequestJob job = jobOf(jobId);
             job.state.compileTimeNanos = compileTimeNanos;
             job.statementPosition = statementPosition;
+            statementJob = job;
         }
         setRunning();
         return true;
@@ -161,6 +164,19 @@ public class ClientRequest extends BaseClientRequest {
         synchronized (jobsLock) {
             RequestJob job = findJob(jobId);
             return job != null ? job.state.compileTimeNanos : 0;
+        }
+    }
+
+    /**
+     * A job's outcome is recorded here before the wait of the statement that submitted it is released, so this
+     * holds from the moment the job finishes, not only from when that statement goes on to mark the request
+     * uncancellable. A cancel in between found no unfinished job and interrupted that wait, and so failed a
+     * statement whose job had done its work.
+     */
+    @Override
+    protected boolean isStatementJobFinished() {
+        synchronized (jobsLock) {
+            return statementJob != null && isTerminal(statementJob.state.status);
         }
     }
 
@@ -250,6 +266,10 @@ public class ClientRequest extends BaseClientRequest {
      */
     public void setStatementPosition(int statementPosition) {
         this.statementPosition = statementPosition;
+        // set as each statement starts: the job of the one before is no longer the statement's
+        synchronized (jobsLock) {
+            statementJob = null;
+        }
     }
 
     /**
