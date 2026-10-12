@@ -29,10 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -478,12 +481,17 @@ public class BufferCacheTest {
     }
 
     private BufferCache createDescriptorBoundedCache(int numPages, int maxOpenDescriptors) throws HyracksDataException {
+        return createDescriptorBoundedCache(numPages, maxOpenDescriptors, Thread::new);
+    }
+
+    private BufferCache createDescriptorBoundedCache(int numPages, int maxOpenDescriptors, ThreadFactory threadFactory)
+            throws HyracksDataException {
         TestStorageManagerComponentHolder.init(PAGE_SIZE, numPages, MAX_OPEN_FILES);
         return new BufferCache(TestStorageManagerComponentHolder.getIOManager(),
                 new ClockPageReplacementStrategy(new HeapBufferAllocator(), DefaultDiskCachedPageAllocator.INSTANCE,
                         PAGE_SIZE, numPages),
                 new DelayPageCleanerPolicy(1000), new FileMapManager(), Integer.MAX_VALUE, maxOpenDescriptors, 10,
-                Thread::new, new HashMap<>(), DefaultBufferCacheReadContextProvider.DEFAULT);
+                threadFactory, new HashMap<>(), DefaultBufferCacheReadContextProvider.DEFAULT);
     }
 
     /**
@@ -599,13 +607,35 @@ public class BufferCacheTest {
     @Test
     public void unforcedWritesKeepTheirDescriptorTest() throws Exception {
         final int maxOpenDescriptors = 2;
-        BufferCache bufferCache = createDescriptorBoundedCache(NUM_PAGES, maxOpenDescriptors);
+        // the third open schedules a release pass before that file has been written, and a file with nothing
+        // written is rightly releasable; hold the pass back until all three have unforced writes. Workers are
+        // gated as they are created, so the page cleaner, started by the constructor, is not held
+        final CountDownLatch filesWritten = new CountDownLatch(1);
+        final AtomicBoolean holdNewWorkers = new AtomicBoolean();
+        BufferCache bufferCache = createDescriptorBoundedCache(NUM_PAGES, maxOpenDescriptors, r -> {
+            final boolean hold = holdNewWorkers.get();
+            return new Thread(() -> {
+                if (hold) {
+                    try {
+                        filesWritten.await();
+                    } catch (InterruptedException e) {
+                        // the cache is shutting down its executor
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+                r.run();
+            });
+        });
+        holdNewWorkers.set(true);
         List<Integer> fileIds = new ArrayList<>();
         // the third open goes over the bound, but a file with writes not yet forced must keep its descriptor
         for (int i = 0; i < 3; i++) {
             fileIds.add(createFileWithPage(bufferCache, false));
         }
-        TimeUnit.MILLISECONDS.sleep(200);
+        Assert.assertEquals(0, bufferCache.getDescriptorReleasePassCount());
+        filesWritten.countDown();
+        awaitTrue("the release pass", () -> bufferCache.getDescriptorReleasePassCount() > 0);
         Assert.assertEquals(0, bufferCache.getReleasedDescriptorCount());
         Assert.assertEquals(3, bufferCache.getOpenDescriptorCount());
         Assert.assertEquals(1, bufferCache.getDescriptorReleasePassCount());
