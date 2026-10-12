@@ -17,5 +17,5 @@
  * under the License.
  */
 
--- The conflict is inside a nested object: the error names the nested field
-object_merge({"id": 1, "address": {"city": "Irvine"}}, {"id": 1, "address": {"city": "Austin"}});
+-- Conflicting values for one field: the error names that field
+object_merge({"id": 1, "price": 10}, {"id": 1, "price": 12});
