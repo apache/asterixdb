@@ -28,7 +28,9 @@ import static com.google.cloud.hadoop.util.HadoopCredentialConfiguration.ENABLE_
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.getDisableSslVerify;
+import static org.apache.asterix.external.util.ExternalDataUtils.getFirstProvided;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
+import static org.apache.asterix.external.util.ExternalDataUtils.isAuthFlagSet;
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
@@ -172,16 +174,18 @@ public class GCSUtils {
         };
     }
 
-    private static AuthenticationType getAuthenticationType(Map<String, String> configuration) {
+    private static AuthenticationType getAuthenticationType(Map<String, String> configuration)
+            throws CompilationException {
         String impersonateServiceAccount = configuration.get(IMPERSONATE_SERVICE_ACCOUNT_FIELD_NAME);
-        String applicationDefaultCredentials = configuration.get(APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
+        boolean applicationDefaultCredentials =
+                isAuthFlagSet(configuration, APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
         String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
 
         if (noAuth(configuration)) {
             return AuthenticationType.ANONYMOUS;
         } else if (impersonateServiceAccount != null) {
             return AuthenticationType.IMPERSONATE_SERVICE_ACCOUNT;
-        } else if (applicationDefaultCredentials != null) {
+        } else if (applicationDefaultCredentials) {
             return AuthenticationType.APPLICATION_DEFAULT_CREDENTIALS;
         } else if (jsonCredentials != null) {
             return AuthenticationType.SERVICE_ACCOUNT_KEY_JSON_CREDENTIALS;
@@ -190,9 +194,9 @@ public class GCSUtils {
         }
     }
 
-    private static boolean noAuth(Map<String, String> configuration) {
-        return getNonNull(configuration, APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME, JSON_CREDENTIALS_FIELD_NAME,
-                IMPERSONATE_SERVICE_ACCOUNT_FIELD_NAME) == null;
+    private static boolean noAuth(Map<String, String> configuration) throws CompilationException {
+        return getFirstProvided(configuration, APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME, JSON_CREDENTIALS_FIELD_NAME,
+                IMPERSONATE_SERVICE_ACCOUNT_FIELD_NAME).isEmpty();
     }
 
     /**
@@ -224,10 +228,9 @@ public class GCSUtils {
 
     private static GoogleCredentials getCredentialsToImpersonateServiceAccount(Map<String, String> configuration,
             List<String> scopes) throws CompilationException {
-        String applicationDefaultCredentials = configuration.get(APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
         String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
 
-        if (applicationDefaultCredentials != null) {
+        if (isAuthFlagSet(configuration, APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME)) {
             return getApplicationDefaultCredentials(configuration, scopes);
         } else if (jsonCredentials != null) {
             return getServiceAccountKeyCredentials(configuration, scopes);

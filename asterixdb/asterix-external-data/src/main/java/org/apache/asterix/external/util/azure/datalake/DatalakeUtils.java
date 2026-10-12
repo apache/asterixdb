@@ -21,8 +21,11 @@ package org.apache.asterix.external.util.azure.datalake;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
+import static org.apache.asterix.external.util.ExternalDataUtils.getDisableSslVerify;
 import static org.apache.asterix.external.util.ExternalDataUtils.getFirstNotNull;
+import static org.apache.asterix.external.util.ExternalDataUtils.getFirstProvided;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
+import static org.apache.asterix.external.util.ExternalDataUtils.isAuthFlagSet;
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
@@ -55,6 +58,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.azure.AzureConstants;
 import org.apache.asterix.external.util.azure.AzureUtils;
+import org.apache.asterix.external.util.azure.blob.BlobUtils;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -65,6 +69,7 @@ import org.apache.iceberg.azure.AzureProperties;
 import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.AzureSasCredential;
 import com.azure.core.credential.TokenRequestContext;
+import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
@@ -76,6 +81,8 @@ import com.azure.storage.file.datalake.DataLakeServiceClient;
 import com.azure.storage.file.datalake.DataLakeServiceClientBuilder;
 import com.azure.storage.file.datalake.models.ListPathsOptions;
 import com.azure.storage.file.datalake.models.PathItem;
+
+import reactor.netty.http.client.HttpClient;
 
 public class DatalakeUtils {
     private DatalakeUtils() {
@@ -100,7 +107,7 @@ public class DatalakeUtils {
      */
     private static <T> T buildClient(Class<T> type, IApplicationContext appCtx, Map<String, String> configuration)
             throws CompilationException {
-        String managedIdentity = configuration.get(MANAGED_IDENTITY_FIELD_NAME);
+        boolean managedIdentity = isAuthFlagSet(configuration, MANAGED_IDENTITY_FIELD_NAME);
         String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
         String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
         String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
@@ -108,6 +115,7 @@ public class DatalakeUtils {
         String clientId = configuration.get(CLIENT_ID_FIELD_NAME);
         String clientSecret = configuration.get(CLIENT_SECRET_FIELD_NAME);
         String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
+        boolean disableSslVerify = getDisableSslVerify(configuration);
 
         // Client builder
         DataLakeServiceClientBuilder builder = new DataLakeServiceClientBuilder();
@@ -129,6 +137,11 @@ public class DatalakeUtils {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
 
+        if (disableSslVerify) {
+            HttpClient httpClient = BlobUtils.disableSslVerify(HttpClient.create());
+            builder.httpClient(new NettyAsyncHttpClientBuilder(httpClient).build());
+        }
+
         // Shared Key
         if (accountName != null || accountKey != null) {
             if (accountName == null) {
@@ -141,7 +154,7 @@ public class DatalakeUtils {
                         ACCOUNT_NAME_FIELD_NAME);
             }
 
-            Optional<String> provided = getFirstNotNull(configuration, SHARED_ACCESS_SIGNATURE_FIELD_NAME,
+            Optional<String> provided = getFirstProvided(configuration, SHARED_ACCESS_SIGNATURE_FIELD_NAME,
                     MANAGED_IDENTITY_FIELD_NAME, CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME, TENANT_ID_FIELD_NAME);
             if (provided.isPresent()) {
                 throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
@@ -153,7 +166,7 @@ public class DatalakeUtils {
 
         // Shared access signature
         if (sharedAccessSignature != null) {
-            Optional<String> provided = getFirstNotNull(configuration, MANAGED_IDENTITY_FIELD_NAME,
+            Optional<String> provided = getFirstProvided(configuration, MANAGED_IDENTITY_FIELD_NAME,
                     CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME, TENANT_ID_FIELD_NAME);
             if (provided.isPresent()) {
                 throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
@@ -164,7 +177,7 @@ public class DatalakeUtils {
         }
 
         // Managed Identity auth
-        if (managedIdentity != null) {
+        if (managedIdentity) {
             Optional<String> provided = getFirstNotNull(configuration, CLIENT_SECRET_FIELD_NAME, TENANT_ID_FIELD_NAME);
             if (provided.isPresent()) {
                 throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
@@ -347,7 +360,7 @@ public class DatalakeUtils {
     public static void setIcebergAdlsAuthParams(Map<String, String> properties) throws CompilationException {
         // the collection's own credentials, with the prefix already stripped
         Map<String, String> collectionProperties = IcebergUtils.filterCollectionProperties(properties);
-        String managedIdentity = collectionProperties.get(MANAGED_IDENTITY_FIELD_NAME);
+        boolean managedIdentity = isAuthFlagSet(collectionProperties, MANAGED_IDENTITY_FIELD_NAME);
         String accountName = collectionProperties.get(ACCOUNT_NAME_FIELD_NAME);
         String accountKey = collectionProperties.get(ACCOUNT_KEY_FIELD_NAME);
         String sharedAccessSignature = collectionProperties.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
@@ -369,7 +382,7 @@ public class DatalakeUtils {
             return;
         }
 
-        if (managedIdentity != null) {
+        if (managedIdentity) {
             ManagedIdentityCredentialBuilder builder = new ManagedIdentityCredentialBuilder();
             if (clientId != null) {
                 builder.clientId(clientId);

@@ -18,9 +18,10 @@
  */
 package org.apache.asterix.external.util.aws;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
+import static org.apache.asterix.external.util.ExternalDataUtils.getFirstProvided;
+import static org.apache.asterix.external.util.ExternalDataUtils.isAuthFlagSet;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateAndGetBooleanProperty;
 import static org.apache.asterix.external.util.aws.AwsConstants.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.CROSS_REGION_FIELD_NAME;
@@ -132,14 +133,15 @@ public class AwsUtils {
         return Region.of(regionId);
     }
 
-    public static AuthenticationType getAuthenticationType(Map<String, String> configuration) {
+    public static AuthenticationType getAuthenticationType(Map<String, String> configuration)
+            throws CompilationException {
         return getAuthenticationType(configuration, false);
     }
 
     public static AuthenticationType getAuthenticationType(Map<String, String> configuration,
-            boolean credentialsToAssumeRole) {
+            boolean credentialsToAssumeRole) throws CompilationException {
         String roleArn = configuration.get(ROLE_ARN_FIELD_NAME);
-        String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
+        boolean instanceProfile = isAuthFlagSet(configuration, INSTANCE_PROFILE_FIELD_NAME);
         String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
         String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
 
@@ -147,7 +149,7 @@ public class AwsUtils {
             return AuthenticationType.ANONYMOUS;
         } else if (roleArn != null && !credentialsToAssumeRole) {
             return AuthenticationType.ARN_ASSUME_ROLE;
-        } else if (instanceProfile != null) {
+        } else if (instanceProfile) {
             return AuthenticationType.INSTANCE_PROFILE;
         } else if (accessKeyId != null || secretAccessKey != null) {
             return AuthenticationType.ACCESS_KEYS;
@@ -166,9 +168,9 @@ public class AwsUtils {
         return validateAndGetBooleanProperty(PATH_STYLE_ADDRESSING_FIELD_NAME, pathStyleAccessString);
     }
 
-    private static boolean noAuth(Map<String, String> configuration) {
-        return getNonNull(configuration, INSTANCE_PROFILE_FIELD_NAME, ROLE_ARN_FIELD_NAME, EXTERNAL_ID_FIELD_NAME,
-                ACCESS_KEY_ID_FIELD_NAME, SECRET_ACCESS_KEY_FIELD_NAME, SESSION_TOKEN_FIELD_NAME) == null;
+    private static boolean noAuth(Map<String, String> configuration) throws CompilationException {
+        return getFirstProvided(configuration, INSTANCE_PROFILE_FIELD_NAME, ROLE_ARN_FIELD_NAME, EXTERNAL_ID_FIELD_NAME,
+                ACCESS_KEY_ID_FIELD_NAME, SECRET_ACCESS_KEY_FIELD_NAME, SESSION_TOKEN_FIELD_NAME).isEmpty();
     }
 
     /**
@@ -247,10 +249,9 @@ public class AwsUtils {
 
     private static AwsCredentialsProvider getCredentialsToAssumeRole(Map<String, String> configuration)
             throws CompilationException {
-        String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
         String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
         String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
-        if (instanceProfile != null) {
+        if (isAuthFlagSet(configuration, INSTANCE_PROFILE_FIELD_NAME)) {
             return getInstanceProfileCredentials(configuration);
         } else if (accessKeyId != null || secretAccessKey != null) {
             return getAccessKeyCredentials(configuration);
@@ -261,13 +262,6 @@ public class AwsUtils {
 
     private static AwsCredentialsProvider getInstanceProfileCredentials(Map<String, String> configuration)
             throws CompilationException {
-        String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
-
-        // only "true" value is allowed
-        if (!"true".equalsIgnoreCase(instanceProfile)) {
-            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, INSTANCE_PROFILE_FIELD_NAME, "true");
-        }
-
         String notAllowed = getNonNull(configuration, ACCESS_KEY_ID_FIELD_NAME, SECRET_ACCESS_KEY_FIELD_NAME,
                 SESSION_TOKEN_FIELD_NAME);
         if (notAllowed != null) {

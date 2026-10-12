@@ -23,7 +23,9 @@ import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_I
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.getDisableSslVerify;
 import static org.apache.asterix.external.util.ExternalDataUtils.getFirstNotNull;
+import static org.apache.asterix.external.util.ExternalDataUtils.getFirstProvided;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
+import static org.apache.asterix.external.util.ExternalDataUtils.isAuthFlagSet;
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.azure.AzureConstants.ACCOUNT_KEY_FIELD_NAME;
@@ -102,7 +104,7 @@ public class BlobUtils {
      */
     private static <T> T buildClient(Class<T> type, IApplicationContext appCtx, Map<String, String> configuration)
             throws CompilationException {
-        String managedIdentity = configuration.get(MANAGED_IDENTITY_FIELD_NAME);
+        boolean managedIdentity = isAuthFlagSet(configuration, MANAGED_IDENTITY_FIELD_NAME);
         String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
         String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
         String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
@@ -149,7 +151,7 @@ public class BlobUtils {
                         ACCOUNT_NAME_FIELD_NAME);
             }
 
-            Optional<String> provided = getFirstNotNull(configuration, SHARED_ACCESS_SIGNATURE_FIELD_NAME,
+            Optional<String> provided = getFirstProvided(configuration, SHARED_ACCESS_SIGNATURE_FIELD_NAME,
                     MANAGED_IDENTITY_FIELD_NAME, CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME, TENANT_ID_FIELD_NAME);
             if (provided.isPresent()) {
                 throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
@@ -161,7 +163,7 @@ public class BlobUtils {
 
         // Shared access signature
         if (sharedAccessSignature != null) {
-            Optional<String> provided = getFirstNotNull(configuration, MANAGED_IDENTITY_FIELD_NAME,
+            Optional<String> provided = getFirstProvided(configuration, MANAGED_IDENTITY_FIELD_NAME,
                     CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME, TENANT_ID_FIELD_NAME);
             if (provided.isPresent()) {
                 throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
@@ -172,7 +174,7 @@ public class BlobUtils {
         }
 
         // Managed Identity auth
-        if (managedIdentity != null) {
+        if (managedIdentity) {
             Optional<String> provided = getFirstNotNull(configuration, CLIENT_SECRET_FIELD_NAME, TENANT_ID_FIELD_NAME);
             if (provided.isPresent()) {
                 throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),

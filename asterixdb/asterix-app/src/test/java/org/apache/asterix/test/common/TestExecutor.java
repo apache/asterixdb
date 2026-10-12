@@ -33,8 +33,6 @@ import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_ID_DEFAU
 import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_ID_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_SECRET_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_SECRET_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Azure.MANAGED_IDENTITY_DEFAULT;
-import static org.apache.asterix.test.common.TestConstants.Azure.MANAGED_IDENTITY_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.SAS_TOKEN_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.TEMPLATE;
 import static org.apache.asterix.test.common.TestConstants.Azure.TEMPLATE_DEFAULT;
@@ -2539,7 +2537,6 @@ public class TestExecutor {
         str = str.replace(ACCOUNT_NAME_PLACEHOLDER, AZURITE_ACCOUNT_NAME_DEFAULT);
         str = str.replace(ACCOUNT_KEY_PLACEHOLDER, AZURITE_ACCOUNT_KEY_DEFAULT);
         str = str.replace(SAS_TOKEN_PLACEHOLDER, sasToken);
-        str = str.replace(MANAGED_IDENTITY_PLACEHOLDER, MANAGED_IDENTITY_DEFAULT);
         str = str.replace(CLIENT_ID_PLACEHOLDER, CLIENT_ID_DEFAULT);
         str = str.replace(CLIENT_SECRET_PLACEHOLDER, CLIENT_SECRET_DEFAULT);
 
