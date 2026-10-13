@@ -81,6 +81,8 @@
           <!-- there is no .git directory when building from a source assembly- a static git.properties file (generated
                at source assembly time) is used in this case -->
           <failOnNoGitDirectory>false</failOnNoGitDirectory>
+          <!-- never contact a remote to compute git.local.branch.ahead/behind -->
+          <offline>true</offline>
         </configuration>
       </plugin>
       <plugin>
