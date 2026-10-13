@@ -98,14 +98,14 @@
          single-threaded input listing forced in HDFSUtils#configureHadoopAuthentication is a
          workaround for its absence and should be removed at that point. -->
     <hadoop.version>3.5.0</hadoop.version>
-    <jacoco.version>0.7.6.201602180812</jacoco.version>
+    <jacoco.version>0.8.15</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
     <avro.version>1.12.2</avro.version>
     <parquet.version>1.18.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
-    <awsjavasdk.version>2.55.14</awsjavasdk.version>
+    <awsjavasdk.version>2.55.15</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.48.5</awsjavasdk.crt.version>
 

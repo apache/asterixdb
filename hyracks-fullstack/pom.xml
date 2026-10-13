@@ -70,9 +70,9 @@
     <test.excludes>${global.test.excludes}</test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <hadoop.version>3.5.0</hadoop.version>
-    <jacoco.version>0.7.6.201602180812</jacoco.version>
+    <jacoco.version>0.8.15</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
-    <snappy.version>1.1.10.8</snappy.version>
+    <snappy.version>1.1.10.12</snappy.version>
     <jackson.version>2.22.3</jackson.version>
     <jackson-annotations.version>2.22</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
@@ -81,7 +81,7 @@
     <netty.tcnative.version>2.0.84.Final</netty.tcnative.version>
     <asm.version>9.10.1</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
-    <awsjavasdk.version>2.55.14</awsjavasdk.version>
+    <awsjavasdk.version>2.55.15</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
     <google-cloud-storage.version>2.75.0</google-cloud-storage.version>
