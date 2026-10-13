@@ -75,9 +75,9 @@
          compiling the query, which halts the JVM. -->
     <!-- @pinned-with: ${awsjavasdk.version} -->
     <hadoop.version>3.5.0</hadoop.version>
-    <jacoco.version>0.7.6.201602180812</jacoco.version>
+    <jacoco.version>0.8.15</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
-    <snappy.version>1.1.10.8</snappy.version>
+    <snappy.version>1.1.10.12</snappy.version>
     <jackson.version>2.22.3</jackson.version>
     <jackson-annotations.version>2.22</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
