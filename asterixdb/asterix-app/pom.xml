@@ -80,6 +80,8 @@
           <!-- there is no .git directory when building from a source assembly- a static git.properties file (generated
                at source assembly time) is used in this case -->
           <failOnNoGitDirectory>false</failOnNoGitDirectory>
+          <!-- never contact a remote to compute git.local.branch.ahead/behind -->
+          <offline>true</offline>
         </configuration>
       </plugin>
       <plugin>
@@ -501,6 +503,19 @@
       </build>
     </profile>
   </profiles>
+  <dependencyManagement>
+    <dependencies>
+      <!-- Jersey 2 (from hadoop's test jars) asks for jakarta.annotation-api 1.3.5, which is
+           still the javax.annotation package and would win by nearness over the 3.x that
+           S3Mock's embedded Tomcat needs, so S3Mock fails to start. javax.annotation-api
+           already supplies what Jersey uses. -->
+      <dependency>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>3.0.0</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
