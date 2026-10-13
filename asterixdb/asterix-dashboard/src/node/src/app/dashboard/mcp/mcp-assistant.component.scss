@@ -1,0 +1,637 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+.mcp-assistant {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+}
+
+.mcp-llm-setup {
+    padding: 16px;
+}
+
+.mcp-hint {
+    color: #555;
+    font-size: 13px;
+}
+
+.mcp-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+
+    span {
+        font-size: 12px;
+        color: #777;
+        margin-bottom: 4px;
+    }
+
+    input,
+    select {
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 13px;
+        background: #fff;
+    }
+}
+
+.mcp-thread {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+$accent: #25428d;
+$accent-dark: #1b3268;
+$ink: #1f2328;
+$muted: #6b7280;
+
+.mcp-thread-scroll {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 16px 14px;
+    font-size: 14px;
+    color: $ink;
+}
+
+.mcp-turn {
+    margin-bottom: 18px;
+}
+
+/* User message — compact bubble aligned right. */
+.mcp-user-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.mcp-user-bubble {
+    max-width: 88%;
+    padding: 9px 13px;
+    border-radius: 16px 16px 4px 16px;
+    background: #eef2f7;
+    color: $ink;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Assistant + tool rows — avatar gutter, full-width content. */
+.mcp-assistant-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.mcp-avatar {
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $accent;
+    color: #fff;
+    font-size: 14px;
+    margin-top: 2px;
+
+    &.mcp-avatar-tool {
+        background: #eef2f7;
+        color: $accent;
+
+        mat-icon {
+            font-size: 17px;
+            width: 17px;
+            height: 17px;
+        }
+    }
+}
+
+/* Rendered markdown body. ::ng-deep reaches the pipe-injected HTML. */
+.mcp-md {
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1.6;
+}
+
+:host ::ng-deep .mcp-md {
+    p { margin: 0 0 10px; }
+    p:last-child { margin-bottom: 0; }
+    h1, h2, h3, h4 { margin: 14px 0 8px; line-height: 1.3; font-weight: 600; }
+    h1 { font-size: 18px; }
+    h2 { font-size: 16px; }
+    h3 { font-size: 15px; }
+    ul, ol { margin: 0 0 10px; padding-left: 20px; }
+    li { margin: 2px 0; }
+    a { color: $accent; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    strong { font-weight: 600; }
+    code {
+        font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        background: #f0f2f5;
+        padding: 1px 5px;
+        border-radius: 4px;
+    }
+    pre {
+        background: #f6f8fa;
+        border: 1px solid #e6e8eb;
+        border-radius: 8px;
+        padding: 10px 12px;
+        overflow: auto;
+        margin: 0 0 10px;
+
+        code { background: none; padding: 0; font-size: 12.5px; }
+    }
+    blockquote {
+        margin: 0 0 10px;
+        padding-left: 12px;
+        border-left: 3px solid #d6dbe1;
+        color: $muted;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 0 0 10px;
+        font-size: 13px;
+    }
+    th, td { border: 1px solid #e6e8eb; padding: 5px 8px; text-align: left; }
+    th { background: #f6f8fa; font-weight: 600; }
+}
+
+/* Tool-call trace card. */
+.mcp-trace {
+    flex: 1 1 auto;
+    min-width: 0;
+    box-shadow: none !important;
+    border: 1px solid #e6e8eb;
+    border-radius: 10px !important;
+    background: #fbfcfd;
+
+    &.mcp-trace-error {
+        border-color: #f0c0c0;
+        background: #fdf6f6;
+    }
+}
+
+.mcp-trace-verb {
+    color: $muted;
+    margin-right: 6px;
+    font-size: 13px;
+}
+
+.mcp-trace-name {
+    font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: $ink;
+}
+
+.mcp-trace-label {
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.6px;
+    color: $muted;
+    margin: 8px 0 3px;
+}
+
+.mcp-trace-body {
+    font-size: 12px;
+
+    pre {
+        background: #f6f8fa;
+        border: 1px solid #e6e8eb;
+        padding: 8px;
+        border-radius: 6px;
+        margin: 0;
+        max-height: 30vh;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+}
+
+/* Typing indicator. */
+.mcp-typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    height: 26px;
+
+    span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #bcc3cc;
+        animation: mcp-bounce 1.2s infinite ease-in-out;
+    }
+    span:nth-child(2) { animation-delay: 0.15s; }
+    span:nth-child(3) { animation-delay: 0.3s; }
+}
+
+@keyframes mcp-bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+    40% { transform: translateY(-4px); opacity: 1; }
+}
+
+.mcp-error {
+    color: #c62828;
+    font-size: 13px;
+    white-space: pre-wrap;
+    padding: 4px;
+}
+
+.mcp-spin {
+    display: inline-flex;
+    animation: mcp-spin 1s linear infinite;
+}
+
+@keyframes mcp-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Composer — rounded input with inline send. */
+/* History toolbar above the thread. */
+.mcp-chat-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #ececec;
+    background: #fbfcfd;
+
+    .flex-spacer { flex: 1; }
+}
+
+.mcp-chat-bar-btn {
+    min-width: 0;
+    line-height: 28px;
+    font-size: 12.5px;
+    color: $ink;
+
+    mat-icon { font-size: 17px; width: 17px; height: 17px; vertical-align: middle; }
+
+    &.mcp-active { color: $accent; }
+}
+
+.mcp-scope {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: $muted;
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+    select {
+        border: 1px solid #d6dbe1;
+        border-radius: 6px;
+        padding: 3px 6px;
+        font-size: 12.5px;
+        color: $ink;
+        background: #fff;
+        max-width: 150px;
+    }
+}
+
+.mcp-history-drawer {
+    max-height: 220px;
+    overflow-y: auto;
+    border-bottom: 1px solid #ececec;
+    background: #fff;
+    padding: 4px;
+}
+
+.mcp-history-empty {
+    color: $muted;
+    font-size: 12.5px;
+    padding: 10px 8px;
+    margin: 0;
+}
+
+.mcp-history-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-radius: 7px;
+    padding: 7px 8px;
+    cursor: pointer;
+
+    &:hover { background: #f0f2f5; }
+    &.mcp-history-active { background: #eef2f7; }
+}
+
+.mcp-history-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: $muted;
+    flex: 0 0 auto;
+}
+
+.mcp-history-title {
+    flex: 1;
+    font-size: 13px;
+    color: $ink;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mcp-history-del {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: $muted;
+    padding: 0;
+    display: inline-flex;
+    opacity: 0;
+    transition: opacity 0.12s;
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    &:hover { color: #c0392b; }
+}
+
+.mcp-history-item:hover .mcp-history-del { opacity: 1; }
+
+.mcp-composer {
+    position: relative;
+    border-top: 1px solid #ececec;
+    padding: 10px 12px 8px;
+    background: #fff;
+}
+
+/* / (prompts) and @ (resources) autocomplete popup, anchored above the input. */
+.mcp-mention-menu {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: calc(100% - 6px);
+    max-height: 240px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #d6dbe1;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(31, 35, 40, 0.14);
+    padding: 4px;
+    z-index: 20;
+}
+
+.mcp-mention-head {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $muted;
+    padding: 6px 8px 4px;
+}
+
+.mcp-mention-busy {
+    color: $accent;
+}
+
+.mcp-mention-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-radius: 7px;
+    padding: 6px 8px;
+    cursor: pointer;
+
+    &:hover,
+    &.mcp-mention-active {
+        background: #eef2f7;
+    }
+}
+
+.mcp-mention-label {
+    font-size: 13px;
+    color: $ink;
+}
+
+.mcp-mention-sigil {
+    color: $accent;
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.mcp-mention-detail {
+    font-size: 11.5px;
+    color: $muted;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Attached-resource chips shown above the input. */
+.mcp-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.mcp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: $ink;
+    background: #eef2f7;
+    border: 1px solid #d6dbe1;
+    border-radius: 14px;
+    padding: 2px 6px 2px 8px;
+}
+
+.mcp-chip-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: $accent;
+}
+
+.mcp-chip-remove {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    color: $muted;
+    font-size: 15px;
+    line-height: 1;
+    padding: 0 2px;
+
+    &:hover {
+        color: $ink;
+    }
+}
+
+.mcp-input-wrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d6dbe1;
+    border-radius: 22px;
+    padding: 4px 4px 4px 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:focus-within {
+        border-color: $accent;
+        box-shadow: 0 0 0 3px rgba(37, 66, 141, 0.12);
+    }
+
+    textarea {
+        flex: 1 1 auto;
+        min-width: 0;
+        border: none;
+        outline: none;
+        resize: none;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.5;
+        max-height: 140px;
+        padding: 6px 0;
+        background: transparent;
+        color: #1f2328;
+    }
+}
+
+.mcp-send {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: $accent;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+    &:hover:not(:disabled) { background: $accent-dark; }
+    &:disabled { background: #c7ced6; cursor: default; }
+}
+
+.mcp-composer-foot {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+}
+
+.mcp-clear {
+    font-size: 12px;
+    color: $muted;
+    min-width: 0;
+}
+
+/* Empty-state guide: first-run hotkey hints, pinned to the bottom near the composer. */
+.mcp-empty {
+    max-width: 360px;
+    width: 100%;
+    margin: auto auto 4px;
+    text-align: center;
+    color: $ink;
+}
+
+.mcp-empty-title {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.mcp-empty-sub {
+    margin: 0 0 18px;
+    font-size: 12.5px;
+    color: $muted;
+}
+
+.mcp-empty-hotkeys {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.mcp-empty-key {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e6e8eb;
+    border-radius: 8px;
+    background: #fbfcfd;
+}
+
+.mcp-empty-sigil {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    background: #eef2f7;
+    color: $accent;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.mcp-empty-keytext {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mcp-empty-keytitle {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.mcp-empty-keydesc {
+    font-size: 12px;
+    color: $muted;
+
+    em {
+        font-style: normal;
+        color: $accent;
+    }
+}
+
+.mcp-empty-foot {
+    margin: 16px 0 0;
+    font-size: 12px;
+    color: $muted;
+
+    em { font-style: italic; }
+}

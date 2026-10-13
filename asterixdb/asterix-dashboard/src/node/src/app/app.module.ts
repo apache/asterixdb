@@ -42,6 +42,13 @@ import { PlanViewerComponent } from "./dashboard/query/plan-viewer.component";
 import { TreeNodeComponent } from './dashboard/query/tree-node.component';
 import { DialogExportPicker, TreeViewComponent } from './dashboard/query/tree-view.component';
 import {SQLCancelEffects} from "./shared/effects/cancel.effects";
+import { MCPEffects } from './shared/effects/mcp.effects';
+import { MCPClientService } from './shared/services/mcp-client.service';
+import { LLMService } from './shared/services/llm.service';
+import { ChatHistoryService } from './shared/services/chat-history.service';
+import { MCPPanelComponent } from './dashboard/mcp/mcp-panel.component';
+import { MCPAssistantComponent } from './dashboard/mcp/mcp-assistant.component';
+import { MarkdownPipe } from './shared/pipes/markdown.pipe';
 
 @NgModule({
     declarations: [
@@ -57,12 +64,15 @@ import {SQLCancelEffects} from "./shared/effects/cancel.effects";
         TreeNodeComponent,
         DialogExportPicker,
         TreeViewComponent,
+        MCPPanelComponent,
+        MCPAssistantComponent,
+        MarkdownPipe,
     ],
     imports: [
         FormsModule,
         BrowserModule,
         BrowserAnimationsModule,
-        EffectsModule.forRoot([AppEffects, DataverseEffects, DatasetEffects, DatatypeEffects, IndexEffects, FunctionEffects, SQLQueryEffects, SQLCancelEffects]),
+        EffectsModule.forRoot([AppEffects, DataverseEffects, DatasetEffects, DatatypeEffects, IndexEffects, FunctionEffects, SQLQueryEffects, SQLCancelEffects, MCPEffects]),
         HttpClientModule,
         MaterialModule,
         StoreModule.forRoot(reducers, {
@@ -80,7 +90,7 @@ import {SQLCancelEffects} from "./shared/effects/cancel.effects";
         NgxChartsModule
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    providers: [SQLService],
+    providers: [SQLService, MCPClientService, LLMService, ChatHistoryService],
     bootstrap: [AppComponent]
 })
 export class AppModule {}
