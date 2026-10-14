@@ -146,7 +146,7 @@
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
     <implementation.version>${project.version}</implementation.version>
     <implementation.vendor>${project.organization.name}</implementation.vendor>
-    <sis.version>1.6</sis.version>
+    <sis.version>1.7</sis.version>
   </properties>
 
   <build>
@@ -1955,14 +1955,14 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
-        <version>1.84.2</version>
+        <version>1.84.3</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
-        <version>1.84.2</version>
+        <version>1.84.3</version>
         <exclusions>
           <exclusion>
             <groupId>io.grpc</groupId>

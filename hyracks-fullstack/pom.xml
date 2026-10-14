@@ -79,7 +79,7 @@
     <!-- 4.2 is a new netty generation; stay on the 4.1.x line (patch updates only) -->
     <netty.version>4.1.139.Final</netty.version>
     <netty.tcnative.version>2.0.84.Final</netty.tcnative.version>
-    <asm.version>9.10.1</asm.version>
+    <asm.version>9.11</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
     <awsjavasdk.version>2.55.15</awsjavasdk.version>
 
