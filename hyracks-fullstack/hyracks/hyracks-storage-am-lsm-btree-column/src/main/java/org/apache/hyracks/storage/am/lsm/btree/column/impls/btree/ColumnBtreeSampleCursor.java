@@ -597,7 +597,9 @@ public class ColumnBtreeSampleCursor extends EnforcedIndexCursor implements ITre
                 // Full column load -- the point of deferring to phase 2.
                 context.preparePageZeroSegments(leafFrame, bufferCache, fileId);
                 frameTuple.newPage();
-                context.prepareColumns(leafFrame, bufferCache, fileId);
+                if (frameTuple.isColumnReadRequired()) {
+                    context.prepareColumns(leafFrame, bufferCache, fileId);
+                }
                 frameTuple.reset(tupleIdx, leafFrame.getTupleCount() - 1);
                 prevYieldPageId = pageId;
             } else {

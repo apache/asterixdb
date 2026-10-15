@@ -565,6 +565,10 @@ public class ColumnSampleBenchHarness {
         return 0;
     }
 
+    public ARecordType getRecordType() {
+        return recordType;
+    }
+
     public LSMBTree getIndex() {
         return lsmBtree;
     }

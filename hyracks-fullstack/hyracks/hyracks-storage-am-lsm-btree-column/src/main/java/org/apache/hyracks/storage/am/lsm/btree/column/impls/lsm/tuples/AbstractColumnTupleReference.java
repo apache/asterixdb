@@ -46,6 +46,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     private final int numberOfPrimaryKeys;
     protected int endIndex;
     protected int tupleIndex;
+    private boolean readColumnPages;
 
     // For logging
     private final LongSet pinnedPages;
@@ -104,6 +105,13 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     public void newPage() throws HyracksDataException {
         tupleIndex = 0;
         readPrimaryKeyPages();
+        // Evaluated here, from page zero alone, so the cursor can skip fetching the columns of a filtered-out leaf
+        readColumnPages = startNewPage(frame.getTupleCount());
+    }
+
+    @Override
+    public boolean isColumnReadRequired() {
+        return readColumnPages;
     }
 
     /**
@@ -139,8 +147,6 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         tupleIndex = startIndex;
         this.endIndex = endIndex;
         int numberOfTuples = frame.getTupleCount();
-        //Start new page and check whether we should skip reading non-key columns or not
-        boolean readColumnPages = startNewPage(numberOfTuples);
         //Release previous pinned pages if any
         unpinColumnsPages();
         /*
