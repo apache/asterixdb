@@ -1,0 +1,129 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Required by https://infra.apache.org/github-actions-policy.html for every repository using GitHub Actions.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 4
+    # Every update runs the full CI matrix, so batch them into one pull request per kind.
+    groups:
+      actions-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  # Each entry runs as its own update job, and a multi-directory entry runs all of its directories in one job.
+  # Every asterixdb module also loads asterixdb/pom.xml, so listing them all in one entry re-checked the ~125
+  # dependencies it manages once per module and the job timed out. Instead each declared version is owned by
+  # exactly one entry: hyracks-fullstack, then asterixdb/pom.xml, then the few asterixdb modules that pin
+  # versions of their own.
+  - package-ecosystem: "maven"
+    directory: "/hyracks-fullstack"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 4
+    groups:
+      hyracks-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      hyracks-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  # asterixdb/pom.xml's opt-modules profile adds asterix-opt only when asterix-opt/pom.xml exists, which
+  # dependabot does not understand, so it fails looking for that module when started from /asterixdb.
+  # asterix-common pins nothing itself; it is here only to pull in asterixdb/pom.xml as its parent.
+  - package-ecosystem: "maven"
+    directory: "/asterixdb/asterix-common"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 4
+    ignore:
+      - dependency-name: "org.apache.asterix:*"
+      - dependency-name: "org.apache.hyracks:*"
+    groups:
+      asterixdb-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      asterixdb-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  # These modules also load asterixdb/pom.xml, so only the versions they declare themselves are allowed here;
+  # the previous entry owns the rest. A version pinned directly in an asterixdb module must be added below.
+  # Versions taken from an asterixdb/pom.xml property (jacoco, awssdk) belong to the previous entry.
+  - package-ecosystem: "maven"
+    directories:
+      - "/asterixdb/asterix-app"
+      - "/asterixdb/asterix-cloud"
+      - "/asterixdb/asterix-dashboard"
+      - "/asterixdb/asterix-doc"
+      - "/asterixdb/asterix-external-data"
+      - "/asterixdb/asterix-maven-plugins"
+      - "/asterixdb/asterix-podman"
+      - "/asterixdb/asterix-server"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 4
+    allow:
+      - dependency-name: "com.azure:azure-storage-blob-batch"
+      - dependency-name: "com.couchbase.client:core-io"
+      - dependency-name: "com.github.eirslett:frontend-maven-plugin"
+      - dependency-name: "com.googlecode.maven-download-plugin:download-maven-plugin"
+      - dependency-name: "com.teradata.tpcds:tpcds"
+      - dependency-name: "io.delta:*"
+      - dependency-name: "io.trino.tpch:tpch"
+      - dependency-name: "nl.lexemmens:podman-maven-plugin"
+      - dependency-name: "org.apache.commons:commons-collections4"
+      - dependency-name: "org.apache.httpcomponents.client5:httpclient5"
+      - dependency-name: "org.apache.maven.plugin-testing:maven-plugin-testing-harness"
+      - dependency-name: "org.apache.maven.shared:file-management"
+      - dependency-name: "org.apache.wicket:wicket-util"
+      - dependency-name: "org.bouncycastle:*"
+      - dependency-name: "org.codehaus.jackson:*"
+      - dependency-name: "org.codehaus.plexus:plexus-utils"
+      - dependency-name: "org.freemarker:freemarker"
+      - dependency-name: "org.twitter4j:*"
+      - dependency-name: "org.vafer:jdeb"
+      - dependency-name: "tech.allegro.schema.json2avro:converter"
+    groups:
+      asterixdb-module-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      asterixdb-module-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
