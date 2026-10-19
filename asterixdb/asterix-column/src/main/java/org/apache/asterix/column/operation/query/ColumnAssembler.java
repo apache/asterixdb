@@ -51,6 +51,11 @@ public final class ColumnAssembler {
         assemblers = builderVisitor.createValueAssemblers(node, declaredType);
         rootAssembler = (ObjectValueAssembler) builderVisitor.getRootAssembler();
         state = new AssemblerState();
+        if (assemblers.length == 0) {
+            // With no projected column (e.g., COUNT(*)), every tuple assembles to the same empty record
+            rootAssembler.start();
+            rootAssembler.end();
+        }
     }
 
     public void reset(int numberOfTuples) {
@@ -72,6 +77,9 @@ public final class ColumnAssembler {
     }
 
     public IValueReference nextValue() throws HyracksDataException {
+        if (assemblers.length == 0) {
+            return nextEmptyValue();
+        }
         rootAssembler.start();
         if (tupleIndex == numberOfTuples) {
             rootAssembler.end();
@@ -105,6 +113,16 @@ public final class ColumnAssembler {
 
         tupleIndex++;
         rootAssembler.end();
+        return rootAssembler.getValue();
+    }
+
+    /**
+     * Returns the empty record built once by the constructor, advancing the tuple index so skips stay in step.
+     */
+    private IValueReference nextEmptyValue() {
+        if (tupleIndex < numberOfTuples) {
+            tupleIndex++;
+        }
         return rootAssembler.getValue();
     }
 
