@@ -168,12 +168,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 used.clear();
                 VariableUtilities.getUsedVariables(op1, used);
                 // increment the count for the ones which are still used
-                for (LogicalVariable v : used) {
-                    Integer m = nspListifyVarsCount.get(v);
-                    if (m != null) {
-                        nspListifyVarsCount.put(v, m + 1);
-                    }
-                }
+                countListifyUses(nspListifyVarsCount, used);
                 break;
             case SUBPLAN:
                 // Try to push the subplan into a group-by operator if possible.
@@ -200,6 +195,9 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 // of the group by operator (if possible).
                 collectAggregateVars(nspListifyVarsCount, nspWithAgg, nspAggVarToPlanIndex,
                         (AbstractOperatorWithNestedPlans) op1);
+                // A decoration can read a listify produced below (an outer variable carried through the
+                // group-by); without counting it the listify is removed as unused.
+                countListifyUses(nspListifyVarsCount, used);
                 break;
             case CLUSTER_BY:
                 // CLUSTER BY carries its members listify as a nested plan, exactly as GROUP BY does;
@@ -207,16 +205,21 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 // plan before the operator is expanded, so the list itself is never materialized.
                 collectAggregateVars(nspListifyVarsCount, nspWithAgg, nspAggVarToPlanIndex,
                         (AbstractOperatorWithNestedPlans) op1);
+                countListifyUses(nspListifyVarsCount, used);
                 break;
             default:
-                for (LogicalVariable v : used) {
-                    Integer m = nspListifyVarsCount.get(v);
-                    if (m != null) {
-                        nspListifyVarsCount.put(v, m + 1);
-                    }
-                }
+                countListifyUses(nspListifyVarsCount, used);
         }
         return change;
+    }
+
+    private static void countListifyUses(Map<LogicalVariable, Integer> nspListifyVarsCount, Set<LogicalVariable> used) {
+        for (LogicalVariable v : used) {
+            Integer m = nspListifyVarsCount.get(v);
+            if (m != null) {
+                nspListifyVarsCount.put(v, m + 1);
+            }
+        }
     }
 
     private void collectAggregateVars(Map<LogicalVariable, Integer> nspListifyVarsCount,

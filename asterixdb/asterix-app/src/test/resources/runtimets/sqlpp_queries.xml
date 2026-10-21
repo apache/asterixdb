@@ -6355,6 +6355,26 @@
         <output-dir compare="Text">query-ASTERIXDB-3016</output-dir>
       </compilation-unit>
     </test-case-->
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-outer-shadow-01">
+        <output-dir compare="Text">gby-outer-shadow-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-outer-shadow-02">
+        <output-dir compare="Text">gby-outer-shadow-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-outer-shadow-03">
+        <output-dir compare="Text">gby-outer-shadow-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-outer-with-01">
+        <output-dir compare="Text">gby-outer-with-01</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
@@ -16849,6 +16869,11 @@
     <test-case FilePath="window">
       <compilation-unit name="win_opt_02">
         <output-dir compare="Text">win_opt_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="win_outer_alias_01">
+        <output-dir compare="Text">win_outer_alias_01</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

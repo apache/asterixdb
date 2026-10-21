@@ -1,0 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description  : An outer variable (WITH alias, top-level LET, enclosing query variable)
+ *                referenced after GROUP BY while a FROM variable of the block has the same
+ *                name. After the GROUP BY the name denotes the outer variable again, so the
+ *                reference reads that variable, not an arbitrary row of the block. Here: a
+ *                field of the WITH alias, which is an array, so the field is MISSING.
+ * Expected Res : Success
+ */
+
+WITH t AS (FROM [{"a":1,"b":10},{"a":1,"b":20},{"a":2,"b":30}] AS x SELECT x.a, x.b)
+FROM t
+GROUP BY t.a
+SELECT a, t.b AS b
+ORDER BY a;

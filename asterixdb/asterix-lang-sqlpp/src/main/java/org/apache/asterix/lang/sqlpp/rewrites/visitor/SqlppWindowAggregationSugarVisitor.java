@@ -35,6 +35,7 @@ import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
@@ -154,7 +155,11 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
 
     private void addToFieldList(List<Pair<Expression, Identifier>> outFieldList, List<VariableExpr> varList) {
         for (VariableExpr varExpr : varList) {
-            if (scopeChecker.lookupSymbol(varExpr.getVar().getValue()) != null) {
+            // The same binding, not just the same name: after GROUP BY a WITH or outer-query variable of the
+            // same name still resolves, and a name match would put the block's dead FROM/LET variable into the
+            // window record.
+            Identifier symbol = scopeChecker.lookupSymbol(varExpr.getVar().getValue());
+            if (symbol instanceof VarIdentifier && ((VarIdentifier) symbol).getId() == varExpr.getVar().getId()) {
                 SqlppVariableUtil.addToFieldVariableList(varExpr, outFieldList);
             }
         }

@@ -127,14 +127,17 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         VariableUtilities.getUsedVariables(op, varSet);
         if (op.hasNestedPlans()) {
             boolean isSubplanOp = op.getOperatorTag() == LogicalOperatorTag.SUBPLAN;
-            // Variables used by the parent operators should be live at op.
+            // Variables used by the parent operators should be live at op. The pruned set is for the nested
+            // plans only: the inputs must still see everything op itself uses, such as a listify read by a
+            // group-by decoration, which is an input variable and not live at op.
             Set<LogicalVariable> localLiveVars = new ListSet<>();
             VariableUtilities.getLiveVariables(op, localLiveVars);
-            varSet.retainAll(localLiveVars);
+            Set<LogicalVariable> nestedVarSet = new HashSet<>(varSet);
+            nestedVarSet.retainAll(localLiveVars);
             AbstractOperatorWithNestedPlans aonp = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : aonp.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                    if (applyRuleDown(r, isSubplanOp, varSet, context)) {
+                    if (applyRuleDown(r, isSubplanOp, nestedVarSet, context)) {
                         changed = true;
                     }
                     context.addToDontApplySet(this, r.getValue());
