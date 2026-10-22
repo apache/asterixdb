@@ -213,6 +213,11 @@ public class TCPEndpoint {
                             if (key.isAcceptable()) {
                                 assert sc == serverSocketChannel;
                                 SocketChannel channel = serverSocketChannel.accept();
+                                if (channel == null) {
+                                    // the pending connection was reset before it could be accepted
+                                    LOGGER.debug("no connection to accept on {}", TCPEndpoint.this);
+                                    continue;
+                                }
                                 distributeIncomingConnection(channel);
                             } else if (key.isConnectable()) {
                                 SocketChannel channel = (SocketChannel) sc;
