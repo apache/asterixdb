@@ -105,7 +105,7 @@
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
-    <awsjavasdk.version>2.55.15</awsjavasdk.version>
+    <awsjavasdk.version>2.57.1</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.48.5</awsjavasdk.crt.version>
 
@@ -1955,14 +1955,14 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
-        <version>1.84.3</version>
+        <version>1.85.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
-        <version>1.84.3</version>
+        <version>1.85.1</version>
         <exclusions>
           <exclusion>
             <groupId>io.grpc</groupId>

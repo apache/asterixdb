@@ -73,7 +73,7 @@
     <jacoco.version>0.8.15</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
     <snappy.version>1.1.10.12</snappy.version>
-    <jackson.version>2.22.3</jackson.version>
+    <jackson.version>2.22.4</jackson.version>
     <jackson-annotations.version>2.22</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <!-- 4.2 is a new netty generation; stay on the 4.1.x line (patch updates only) -->
@@ -81,7 +81,7 @@
     <netty.tcnative.version>2.0.84.Final</netty.tcnative.version>
     <asm.version>9.11</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
-    <awsjavasdk.version>2.55.15</awsjavasdk.version>
+    <awsjavasdk.version>2.57.1</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
     <google-cloud-storage.version>2.75.0</google-cloud-storage.version>

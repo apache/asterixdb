@@ -68,7 +68,6 @@ public class ActivityClusterGraph implements Serializable {
         activityMap = new HashMap<ActivityId, ActivityCluster>();
         connectorMap = new HashMap<ConnectorDescriptorId, ActivityCluster>();
         frameSize = 32768;
-        reportTaskDetails = true;
     }
 
     public Map<ActivityId, ActivityCluster> getActivityMap() {
