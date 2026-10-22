@@ -272,9 +272,6 @@ public class JobManager implements IJobManager {
         runMapHistory.put(jobId, run.getExceptions());
 
         if (run.getActivityClusterGraph().isReportTaskDetails()) {
-            /*
-             * log job details when profiling is enabled
-             */
             try {
                 ccs.getJobLogFile().log(createJobLogObject(run));
             } catch (Exception e) {
