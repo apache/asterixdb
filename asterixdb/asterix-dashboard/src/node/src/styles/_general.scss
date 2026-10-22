@@ -94,3 +94,105 @@ textarea {
 .mat-expansion-panel-header-description {
   margin-right: 0px !important;
 }
+
+/* =====================================================================
+   Modern UI unification — align the whole dashboard with the MCP panel:
+   soft white cards, hairline borders, gentle shadows, one type scale.
+   ===================================================================== */
+$ui-border: #e6e8eb;
+$ui-radius: 12px;
+$ui-card: #ffffff;
+$ui-page: #eef1f5;
+$ui-ink: #1f2328;
+$ui-muted: #6b7280;
+$ui-accent: #25428d;
+
+/* Softer page canvas (was muddy gainsboro). */
+body { background-color: $ui-page; }
+.query-container { background-color: $ui-page !important; }
+
+/* Cards: rounded, hairline border, subtle 2-layer shadow (matches MCP). */
+.mat-mdc-card,
+.card.mat-expansion-panel,
+mat-expansion-panel.card {
+  border: 1px solid $ui-border !important;
+  border-radius: $ui-radius !important;
+  box-shadow: none !important;
+  background: $ui-card !important;
+  overflow: hidden;
+}
+
+/* Nuclear flatten: kill every Material elevation shadow (cards, panels,
+   mat-elevation-zN). Cards get their definition from the hairline border. */
+.mat-mdc-card,
+.mat-mdc-card.mat-mdc-card,
+mat-card,
+.mat-expansion-panel,
+.mat-expansion-panel.mat-expansion-panel,
+.mat-expansion-panel:not([class*="mat-elevation-z"]),
+.mat-drawer,
+.mat-sidenav,
+[class*="mat-elevation-z"] {
+  box-shadow: none !important;
+}
+
+/* Nested expansion panels inside the metadata inspector: flatten + hairline. */
+.metadata-inspector .mat-expansion-panel {
+  box-shadow: none !important;
+  border: 1px solid $ui-border !important;
+  border-radius: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+/* Consistent card header: uppercase, small, tracked — like MCP section labels. */
+.card > .mat-expansion-panel-header .mat-content,
+.mat-expansion-panel-header .mat-panel-title {
+  font-size: 12.5px !important;
+  letter-spacing: 0.03em;
+  color: $ui-ink;
+}
+
+/* Section labels (DATAVERSES / DATASETS / DATATYPES / INDEX / UDF):
+   one size, tracked uppercase, brand blue. */
+.metadata-inspector b,
+.list-title,
+.list-tag {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $ui-accent !important;
+}
+
+/* Form fields (Default / PLAN / OUTPUT / QUERY HISTORY selects):
+   lighter, rounded, hairline — not the old heavy grey fill. */
+.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  border-radius: 10px !important;
+  background: #f6f8fa !important;
+}
+.mat-mdc-form-field:hover .mat-mdc-text-field-wrapper {
+  background: #eef2f7 !important;
+}
+
+/* Buttons: consistent weight + tracking. */
+.mat-mdc-button,
+.mat-mdc-raised-button {
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  border-radius: 8px !important;
+}
+
+/* Checkboxes + list rows: comfortable, consistent 13px body. */
+.metadata-inspector,
+.mat-mdc-checkbox label,
+.mat-tree-node {
+  font-size: 13px !important;
+}
+
+/* Tooltips: compact, not the oversized default. */
+.mdc-tooltip .mdc-tooltip__surface,
+.mat-mdc-tooltip .mdc-tooltip__surface {
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  padding: 5px 9px !important;
+}
