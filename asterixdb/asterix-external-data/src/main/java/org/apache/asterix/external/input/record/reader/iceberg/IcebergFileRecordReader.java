@@ -58,6 +58,7 @@ import org.apache.iceberg.io.CloseableIterable;
 import org.apache.iceberg.io.FileIO;
 import org.apache.iceberg.io.InputFile;
 import org.apache.iceberg.parquet.Parquet;
+import org.apache.iceberg.util.SnapshotUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -182,16 +183,37 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
         tableFileIo = table.io();
 
         // we always have a snapshot id since we pin it at compile time
-        long snapshotId = getSnapshotId(originalConfiguration);
+        this.schemaAtSnapshot = schemaAtSnapshot(table, originalConfiguration);
+    }
+
+    /**
+     * @param configuration the pinned configuration: the snapshot id, and the id of the schema the compiler planned
+     *        the scan with
+     * @return the schema the pinned snapshot is read with: the snapshot's own schema, or, for a snapshot that records
+     *         no schema id (optional in the spec), the schema the compiler pinned. Resolving "the current schema" again
+     *         here would read with a different schema whenever the table evolved between compile and run.
+     * @throws CompilationException if the snapshot no longer exists, or names a schema the table does not have
+     */
+    static Schema schemaAtSnapshot(Table table, Map<String, String> configuration) throws CompilationException {
+        long snapshotId = getSnapshotId(configuration);
         Snapshot snapshot = table.snapshot(snapshotId);
         if (snapshot == null) {
             // Snapshot might have been expired/GC'd between compile and runtime
             throw CompilationException.create(ErrorCode.ICEBERG_SNAPSHOT_ID_NOT_FOUND, snapshotId, table.name());
         }
-
-        this.schemaAtSnapshot = table.schemas().get(snapshot.schemaId());
-        if (schemaAtSnapshot == null) {
-            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR,
+        String pinnedSchemaId = configuration.get(IcebergConstants.ICEBERG_SCHEMA_ID_PROPERTY_KEY);
+        if (snapshot.schemaId() == null && pinnedSchemaId != null) {
+            Schema pinned = table.schemas().get(Integer.parseInt(pinnedSchemaId));
+            if (pinned == null) {
+                throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                        "Missing pinned schemaId=" + pinnedSchemaId + " for snapshotId=" + snapshotId);
+            }
+            return pinned;
+        }
+        try {
+            return SnapshotUtil.schemaFor(table, snapshotId);
+        } catch (IllegalStateException e) {
+            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e,
                     "Missing schemaId=" + snapshot.schemaId() + " for snapshotId=" + snapshotId);
         }
     }
@@ -506,7 +528,7 @@ public class IcebergFileRecordReader implements IRecordReader<Record> {
                         Boolean.toString(ExternalDataConstants.IcebergOptions.DEFAULT_USE_MANIFEST_FILE_SIZES)));
     }
 
-    private long getSnapshotId(Map<String, String> configuration) {
+    private static long getSnapshotId(Map<String, String> configuration) {
         String snapshotStr = configuration.get(IcebergConstants.ICEBERG_SNAPSHOT_ID_PROPERTY_KEY);
         if (snapshotStr != null) {
             return Long.parseLong(snapshotStr);

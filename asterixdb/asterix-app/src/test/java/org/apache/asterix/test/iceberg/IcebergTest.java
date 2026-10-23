@@ -26,6 +26,8 @@ import static org.apache.hyracks.util.file.FileUtil.joinPath;
 import static org.apache.iceberg.types.Types.NestedField.required;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -67,6 +69,7 @@ import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.iceberg.AppendFiles;
+import org.apache.iceberg.BaseTable;
 import org.apache.iceberg.CatalogProperties;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
@@ -125,6 +128,7 @@ import org.testcontainers.utility.DockerImageName;
 import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -169,6 +173,7 @@ public class IcebergTest {
             TableIdentifier.of(NAMESPACE, "temporalEqDelete");
     private static final TableIdentifier TEMPORAL_ZONE_TABLE_ID = TableIdentifier.of(NAMESPACE, "temporalZone");
     private static final TableIdentifier NUMERIC_PRECISION_TABLE_ID = TableIdentifier.of(NAMESPACE, "numericPrecision");
+    private static final TableIdentifier NO_SCHEMA_ID_TABLE_ID = TableIdentifier.of(NAMESPACE, "noSchemaId");
     private static final TableIdentifier MANY_FILES_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "manyFilesVariant");
     private static final TableIdentifier DOTTED_FIELD_NAME_VARIANT_TABLE_ID =
@@ -327,6 +332,7 @@ public class IcebergTest {
             writeTemporalEqDeleteTable(catalog);
             writeTemporalZoneTable(catalog);
             writeNumericPrecisionTable(catalog);
+            writeNoSchemaIdTable(catalog);
             writeNestedVariantInStructTable(catalog);
             writePartitionedVariantTable(catalog);
             writeTwoVariantsTable(catalog);
@@ -1820,6 +1826,60 @@ public class IcebergTest {
         rowDelta.commit();
         LOGGER.info("[WRITE] temporalEqDelete committed: {} rows, equality delete on ts={}us", rows.length,
                 deletedMicros);
+    }
+
+    /**
+     * A format v1 table whose snapshots record no {@code schema-id}, which the spec makes optional. It
+     * evolves once: id 1 is written with {@code {id}}, then {@code name} is added and id 2 written with it. The
+     * schema ids are then stripped from the snapshots in the metadata file the catalog points at, which is the only
+     * way to get such a table from a current writer. Iceberg plans these snapshots with the table's current schema.
+     */
+    private static void writeNoSchemaIdTable(NessieCatalog catalog) throws Exception {
+        Schema schema = new Schema(Types.NestedField.optional(1, "id", Types.IntegerType.get()));
+        Table table = catalog.buildTable(NO_SCHEMA_ID_TABLE_ID, schema).withPartitionSpec(PartitionSpec.unpartitioned())
+                .withProperty(TableProperties.FORMAT_VERSION, "1").create();
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        appendNoSchemaIdRow(table, 1, null);
+        TestConstants.Iceberg.noSchemaIdSnapshot1IdValue = table.currentSnapshot().snapshotId();
+        table.updateSchema().addColumn("name", Types.StringType.get()).commit();
+        table.refresh();
+        appendNoSchemaIdRow(table, 2, "b");
+        table.refresh();
+
+        String metadataLocation = ((BaseTable) table).operations().current().metadataFileLocation();
+        ObjectNode metadata;
+        try (InputStream in = table.io().newInputFile(metadataLocation).newStream()) {
+            metadata = (ObjectNode) OBJECT_MAPPER.readTree(in);
+        }
+        metadata.withArray("snapshots").forEach(snapshot -> ((ObjectNode) snapshot).remove("schema-id"));
+        try (OutputStream out = table.io().newOutputFile(metadataLocation).createOrOverwrite()) {
+            out.write(OBJECT_MAPPER.writeValueAsBytes(metadata));
+        }
+        Table reloaded = catalog.loadTable(NO_SCHEMA_ID_TABLE_ID);
+        reloaded.snapshots()
+                .forEach(snapshot -> Assert.assertNull(
+                        "fixture: snapshot " + snapshot.snapshotId() + " must record no schema id",
+                        snapshot.schemaId()));
+        LOGGER.info("[WRITE] noSchemaId committed with schema ids stripped from {}", metadataLocation);
+    }
+
+    private static void appendNoSchemaIdRow(Table table, int id, String name) throws Exception {
+        GenericRecord rec = GenericRecord.create(table.schema());
+        rec.setField("id", id);
+        if (name != null) {
+            rec.setField("name", name);
+        }
+        String path = table.location() + "/data/nsi-" + id + ".parquet";
+        OutputFile out = table.io().newOutputFile(path);
+        FileAppender<Record> appender =
+                Parquet.write(out).forTable(table).createWriterFunc(GenericParquetWriter::create).build();
+        try (FileAppender<Record> writer = appender) {
+            writer.add(rec);
+        }
+        table.newAppend()
+                .appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                        .withFileSizeInBytes(out.toInputFile().getLength()).withMetrics(appender.metrics()).build())
+                .commit();
     }
 
     /**

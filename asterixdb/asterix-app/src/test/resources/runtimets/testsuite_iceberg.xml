@@ -98,6 +98,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg">
+      <compilation-unit name="no-schema-id">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">no-schema-id</output-dir>
+        <expected-error>ASX1238: Iceberg snapshot '42' not found for table</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
       <compilation-unit name="numeric-pushdown">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">numeric-pushdown</output-dir>

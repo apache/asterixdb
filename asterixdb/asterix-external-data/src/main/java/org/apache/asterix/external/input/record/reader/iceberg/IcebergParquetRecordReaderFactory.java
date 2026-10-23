@@ -64,7 +64,6 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.iceberg.FileScanTask;
 import org.apache.iceberg.Schema;
-import org.apache.iceberg.Snapshot;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.TableScan;
 import org.apache.iceberg.catalog.Catalog;
@@ -76,6 +75,7 @@ import org.apache.iceberg.expressions.Binder;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
 import org.apache.iceberg.io.CloseableIterable;
+import org.apache.iceberg.util.SnapshotUtil;
 import org.apache.iceberg.util.TableScanUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -284,7 +284,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             TableScan scan = table.newScan();
             scan = setAndPinScanSnapshot(originalConfiguration, table, scan);
             long snapshotId = Long.parseLong(originalConfiguration.get(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY));
-            schemaAtSnapshot = table.schemas().get(table.snapshot(snapshotId).schemaId());
+            schemaAtSnapshot = SnapshotUtil.schemaFor(table, snapshotId);
             fileIoDescriptor = IcebergFileIoDescriptor.capture(table.io());
 
             projectedSchema = selectRequestedColumns(schemaAtSnapshot, configuration);
@@ -515,7 +515,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
      * @return table scan
      * @throws CompilationException CompilationException
      */
-    private TableScan setAndPinScanSnapshot(Map<String, String> configurationCopy, Table table, TableScan scan)
+    TableScan setAndPinScanSnapshot(Map<String, String> configurationCopy, Table table, TableScan scan)
             throws CompilationException {
         long snapshot;
         Optional<Long> snapshotOptional = IcebergSnapshotUtils.getSnapshotId(configurationCopy, table);
@@ -536,10 +536,12 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
         return scan;
     }
 
+    // The spec makes a snapshot's schema id optional, so it may have none; schemaFor then falls back to the
+    // table's current schema, as the scan itself does, so the pinned id is the schema the scan actually reads with.
     private void pinSnapshotId(Map<String, String> configurationCopy, Table table, long snapshotId) {
-        Snapshot snapshot = table.snapshot(snapshotId);
-        configurationCopy.put(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY, String.valueOf(snapshot.snapshotId()));
-        configurationCopy.put(ICEBERG_SCHEMA_ID_PROPERTY_KEY, Integer.toString(snapshot.schemaId()));
+        configurationCopy.put(ICEBERG_SNAPSHOT_ID_PROPERTY_KEY, String.valueOf(snapshotId));
+        configurationCopy.put(ICEBERG_SCHEMA_ID_PROPERTY_KEY,
+                Integer.toString(SnapshotUtil.schemaFor(table, snapshotId).schemaId()));
     }
 
     public static class PartitionWorkLoadBasedOnSize implements Serializable {
