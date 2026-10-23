@@ -20,6 +20,8 @@ package org.apache.hyracks.http.server;
 
 import org.apache.hyracks.util.annotations.ThreadSafe;
 
+import io.netty.buffer.ByteBufAllocator;
+
 @ThreadSafe
 public class HttpServerConfig {
 
@@ -30,13 +32,14 @@ public class HttpServerConfig {
     private int maxResponseChunkSize;
     private int maxRequestHeaderSize;
     private int maxRequestInitialLineLength;
+    private ByteBufAllocator allocator;
 
     private HttpServerConfig() {
     }
 
     public static HttpServerConfig of(int threadCount, int requestQueueSize, int maxRequestSize,
             int maxRequestInitialLineLength, int maxRequestHeaderSize, int maxRequestChunkSize,
-            int maxResponseChunkSize) {
+            int maxResponseChunkSize, ByteBufAllocator allocator) {
         final HttpServerConfig config = new HttpServerConfig();
         config.threadCount = threadCount;
         config.requestQueueSize = requestQueueSize;
@@ -45,6 +48,7 @@ public class HttpServerConfig {
         config.maxRequestHeaderSize = maxRequestHeaderSize;
         config.maxRequestChunkSize = maxRequestChunkSize;
         config.maxResponseChunkSize = maxResponseChunkSize;
+        config.allocator = allocator;
         return config;
     }
 
@@ -74,5 +78,9 @@ public class HttpServerConfig {
 
     public int getMaxRequestInitialLineLength() {
         return maxRequestInitialLineLength;
+    }
+
+    public ByteBufAllocator getAllocator() {
+        return allocator;
     }
 }
