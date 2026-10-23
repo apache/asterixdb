@@ -321,14 +321,12 @@ public final class VariantBoundsEvaluator {
         if (a instanceof Number && b instanceof Number) {
             Number na = (Number) a;
             Number nb = (Number) b;
-            if (na instanceof BigDecimal || nb instanceof BigDecimal) {
-                // Never go through longValue() here: a DECIMAL16 bound overflows a long, which would produce a
-                // nonsense ordering and could drop a file that matches.
-                BigDecimal da = toBigDecimal(na);
-                BigDecimal db = toBigDecimal(nb);
-                return (da == null || db == null) ? null : da.compareTo(db);
-            }
-            if (isFloatingPoint(na) || isFloatingPoint(nb)) {
+            // A decimal is compared as its double, never exactly: the engine reads a variant decimal through
+            // decimal-to-double, so a 34-digit decimal next to 0.1 reads back AS 0.1, and an exact comparison would
+            // prune the file of a row the engine matches. Rounding to double never reverses an order, so a file's
+            // rounded bounds still enclose every value it holds as the engine sees them. Never go through
+            // longValue() either: a DECIMAL16 bound overflows a long.
+            if (na instanceof BigDecimal || nb instanceof BigDecimal || isFloatingPoint(na) || isFloatingPoint(nb)) {
                 double da = na.doubleValue();
                 double db = nb.doubleValue();
                 if (Double.isNaN(da) || Double.isNaN(db)) {
@@ -358,20 +356,5 @@ public final class VariantBoundsEvaluator {
 
     private static boolean isFloatingPoint(Number n) {
         return n instanceof Double || n instanceof Float;
-    }
-
-    /** Exact widening to {@link BigDecimal}, or {@code null} for values with no finite decimal value. */
-    private static BigDecimal toBigDecimal(Number n) {
-        if (n instanceof BigDecimal) {
-            return (BigDecimal) n;
-        }
-        if (n instanceof Double || n instanceof Float) {
-            double d = n.doubleValue();
-            return (Double.isNaN(d) || Double.isInfinite(d)) ? null : BigDecimal.valueOf(d);
-        }
-        if (n instanceof Long || n instanceof Integer || n instanceof Short || n instanceof Byte) {
-            return BigDecimal.valueOf(n.longValue());
-        }
-        return null;
     }
 }
