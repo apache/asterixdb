@@ -51,7 +51,7 @@ final class IcebergDeleteCache {
 
     private final long maxEntrySize;
     private final long maxTotalSize;
-    private final ConcurrentMap<String, FutureTask<Object>> entries = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Entry> entries = new ConcurrentHashMap<>();
     private final AtomicLong cachedSize = new AtomicLong();
 
     IcebergDeleteCache() {
@@ -106,33 +106,69 @@ final class IcebergDeleteCache {
         return cachedSize.get();
     }
 
+    /** A load in progress or done, and whether it holds its share of the total budget. */
+    private static final class Entry {
+        final FutureTask<Object> task;
+        // written by the reader that inserted the entry, before it runs the load, so every reader that sees the
+        // load's outcome sees this too
+        volatile boolean counted;
+
+        Entry(FutureTask<Object> task) {
+            this.task = task;
+        }
+    }
+
+    /**
+     * Claims {@code size} of the total budget, or nothing when it does not fit. Checking the total and then adding to
+     * it as two steps let every reader that missed at the same moment pass the check, so concurrent misses overran the
+     * budget many times over.
+     */
+    private boolean reserve(long size) {
+        long current;
+        do {
+            current = cachedSize.get();
+            if (current + size > maxTotalSize) {
+                return false;
+            }
+        } while (!cachedSize.compareAndSet(current, current + size));
+        return true;
+    }
+
+    /** Removes {@code entry} if it is still the one cached for {@code key}, handing back the space it holds once. */
+    private void evict(String key, Entry entry, long valueSize) {
+        if (entries.remove(key, entry) && entry.counted) {
+            cachedSize.addAndGet(-valueSize);
+        }
+    }
+
     // The load runs outside any map lock so that readers of other delete files are not held up, and a reader asking
-    // for a file another reader is loading waits for that load instead of repeating it. A failed load is not kept,
-    // so the next reader retries it.
+    // for a file another reader is loading waits for that load instead of repeating it. Only the reader that inserted
+    // the entry claims space: readers racing on the same file used to each claim it first, so their passing claims
+    // could make the budget look full and send a fitting file, or a second copy of this one, down the uncached path.
+    // An entry that does not fit still serves the readers already waiting on it and is then dropped. A failed load is
+    // not kept, so the next reader retries it.
     @SuppressWarnings("unchecked")
     private <V> V getOrLoad(String key, Supplier<V> valueSupplier, long valueSize) {
-        FutureTask<Object> task = entries.get(key);
-        if (task == null) {
-            if (cachedSize.get() + valueSize > maxTotalSize) {
-                return valueSupplier.get();
-            }
-            FutureTask<Object> created = new FutureTask<>(valueSupplier::get);
-            task = entries.putIfAbsent(key, created);
-            if (task == null) {
-                task = created;
-                cachedSize.addAndGet(valueSize);
-                created.run();
+        Entry entry = entries.get(key);
+        if (entry == null) {
+            Entry created = new Entry(new FutureTask<>(valueSupplier::get));
+            entry = entries.putIfAbsent(key, created);
+            if (entry == null) {
+                entry = created;
+                created.counted = reserve(valueSize);
+                created.task.run();
+                if (!created.counted) {
+                    evict(key, created, valueSize);
+                }
             }
         }
         try {
-            return (V) task.get();
+            return (V) entry.task.get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("interrupted while loading delete file " + key, e);
         } catch (ExecutionException e) {
-            if (entries.remove(key, task)) {
-                cachedSize.addAndGet(-valueSize);
-            }
+            evict(key, entry, valueSize);
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException runtime) {
                 throw runtime;
