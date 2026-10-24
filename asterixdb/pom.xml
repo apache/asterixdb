@@ -110,7 +110,7 @@
 
     <gcsjavasdk.version>2.75.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
-    <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
+    <hadoop-gcs.version>hadoop3-2.2.30</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
