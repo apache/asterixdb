@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.cloud.buffercache.context.BufferCacheCloudReadContextUtil;
+import org.apache.hyracks.cloud.buffercache.context.CloudCacheStats;
 import org.apache.hyracks.cloud.buffercache.page.CloudCachedPage;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.cloud.io.stream.CloudInputStream;
@@ -116,6 +117,7 @@ public final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         boolean empty = BufferCacheCloudReadContextUtil.isEmpty(header);
         int pageId = BufferedFileHandle.getPageId(cPage.getDiskPageId());
         boolean cloudOnly = columnRanges.isCloudOnly(pageId);
+        CloudCacheStats.pageRead(!empty && !cloudOnly, header.getBuffer().limit());
         if (empty || cloudOnly) {
             boolean evictable = columnRanges.isEvictable(pageId);
             /*

@@ -105,7 +105,9 @@ public class DefaultCloudReadContext implements IBufferCacheReadContext {
             BufferCacheHeaderHelper header, CachedPage cPage, IThreadStats threadStats, boolean persist)
             throws HyracksDataException {
         ByteBuffer headerBuf = header.getBuffer();
-        if (BufferCacheCloudReadContextUtil.isEmpty(header)) {
+        boolean empty = BufferCacheCloudReadContextUtil.isEmpty(header);
+        CloudCacheStats.pageRead(!empty, headerBuf.limit());
+        if (empty) {
             // header indicates the page is empty
             // reset the buffer position to 0. Limit should be already set before the call of processHeader
             headerBuf.position(0);

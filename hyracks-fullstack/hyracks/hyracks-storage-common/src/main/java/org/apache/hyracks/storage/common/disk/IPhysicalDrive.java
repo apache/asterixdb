@@ -42,4 +42,27 @@ public interface IPhysicalDrive {
      * Note: disk could be pressured but still has free space for storage
      */
     boolean hasSpace();
+
+    /**
+     * @return the space found used on the drive when its pressure was last computed, in bytes, or -1 if the drive is
+     *         not monitored
+     */
+    default long getUsedSpace() {
+        return -1;
+    }
+
+    /**
+     * @return the space the drive may use for storage, in bytes, or -1 if the drive is not monitored
+     */
+    default long getAllocatedCapacity() {
+        return -1;
+    }
+
+    /**
+     * @return the used space beyond which the drive is pressured, and data is swept from it, in bytes, or -1 if the
+     *         drive is not monitored
+     */
+    default long getPressureCapacity() {
+        return -1;
+    }
 }
