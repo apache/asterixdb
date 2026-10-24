@@ -36,6 +36,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongConsumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -95,7 +97,10 @@ public class HttpServer {
     private final Set<SocketAddress> addresses;
     private final Set<SocketAddress> boundAddresses;
     private final ThreadPoolExecutor executor;
+    private final AtomicLong rejectedRequests = new AtomicLong();
     // Mutable members
+    private volatile LongConsumer queueWaitListener = waitNanos -> {
+    };
     private volatile int state = STOPPED;
     private volatile Thread recoveryThread;
     private final List<Channel> channels;
@@ -455,6 +460,31 @@ public class HttpServer {
 
     public int getWorkQueueSize() {
         return workQueue.size();
+    }
+
+    /**
+     * @return the number of requests refused because the executor they were submitted to could not accept them
+     */
+    public long getRejectedRequestCount() {
+        return rejectedRequests.get();
+    }
+
+    /**
+     * Sets the listener told, for every request that starts executing, how long it waited in the work queue.
+     * It is invoked on the executor thread just before the request is handled, so it must not block.
+     *
+     * @param listener receives the queue wait in nanoseconds
+     */
+    public void setQueueWaitListener(LongConsumer listener) {
+        queueWaitListener = listener;
+    }
+
+    void requestRejected() {
+        rejectedRequests.incrementAndGet();
+    }
+
+    void requestStarted(long queueWaitNanos) {
+        queueWaitListener.accept(queueWaitNanos);
     }
 
     public IChannelClosedHandler getChannelClosedHandler() {

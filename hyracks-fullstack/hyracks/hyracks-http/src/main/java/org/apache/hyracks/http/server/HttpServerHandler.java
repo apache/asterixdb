@@ -159,6 +159,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
             closeHandler = servlet.getChannelClosedHandler(server);
         } catch (RejectedExecutionException e) { // NOSONAR
             LOGGER.log(Level.WARN, "Request rejected by server executor service. " + e.getMessage());
+            server.requestRejected();
             handler.reject();
         }
     }

@@ -41,6 +41,7 @@ public class HttpRequestHandler implements Callable<Void> {
     private final IServletRequest request;
     private final IServletResponse response;
     private final HttpServerHandler<?> handler;
+    private final long createdNanos = System.nanoTime();
     private boolean started = false;
     private boolean cancelled = false;
 
@@ -64,6 +65,7 @@ public class HttpRequestHandler implements Callable<Void> {
             }
             started = true;
         }
+        handler.server.requestStarted(System.nanoTime() - createdNanos);
         try {
             ChannelFuture lastContentFuture = handle();
             if (!HttpUtil.isKeepAlive(request.getHttpRequest())) {
