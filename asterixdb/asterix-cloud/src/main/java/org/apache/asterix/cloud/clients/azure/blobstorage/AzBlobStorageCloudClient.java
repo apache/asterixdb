@@ -449,6 +449,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             AzureUtils.fixupForAzuriteEmulator(blobServiceClientBuilder);
         }
         configCredentialsToAzClient(blobServiceClientBuilder, config);
+        blobServiceClientBuilder.addPolicy(AzRequestMetricsPolicy.INSTANCE);
 
         ConnectionProvider.Builder builder = ConnectionProvider.builder("azblob-client-" + (async ? "async" : "sync"))
                 .maxConnections(config.getRequestsMaxHttpConnections())

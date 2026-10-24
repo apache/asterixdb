@@ -73,6 +73,8 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
     private final IOManager ioManager;
     private final S3AsyncClient s3AsyncClient;
     private final S3TransferManager transferManager;
+    // the CRT client takes no execution interceptor, so its downloads are reported from the transfer manager instead
+    private final boolean reportDownloads;
     private final S3ClientConfig config;
     private final IRequestProfilerLimiter profiler;
     // Shared event loop group (reused across Netty client instances if multiple downloaders are created)
@@ -86,6 +88,8 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
         this.profiler = profiler;
         this.s3AsyncClient = createAsyncClient(config);
         this.transferManager = createS3TransferManager(s3AsyncClient);
+        this.reportDownloads =
+                config.getParallelDownloaderClientType() == S3ClientConfig.S3ParallelDownloaderClientType.CRT;
     }
 
     @Override
@@ -136,6 +140,9 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
             DownloadFileRequest.Builder builder = DownloadFileRequest.builder();
             builder.getObjectRequest(requestBuilder.build());
             builder.destination(fileReference.getFile());
+            if (reportDownloads) {
+                builder.addTransferListener(new S3DownloadMetricsListener());
+            }
 
             FileDownload fileDownload = transferManager.downloadFile(builder.build());
             downloads.add(fileDownload.completionFuture());
@@ -166,6 +173,9 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
             // check behavior regarding directory objects
             builder.listObjectsV2RequestTransformer(
                     l -> l.prefix(config.getPrefix() + fileReference.getRelativePath()));
+            if (reportDownloads) {
+                builder.downloadFileRequestTransformer(f -> f.addTransferListener(new S3DownloadMetricsListener()));
+            }
             DirectoryDownload directoryDownload = transferManager.downloadDirectory(builder.build());
             downloads.add(directoryDownload.completionFuture());
         }
@@ -256,6 +266,7 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
         }
 
         builder.httpClient(nettyClient);
+        builder.overrideConfiguration(c -> c.addExecutionInterceptor(S3RequestMetricsInterceptor.INSTANCE));
         return builder.build();
     }
 

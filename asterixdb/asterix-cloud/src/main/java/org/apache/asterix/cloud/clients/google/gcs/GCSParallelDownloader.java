@@ -71,6 +71,7 @@ public class GCSParallelDownloader extends AbstractParallelDownloader {
             builder.setHost(config.getEndpoint());
         }
         builder.setCredentials(config.createCredentialsProvider());
+        builder.setTransportOptions(GCSCloudClient.transportOptions(config));
         this.gcsClient = builder.build().getService();
         this.transferManager =
                 TransferManagerConfig.newBuilder().setStorageOptions(builder.build()).build().getService();
