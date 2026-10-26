@@ -78,7 +78,7 @@
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <netty.version>4.2.19.Final</netty.version>
     <netty.tcnative.version>2.0.84.Final</netty.tcnative.version>
-    <asm.version>9.11</asm.version>
+    <asm.version>9.11.1</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
     <awsjavasdk.version>2.57.3</awsjavasdk.version>
 
