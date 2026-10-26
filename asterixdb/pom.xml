@@ -105,7 +105,7 @@
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
-    <awsjavasdk.version>2.57.1</awsjavasdk.version>
+    <awsjavasdk.version>2.57.3</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.48.5</awsjavasdk.crt.version>
 
@@ -122,7 +122,7 @@
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
     <google-cloud-storage.version>2.75.0</google-cloud-storage.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
-    <hadoop-gcs.version>hadoop3-2.2.25</hadoop-gcs.version>
+    <hadoop-gcs.version>hadoop3-2.2.30</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
     <protobuf-java.version>4.36.2</protobuf-java.version>
 
