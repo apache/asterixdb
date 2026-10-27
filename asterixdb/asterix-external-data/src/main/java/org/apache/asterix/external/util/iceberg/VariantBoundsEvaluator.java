@@ -209,9 +209,11 @@ public final class VariantBoundsEvaluator {
             case LT_EQ:
                 return !isGreater(lower, literal);
             case GT:
-                return !isLessOrEqual(upper, literal);
+                // A floating-point upper bound leaves NaN out, while the engine orders NaN above every number, so a
+                // NaN row can match "> literal" whatever the bound says.
+                return isFloatingPoint(upper) || !isLessOrEqual(upper, literal);
             case GT_EQ:
-                return !isLess(upper, literal);
+                return isFloatingPoint(upper) || !isLess(upper, literal);
             case NOT_EQ:
             default:
                 // NOT_EQ can only be excluded when every value equals the literal, and nulls make that unsafe to
@@ -326,7 +328,7 @@ public final class VariantBoundsEvaluator {
             // prune the file of a row the engine matches. Rounding to double never reverses an order, so a file's
             // rounded bounds still enclose every value it holds as the engine sees them. Never go through
             // longValue() either: a DECIMAL16 bound overflows a long.
-            if (na instanceof BigDecimal || nb instanceof BigDecimal || isFloatingPoint(na) || isFloatingPoint(nb)) {
+            if (na instanceof BigDecimal || nb instanceof BigDecimal || na instanceof Double || nb instanceof Double) {
                 double da = na.doubleValue();
                 double db = nb.doubleValue();
                 if (Double.isNaN(da) || Double.isNaN(db)) {
@@ -341,6 +343,20 @@ public final class VariantBoundsEvaluator {
                 }
                 return da > db ? 1 : 0;
             }
+            if (na instanceof Float || nb instanceof Float) {
+                // With no double on either side the engine compares a float with an integer in float precision,
+                // converting through double exactly as here, so 16777217 reads as the float 16777216. Comparing as
+                // doubles would tell them apart and prune a file whose row the engine matches.
+                float fa = (float) na.doubleValue();
+                float fb = (float) nb.doubleValue();
+                if (Float.isNaN(fa) || Float.isNaN(fb)) {
+                    return null;
+                }
+                if (fa < fb) {
+                    return -1;
+                }
+                return fa > fb ? 1 : 0;
+            }
             return Long.compare(na.longValue(), nb.longValue());
         }
         if (a instanceof CharSequence && b instanceof CharSequence) {
@@ -354,7 +370,7 @@ public final class VariantBoundsEvaluator {
         return null;
     }
 
-    private static boolean isFloatingPoint(Number n) {
+    private static boolean isFloatingPoint(Object n) {
         return n instanceof Double || n instanceof Float;
     }
 }

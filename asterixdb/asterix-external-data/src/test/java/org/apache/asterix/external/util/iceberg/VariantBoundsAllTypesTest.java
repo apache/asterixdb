@@ -208,6 +208,16 @@ public class VariantBoundsAllTypesTest {
     private static <T extends Comparable<T>> void assertExactPruning(String label, List<T> values,
             java.util.function.Function<T, VariantValue> toVariant, List<T> literals,
             java.util.function.Function<T, Object> toLiteral) throws Exception {
+        assertExactPruning(label, values, toVariant, literals, toLiteral, false);
+    }
+
+    /**
+     * @param floatingPoint the values are FLOAT or DOUBLE, whose upper bound leaves NaN out: the engine orders NaN
+     *            above every number, so {@code >} and {@code >=} must keep every file
+     */
+    private static <T extends Comparable<T>> void assertExactPruning(String label, List<T> values,
+            java.util.function.Function<T, VariantValue> toVariant, List<T> literals,
+            java.util.function.Function<T, Object> toLiteral, boolean floatingPoint) throws Exception {
         Table table = newTable(label);
         for (int i = 0; i < values.size(); i++) {
             appendFile(table, "f" + i, toVariant.apply(values.get(i)));
@@ -218,7 +228,7 @@ public class VariantBoundsAllTypesTest {
                 for (int i = 0; i < values.size(); i++) {
                     boolean shouldMatch = matches(values.get(i).compareTo(lit), op);
                     String file = "f" + i + ".parquet";
-                    if (shouldMatch) {
+                    if (shouldMatch || (floatingPoint && op.startsWith("gt"))) {
                         Assert.assertTrue(label + ": DATA LOSS — dropped " + file + " (value=" + values.get(i)
                                 + ") for " + op + " " + lit, keptFiles.contains(file));
                     } else {
@@ -257,13 +267,13 @@ public class VariantBoundsAllTypesTest {
     @Test
     public void float_exact() throws Exception {
         List<Float> vals = Arrays.asList(-1.5f, 0f, 3.14f, 1e10f);
-        assertExactPruning("FLOAT", vals, Variants::of, vals, v -> (double) (float) v);
+        assertExactPruning("FLOAT", vals, Variants::of, vals, v -> (double) (float) v, true);
     }
 
     @Test
     public void double_exact() throws Exception {
         List<Double> vals = Arrays.asList(-1.5d, 0d, 2.718281828459045d, 1e100d);
-        assertExactPruning("DOUBLE", vals, Variants::of, vals, v -> v);
+        assertExactPruning("DOUBLE", vals, Variants::of, vals, v -> v, true);
     }
 
     /**
@@ -401,7 +411,8 @@ public class VariantBoundsAllTypesTest {
         appendFile(table, "f0", Variants.of(1.0d));
         for (String op : OPS) {
             for (double literal : new double[] { Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY }) {
-                boolean shouldMatch = matches(Double.compare(1.0d, literal), op);
+                // > and >= keep the file whatever the literal: the upper bound leaves NaN out
+                boolean shouldMatch = matches(Double.compare(1.0d, literal), op) || op.startsWith("gt");
                 Assert.assertEquals(op + " " + literal, shouldMatch,
                         kept(table, predicate(op, literal)).contains("f0.parquet"));
             }

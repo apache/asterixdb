@@ -174,6 +174,7 @@ public class IcebergTest {
             TableIdentifier.of(NAMESPACE, "dottedFieldNameVariant");
     private static final TableIdentifier MIXED_SHREDDING_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "mixedShreddingVariant");
+    private static final TableIdentifier FLOAT_NAN_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "floatNanVariant");
     /** Files whose variant is fully shredded; the rest shred only "name", so their "bucket" has no bounds. */
     private static final int MIXED_SHREDDING_SHREDDED_FILES = 3;
     private static final int MIXED_SHREDDING_FILE_COUNT = 6;
@@ -327,6 +328,7 @@ public class IcebergTest {
             writeTwoVariantsTable(catalog);
             writeDottedFieldNameVariantTable(catalog);
             writeMixedShreddingVariantTable(catalog);
+            writeFloatNanVariantTable(catalog);
         }
     }
 
@@ -747,6 +749,58 @@ public class IcebergTest {
         table.newAppend().appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
                 .withFileSizeInBytes(bytes).withMetrics(metrics).build()).commit();
         LOGGER.info("[WRITE] dottedFieldNameVariant committed: literal \"a.b\"=5, nested a.b=99");
+    }
+
+    /**
+     * Two fully shredded files whose bounds the engine reads differently from a plain double comparison, so pruning on
+     * them as doubles would skip a file whose row the query returns.
+     * <p>
+     * File 1 holds {@code f = 16777216} as a FLOAT. The engine compares a float with an integer in float precision, so
+     * {@code f = 16777217} matches it, although the two differ as doubles. File 2 holds {@code d = 1.0} and
+     * {@code d = NaN} as DOUBLEs. Its bounds leave NaN out, so both are 1.0, while the engine orders NaN above every
+     * number, so {@code d > 5} matches the NaN row.
+     */
+    private static void writeFloatNanVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, FLOAT_NAN_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        VariantShreddingFunction shredder = shreddingFunc(floatNanVariant(0f, 0d), null);
+        GenericRecord template = GenericRecord.create(table.schema());
+        AppendFiles append = table.newAppend();
+        appendShreddedRowsFile(table, append, shredder, template, "float_nan_float.parquet", 1,
+                floatNanVariant(16777216f, 0d));
+        appendShreddedRowsFile(table, append, shredder, template, "float_nan_nan.parquet", 2, floatNanVariant(0f, 1.0d),
+                floatNanVariant(0f, Double.NaN));
+        append.commit();
+        LOGGER.info("[WRITE] floatNanVariant committed: f=16777216 (id 1); d=1.0 and d=NaN in one file (ids 2, 3)");
+    }
+
+    private static final VariantMetadata FLOAT_NAN_VARIANT_METADATA = Variants.metadata("f", "d");
+
+    private static Variant floatNanVariant(float f, double d) {
+        ShreddedObject obj = Variants.object(FLOAT_NAN_VARIANT_METADATA);
+        obj.put("f", Variants.of(f));
+        obj.put("d", Variants.of(d));
+        return Variant.of(FLOAT_NAN_VARIANT_METADATA, obj);
+    }
+
+    /** One shredded data file holding {@code rows}, with ids from {@code firstId}, staged with real metrics. */
+    private static void appendShreddedRowsFile(Table table, AppendFiles append, VariantShreddingFunction shredder,
+            GenericRecord template, String fileName, int firstId, Variant... rows) throws Exception {
+        String path = table.location() + "/data/" + fileName;
+        OutputFile out = table.io().newOutputFile(path);
+        try (FileAppender<Record> writer = Parquet.write(out).schema(table.schema())
+                .createWriterFunc(GenericParquetWriter::create).variantShreddingFunc(shredder).build()) {
+            for (int i = 0; i < rows.length; i++) {
+                Record row = template.copy();
+                row.setField("id", firstId + i);
+                row.setField("variant_field", rows[i]);
+                writer.add(row);
+            }
+        }
+        Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+        append.appendFile(DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET)
+                .withFileSizeInBytes(out.toInputFile().getLength()).withMetrics(metrics).build());
     }
 
     private static void writeManyFilesVariantTable(NessieCatalog catalog) throws Exception {
