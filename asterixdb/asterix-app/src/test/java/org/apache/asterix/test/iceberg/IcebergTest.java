@@ -39,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -351,8 +352,9 @@ public class IcebergTest {
         GenericRecord templateV2 = GenericRecord.create(table.schema());
         long snap2 = writeSnapshot(table, templateV2, 801, 1000);
         Thread.sleep(TimeUnit.SECONDS.toMillis(3));
+        // LocalDateTime.toString() drops ":ss" when the seconds are zero, which datetime() cannot parse
         TestConstants.Iceberg.snapshot2TimestampDatetimeValue =
-                LocalDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).toString();
+                LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
         Thread.sleep(TimeUnit.SECONDS.toMillis(3));
 
         LOGGER.info("[DELETE] Committing equality deletes for ids=[10, 20, 30]");
