@@ -497,6 +497,7 @@ public interface IStatementExecutor {
         private String name;
         private boolean explain;
         private boolean advise;
+        private int categories;
 
         public Statement.Kind getKind() {
             return kind;
@@ -534,6 +535,18 @@ public interface IStatementExecutor {
 
         public boolean isValid() {
             return kind != null && (kind != Statement.Kind.EXTENSION || name != null);
+        }
+
+        /**
+         * @return the {@link Statement.Category} of each of the request's statements, OR-ed together; 0 when the
+         *         request's statements were never parsed
+         */
+        public int getCategories() {
+            return categories;
+        }
+
+        public void setCategories(int categories) {
+            this.categories = categories;
         }
 
         @Override

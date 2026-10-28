@@ -404,6 +404,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     @Override
     public void compileAndExecute(IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
+        // before validation, so that a request refused there still says what it asked to do
+        requestParameters.getStatementProperties().setCategories(statementCategories(statements));
         validateStatements(requestParameters);
         boolean trackInAsyncDeferredRequests = shouldTrackAsSeparateRequest(requestParameters);
         IClientRequest clientRequest = trackRequest(requestParameters, trackInAsyncDeferredRequests);
@@ -6714,6 +6716,23 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
         }
+    }
+
+    /**
+     * The categories of the client's statements, OR-ed together. {@code USE}, {@code SET} and {@code DECLARE FUNCTION}
+     * are counted only in a request that has nothing else, as they would otherwise make every request a query.
+     */
+    public static int statementCategories(List<? extends Statement> statements) {
+        int categories = 0;
+        int declarations = 0;
+        for (Statement statement : statements) {
+            if (isNotAllowedMultiStatement(statement)) {
+                categories |= statement.getCategory();
+            } else {
+                declarations |= statement.getCategory();
+            }
+        }
+        return categories != 0 ? categories : declarations;
     }
 
     protected static boolean isNotAllowedMultiStatement(Statement statement) {

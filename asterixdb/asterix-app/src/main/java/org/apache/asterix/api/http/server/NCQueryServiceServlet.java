@@ -313,6 +313,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             statementProperties.setKind(responseStmtProps.getKind());
             statementProperties.setName(responseStmtProps.getName());
             statementProperties.setQueryFlags(responseStmtProps.isExplain(), responseStmtProps.isAdvise());
+            statementProperties.setCategories(responseStmtProps.getCategories());
         }
     }
 }
