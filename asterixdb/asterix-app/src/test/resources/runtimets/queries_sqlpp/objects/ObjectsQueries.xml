@@ -87,6 +87,16 @@
       <output-dir compare="Text">open-list-type</output-dir>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="objects/get-object-fields">
+    <compilation-unit name="open-list-trailing-null">
+      <output-dir compare="Text">open-list-trailing-null</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects/get-object-fields">
+    <compilation-unit name="closed-list-trailing-null">
+      <output-dir compare="Text">closed-list-trailing-null</output-dir>
+    </compilation-unit>
+  </test-case>
   <test-case FilePath="objects/get-object-field-value">
     <compilation-unit name="documentation-example">
       <output-dir compare="Text">documentation-example</output-dir>
