@@ -25,14 +25,25 @@ import org.apache.hyracks.http.api.IServlet;
 public class BasicAuthServletFactory implements IDelegatingServletFactory {
     Map<String, String> storedCredentials;
     Map<String, String> ephemeralCredentials;
+    private final boolean challenge;
 
     public BasicAuthServletFactory(Map<String, String> storedCredentials, Map<String, String> ephemeralCredentials) {
+        this(storedCredentials, ephemeralCredentials, false);
+    }
+
+    /**
+     * @param challenge
+     *            whether the servlets this wraps answer a rejected request with a Basic challenge
+     */
+    public BasicAuthServletFactory(Map<String, String> storedCredentials, Map<String, String> ephemeralCredentials,
+            boolean challenge) {
         this.storedCredentials = storedCredentials;
         this.ephemeralCredentials = ephemeralCredentials;
+        this.challenge = challenge;
     }
 
     @Override
     public IServlet wrap(IServlet delegate) {
-        return new BasicAuthServlet(delegate, storedCredentials, ephemeralCredentials);
+        return new BasicAuthServlet(delegate, storedCredentials, ephemeralCredentials, challenge);
     }
 }

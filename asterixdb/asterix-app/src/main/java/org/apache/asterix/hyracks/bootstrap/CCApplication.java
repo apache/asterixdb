@@ -50,7 +50,6 @@ import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
 import org.apache.asterix.api.http.server.CredentialFileUtil;
 import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
-import org.apache.asterix.api.http.server.IDelegatingServletFactory;
 import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.PingServlet;
 import org.apache.asterix.api.http.server.PlanCacheApiServlet;
@@ -156,7 +155,7 @@ public class CCApplication extends BaseCCApplication {
     protected ICcApplicationContext appCtx;
     private IJobCapacityController jobCapacityController;
     private HyracksConnection hcc;
-    private IDelegatingServletFactory authFactory = null;
+    private Map<String, String> credentialMap;
 
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
@@ -313,8 +312,9 @@ public class CCApplication extends BaseCCApplication {
         HttpServer webServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
                 externalProperties.getWebInterfacePort(), config);
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
-                ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(), componentProvider));
+        webServer.addServlet(wrapWithAuth(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
+                ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(), componentProvider),
+                true));
         return webServer;
     }
 
@@ -328,14 +328,7 @@ public class CCApplication extends BaseCCApplication {
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
                 ccServiceCtx.getControllerService().getExecutor());
         jsonAPIServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ccServiceCtx);
-        boolean authEnabled = externalProperties.isApiAuthenticationEnabled();
-        Map<String, String> credMap =
-                CredentialFileUtil.load(((ClusterControllerService) (appCtx.getServiceContext().getControllerService()))
-                        .getCCConfig().getCredentialFilePath(), authEnabled);
-        jsonAPIServer.setAttribute(ServletConstants.CREDENTIAL_MAP, credMap);
-        if (authEnabled && !ccExtensionManager.hasExtensions()) {
-            authFactory = new BasicAuthServletFactory(credMap, Collections.emptyMap());
-        }
+        jsonAPIServer.setAttribute(ServletConstants.CREDENTIAL_MAP, getCredentialMap());
 
         // Other APIs.
         addWrappedServlet(jsonAPIServer, Servlets.QUERY_STATUS);
@@ -362,8 +355,31 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected void addWrappedServlet(HttpServer server, String path) {
-        server.addServlet(authFactory == null ? createServlet(server, path, path)
-                : authFactory.wrap(createServlet(server, path, path)));
+        server.addServlet(wrapWithAuth(createServlet(server, path, path), false));
+    }
+
+    /**
+     * @param challenge
+     *            whether a rejected request is answered with a Basic challenge, for servlets a browser navigates to
+     * @return the servlet behind Basic authentication, or the servlet itself when this application does not
+     *         authenticate its APIs
+     */
+    protected IServlet wrapWithAuth(IServlet servlet, boolean challenge) {
+        if (!appCtx.getExternalProperties().isApiAuthenticationEnabled() || ccExtensionManager.hasExtensions()) {
+            return servlet;
+        }
+        return new BasicAuthServletFactory(getCredentialMap(), Collections.emptyMap(), challenge).wrap(servlet);
+    }
+
+    // loaded on first use, as the servers that need it may be set up in any order
+    private Map<String, String> getCredentialMap() {
+        if (credentialMap == null) {
+            String credentialFilePath = ((ClusterControllerService) (appCtx.getServiceContext().getControllerService()))
+                    .getCCConfig().getCredentialFilePath();
+            credentialMap = CredentialFileUtil.load(credentialFilePath,
+                    appCtx.getExternalProperties().isApiAuthenticationEnabled());
+        }
+        return credentialMap;
     }
 
     protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {

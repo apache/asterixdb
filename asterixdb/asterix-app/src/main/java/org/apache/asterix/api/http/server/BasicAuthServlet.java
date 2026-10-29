@@ -45,14 +45,27 @@ public class BasicAuthServlet implements IServlet {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static String BASIC_AUTH_METHOD_NAME = "Basic";
+    private static final String CHALLENGE = BASIC_AUTH_METHOD_NAME + " realm=\"AsterixDB\", charset=\"UTF-8\"";
     private Base64.Decoder b64Decoder;
     Map<String, String> storedCredentials;
     Map<String, String> ephemeralCredentials;
     private final IServlet delegate;
+    private final boolean challenge;
 
     public BasicAuthServlet(IServlet delegate, Map<String, String> storedCredentials,
             Map<String, String> ephemeralCredentials) {
+        this(delegate, storedCredentials, ephemeralCredentials, false);
+    }
+
+    /**
+     * @param challenge
+     *            whether a rejected request is answered with a Basic challenge, which makes a browser prompt for
+     *            credentials
+     */
+    public BasicAuthServlet(IServlet delegate, Map<String, String> storedCredentials,
+            Map<String, String> ephemeralCredentials, boolean challenge) {
         this.delegate = delegate;
+        this.challenge = challenge;
         b64Decoder = Base64.getDecoder();
         this.storedCredentials = storedCredentials;
         this.ephemeralCredentials = ephemeralCredentials;
@@ -99,7 +112,9 @@ public class BasicAuthServlet implements IServlet {
             }
             boolean authorized = authorize(request);
             if (!authorized) {
-                response.setHeader(HttpHeaderNames.WWW_AUTHENTICATE, "Basic realm=\"AsterixDB\"");
+                if (challenge) {
+                    response.setHeader(HttpHeaderNames.WWW_AUTHENTICATE, CHALLENGE);
+                }
                 response.setStatus(HttpResponseStatus.UNAUTHORIZED);
             } else {
                 delegate.handle(request, response);

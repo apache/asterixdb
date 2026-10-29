@@ -26,6 +26,7 @@ import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -43,6 +44,7 @@ public class ApiAuthenticationDisabledTest {
     private static final AsterixHyracksIntegrationUtil INTEGRATION_UTIL = new AsterixHyracksIntegrationUtil();
     private static final String CC_QUERY_SERVICE = "http://localhost:19002/query/service";
     private static final String NC_QUERY_SERVICE = "http://localhost:19004/query/service";
+    private static final String LEGACY_WEB_UI = "http://localhost:19001/";
     private static final String NC_UDF = "http://localhost:19004/admin/udf/Default/lib";
     private static final String MISSING_CREDENTIAL_FILE = "target/no-such-dir/passwd";
 
@@ -69,6 +71,11 @@ public class ApiAuthenticationDisabledTest {
     @Test
     public void ncQueryServiceAcceptsUnauthenticatedRequests() throws Exception {
         Assert.assertEquals(200, execute(query(NC_QUERY_SERVICE)));
+    }
+
+    @Test
+    public void legacyWebUiAcceptsUnauthenticatedRequests() throws Exception {
+        Assert.assertEquals(200, execute(new HttpGet(LEGACY_WEB_UI)));
     }
 
     @Test
