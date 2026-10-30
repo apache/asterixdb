@@ -258,7 +258,12 @@ public class IcebergUtils {
                     ExternalDataConstants.IcebergOptions.MAX_VARIANT_DEPTH);
         }
 
-        // if either pushdown flag is provided, it must be a boolean
+        // if a boolean option is provided, it must be a boolean
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.DECIMAL_TO_DOUBLE);
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.TIMESTAMP_AS_LONG);
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.DATE_AS_INT);
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.TIME_AS_INT);
+        validateBoolean(properties, ExternalDataConstants.IcebergOptions.SPLIT_SCAN_TASKS);
         validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN);
         validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_STATS_PUSHDOWN);
         validateBoolean(properties, ExternalDataConstants.IcebergOptions.VARIANT_PROJECTION_PUSHDOWN_WITH_DELETES);

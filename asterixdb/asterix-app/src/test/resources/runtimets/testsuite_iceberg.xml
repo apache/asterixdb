@@ -222,6 +222,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg/negative">
+      <compilation-unit name="invalid-boolean-option">
+        <output-dir compare="Text">invalid-boolean-option</output-dir>
+        <expected-error>ASX0047: Invalid value for parameter 'decimal-to-double': yes</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'timestamp-to-long': 1</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'date-to-int': ture</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'time-to-int': abc</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'splitScanTasks': 0</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="variant-negative">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">variant-negative</output-dir>

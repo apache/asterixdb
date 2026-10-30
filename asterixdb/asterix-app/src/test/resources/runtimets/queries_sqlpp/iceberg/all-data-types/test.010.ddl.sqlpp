@@ -17,6 +17,8 @@
  * under the License.
  */
 
+// Some boolean options are written in mixed case: the DDL accepts a boolean in any case, and the read must honour it,
+// so these collections read exactly as they would with lowercase values.
 DROP COLLECTION allTypesTimesConverted IF EXISTS;
 DROP TYPE allTypesTimesConverted IF EXISTS;
 
@@ -32,10 +34,11 @@ USING S3
     ("pathStyleAddressing"="true"),
     ("catalogName"="myNessieCatalog"),
     ("format"="parquet"),
-    ("decimal-to-double"="true"),
-    ("date-to-int"="true"),
-    ("time-to-int"="true"),
-    ("timestamp-to-long"="true")
+    ("decimal-to-double"="TRUE"),
+    ("date-to-int"="True"),
+    ("time-to-int"="TRUE"),
+    ("timestamp-to-long"="tRuE"),
+    ("splitScanTasks"="TRUE")
 );
 
 DROP COLLECTION allTypesTimesNotConverted IF EXISTS;
@@ -54,9 +57,9 @@ USING S3
     ("catalogName"="myNessieCatalog"),
     ("format"="parquet"),
     ("decimal-to-double"="true"),
-    ("date-to-int"="false"),
-    ("time-to-int"="false"),
-    ("timestamp-to-long"="false")
+    ("date-to-int"="FALSE"),
+    ("time-to-int"="False"),
+    ("timestamp-to-long"="fAlSe")
 );
 
 CREATE TYPE allTypesTimesDefaultExpectingNotConverted AS open {};
