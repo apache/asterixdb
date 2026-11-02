@@ -154,6 +154,7 @@ import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
 import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.SynonymDropStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
@@ -397,6 +398,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case DATASET_DROP:
                         handleDatasetDropStatement(metadataProvider, stmt, hcc, requestParameters);
+                        break;
+                    case TRUNCATE:
+                        handleDatasetTruncateStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case INDEX_DROP:
                         handleIndexDropStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -2158,6 +2162,72 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } finally {
             metadataProvider.getLocks().unlock();
             ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
+        }
+    }
+
+    public void handleDatasetTruncateStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
+        TruncateDatasetStatement truncateStmt = (TruncateDatasetStatement) stmt;
+        SourceLocation sourceLoc = truncateStmt.getSourceLocation();
+        String datasetName = truncateStmt.getDatasetName();
+        metadataProvider.validateDatabaseObjectName(truncateStmt.getDataverseName(), datasetName, sourceLoc);
+        DataverseName dataverseName = getActiveDataverseName(truncateStmt.getDataverseName());
+        if (isCompileOnly()) {
+            return;
+        }
+        lockUtil.truncateDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        try {
+            doTruncateDataset(dataverseName, datasetName, metadataProvider, truncateStmt.getIfExists(), sourceLoc);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected void doTruncateDataset(DataverseName dataverseName, String datasetName, MetadataProvider metadataProvider,
+            boolean ifExists, SourceLocation sourceLoc) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        Dataset ds = null;
+        try {
+            // Check if the dataverse exists
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
+            if (dv == null) {
+                if (ifExists) {
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
+                    }
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                }
+            }
+            ds = metadataProvider.findDataset(dataverseName, datasetName, true);
+            if (ds == null) {
+                if (ifExists) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                            dataverseName);
+                }
+            }
+            DatasetType dsType = ds.getDatasetType();
+            if (dsType != DatasetType.INTERNAL) {
+                String dsTypeName = dsType.toString().toLowerCase();
+                throw new CompilationException(ErrorCode.CANNOT_TRUNCATE_DATASET_TYPE, sourceLoc,
+                        dsType == DatasetType.EXTERNAL ? dsTypeName + " collection" : dsTypeName,
+                        ds.getDatasetFullyQualifiedName());
+            }
+            validateDatasetState(metadataProvider, ds, sourceLoc);
+            DatasetUtil.truncate(metadataProvider, ds);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            LOGGER.error("failed to truncate collection {}", new DatasetFullyQualifiedName(dataverseName, datasetName),
+                    e);
+            abort(e, e, mdTxnCtx);
+            throw e;
         }
     }
 

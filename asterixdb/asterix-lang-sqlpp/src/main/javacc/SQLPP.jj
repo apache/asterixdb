@@ -167,6 +167,7 @@ import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.SynonymDropStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
@@ -267,6 +268,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String RETURNS = "RETURNS";
     private static final String CONFIG = "CONFIG";
     private static final String STATISTICS = "STATISTICS";
+    private static final String TRUNCATE = "TRUNCATE";
 
 
     private static final String INT_TYPE_NAME = "int";
@@ -940,6 +942,9 @@ Statement SingleStatement() throws ParseException:
     | stmt = ConnectionStatement()
     | stmt = CompactStatement()
     | stmt = AnalyzeStatement()
+    | LOOKAHEAD({ laIdentifier(TRUNCATE)
+        && (laToken(2, DATASET) || laToken(2, COLLECTION) || laToken(2, IDENTIFIER)) })
+      stmt = TruncateStatement()
     | stmt = Query()
     | stmt = RefreshExternalDatasetStatement()
   )
@@ -2780,6 +2785,45 @@ Statement AnalyzeDatasetDropStatement(Token startToken, DataverseName dvName, Id
   {
     AnalyzeDropStatement stmt = new AnalyzeDropStatement(dvName, identifier.getValue());
     return addSourceLocation(stmt, startToken);
+  }
+}
+
+Statement TruncateStatement() throws ParseException:
+{
+  Token startToken = null;
+  Statement stmt = null;
+}
+{
+  <IDENTIFIER> { expectToken(TRUNCATE); startToken = token; }
+  (
+    stmt = TruncateDatasetStatement(startToken)
+  )
+  {
+    return stmt;
+  }
+}
+
+TruncateDatasetStatement TruncateDatasetStatement(Token startStmtToken) throws ParseException:
+{
+  TruncateDatasetStatement stmt = null;
+}
+{
+  DatasetToken() stmt = TruncateDatasetSpecification(startStmtToken)
+  {
+    return stmt;
+  }
+}
+
+TruncateDatasetStatement TruncateDatasetSpecification(Token startStmtToken) throws ParseException:
+{
+  Pair<DataverseName,Identifier> pairId = null;
+  boolean ifExists = false;
+}
+{
+  pairId = QualifiedName() ifExists = IfExists()
+  {
+    TruncateDatasetStatement stmt = new TruncateDatasetStatement(pairId.first, pairId.second.getValue(), ifExists);
+    return addSourceLocation(stmt, startStmtToken);
   }
 }
 

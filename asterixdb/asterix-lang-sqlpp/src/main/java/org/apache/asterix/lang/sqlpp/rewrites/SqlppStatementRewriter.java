@@ -34,6 +34,7 @@ class SqlppStatementRewriter implements IStatementRewriter {
             case INSERT:
             case UPSERT:
             case DELETE:
+            case TRUNCATE:
                 return true;
             default:
                 return false;

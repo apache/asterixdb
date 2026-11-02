@@ -25,6 +25,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppAstVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -32,7 +33,7 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
- * This class resolves dataset synonyms in load/insert/upsert/delete statements
+ * This class resolves dataset synonyms in load/insert/upsert/delete/truncate statements
  */
 public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, MetadataProvider> {
 
@@ -70,6 +71,19 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
         if (dsName != null) {
             deleteStmt.setDataverseName(dsName.first);
             deleteStmt.setDatasetName(dsName.second);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(TruncateDatasetStatement truncateStmt, MetadataProvider metadataProvider)
+            throws CompilationException {
+        Triple<DataverseName, String, Boolean> dsName =
+                resolveDatasetNameUsingSynonyms(metadataProvider, truncateStmt.getDataverseName(),
+                        truncateStmt.getDatasetName(), false, truncateStmt.getSourceLocation());
+        if (dsName != null) {
+            truncateStmt.setDataverseName(dsName.first);
+            truncateStmt.setDatasetName(dsName.second);
         }
         return null;
     }
