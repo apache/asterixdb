@@ -120,6 +120,7 @@ public class ChannelControlBlock implements IChannelControlBlock {
 
     void reportRemoteEOSAck() {
         remoteCloseAck.set(true);
+        cSet.markReclaimableIfClosed(this);
     }
 
     boolean getRemoteEOS() {
@@ -128,6 +129,7 @@ public class ChannelControlBlock implements IChannelControlBlock {
 
     void reportLocalEOSAck() {
         localCloseAck.set(true);
+        cSet.markReclaimableIfClosed(this);
     }
 
     void reportRemoteError(int ecode) {
