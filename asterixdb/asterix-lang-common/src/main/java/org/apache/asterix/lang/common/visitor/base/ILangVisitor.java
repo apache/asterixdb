@@ -81,6 +81,7 @@ import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
 import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.SynonymDropStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
@@ -103,6 +104,8 @@ public interface ILangVisitor<R, T> {
     R visit(LoadStatement stmtLoad, T arg) throws CompilationException;
 
     R visit(DropDatasetStatement del, T arg) throws CompilationException;
+
+    R visit(TruncateDatasetStatement del, T arg) throws CompilationException;
 
     R visit(InsertStatement insert, T arg) throws CompilationException;
 

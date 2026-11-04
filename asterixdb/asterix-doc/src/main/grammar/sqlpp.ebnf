@@ -135,6 +135,7 @@ SingleStmnt ::= UseStmnt
                |Query
                |CreateStmnt
                |DropStmnt
+               |TruncateStmnt
                |LoadStmnt
                |InsertStmnt
                |UpsertStmnt
@@ -249,6 +250,8 @@ DropStmnt ::= "DROP" ("DATAVERSE" DataverseName
                      | ("TYPE" |"DATASET" |"SYNONYM" |"VIEW") QualifiedName
                      | "INDEX" DoubleQualifiedName
                      | "FUNCTION" FunctionSignature ) ("IF" "EXISTS")?
+
+TruncateStmnt ::= "TRUNCATE" "DATASET" QualifiedName ("IF" "EXISTS")?
 
 FunctionSignature ::= QualifiedName ( ( "(" ( FunctionParameters? | IntegerLiteral ) ")" ) | ("@" IntegerLiteral) )
 

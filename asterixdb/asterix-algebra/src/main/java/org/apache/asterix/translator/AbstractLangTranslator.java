@@ -57,6 +57,7 @@ import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
@@ -251,6 +252,17 @@ public abstract class AbstractLangTranslator {
                 invalidOperation = isMetadataDataverse(dataverseName);
                 if (invalidOperation) {
                     message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "drop", dataset(), dataverseName);
+                }
+                break;
+
+            case TRUNCATE:
+                TruncateDatasetStatement dsTruncateStmt = (TruncateDatasetStatement) stmt;
+                if (dsTruncateStmt.getDataverseName() != null) {
+                    dataverseName = dsTruncateStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "truncate", dataset(), dataverseName);
                 }
                 break;
 

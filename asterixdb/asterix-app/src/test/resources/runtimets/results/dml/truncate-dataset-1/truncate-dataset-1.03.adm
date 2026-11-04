@@ -1,0 +1,3 @@
+{ "orders": { "my_id": "a", "f": null } }
+{ "orders": { "my_id": "b" } }
+{ "orders": { "my_id": "c", "f": { "inner_f": "foo", "inner_f2": { "f3": "bar" } } } }
