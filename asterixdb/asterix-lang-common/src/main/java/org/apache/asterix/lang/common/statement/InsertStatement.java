@@ -36,7 +36,7 @@ public class InsertStatement extends AbstractStatement implements IReturningStat
 
     private Namespace namespace;
     private String datasetName;
-    private final Query query;
+    private Query query;
     private final VariableExpr var;
     private Expression returnExpression;
     private int varCounter;
@@ -82,6 +82,10 @@ public class InsertStatement extends AbstractStatement implements IReturningStat
 
     public Query getQuery() {
         return query;
+    }
+
+    protected void setQuery(Query query) {
+        this.query = query;
     }
 
     @Override

@@ -15637,6 +15637,13 @@
         <output-dir compare="Text">all-cases</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="update-statements">
+      <compilation-unit name="request-dataverse">
+        <output-dir compare="Text">request-dataverse</output-dir>
+        <expected-error>Cannot update primary key</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
   </test-group>
 <test-group name="json">
     <test-case FilePath="json">

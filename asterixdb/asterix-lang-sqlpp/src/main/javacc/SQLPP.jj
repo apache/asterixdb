@@ -3549,52 +3549,10 @@ UpdateStatement UpdateStatement() throws ParseException:
   (<WHERE> condition = Expression())?
   (<RETURNING> returnExpression = Expression())?
   {
-    Namespace namespace = nameComponents.getLeft() != null ? nameComponents.getLeft() : (defaultNamespace != null ? defaultNamespace : MetadataConstants.DEFAULT_NAMESPACE);
-    String datasetName = nameComponents.getRight().getValue();
-    String databaseName = namespace.getDatabaseName();
-    DataverseName dataverseName = namespace.getDataverseName();
-
-    List<Expression> datasetArgs = new ArrayList<Expression>();
-    datasetArgs.add(new LiteralExpr(new StringLiteral(databaseName)));
-    datasetArgs.add(new LiteralExpr(new StringLiteral(dataverseName.getCanonicalForm())));
-    datasetArgs.add(new LiteralExpr(new StringLiteral(datasetName)));
-    CallExpr callExpression = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), datasetArgs);
-    callExpression.setSourceLocation(getSourceLocation(startToken));
-
-    FromTerm fromTerm = new FromTerm(callExpression, aliasVar, null, null);
-    fromTerm.setSourceLocation(aliasVar.getSourceLocation());
-    FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
-    fromClause.setSourceLocation(aliasVar.getSourceLocation());
-
-    WhereClause whereClause = null;
-    if (condition != null) {
-        whereClause = new WhereClause(condition);
-        whereClause.setSourceLocation(condition.getSourceLocation());
-    }
-
-    // Create SELECT clause with IndexAccessor to extract element 0 from changeSeq
-    IndexAccessor inverseListifyExpr = new IndexAccessor(changeSeq, IndexAccessor.IndexKind.ELEMENT,
-            new LiteralExpr(new LongIntegerLiteral(0L)));
-    inverseListifyExpr.setSourceLocation(getSourceLocation(startToken));
-    SelectElement selectElement = new SelectElement(inverseListifyExpr);
-    selectElement.setSourceLocation(getSourceLocation(startToken));
-    SelectClause selectClause = new SelectClause(selectElement, null, false);
-    selectClause.setSourceLocation(getSourceLocation(startToken));
-
-    SelectBlock selectBlock = new SelectBlock(selectClause, fromClause,
-            whereClause != null ? Collections.singletonList(whereClause) : null, null, null);
-    selectBlock.setSourceLocation(aliasVar.getSourceLocation());
-    SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
-    selectSetOperation.setSourceLocation(aliasVar.getSourceLocation());
-    SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, false);
-    selectExpression.setSourceLocation(aliasVar.getSourceLocation());
-
-    Query query = new Query(false, false, true, selectExpression, 0);
-    query.setBody(selectExpression);
-    query.setSourceLocation(getSourceLocation(startToken));
-
-    UpdateStatement stmt = new UpdateStatement(namespace, nameComponents.getRight().getValue(), query,
-            aliasVar, getVarCounter(), returnExpression);
+    // The statement's query is built by the statement rewriter, not here: it reads the collection in the active
+    // namespace, which the parser cannot see when the request applies it outside the statement text.
+    UpdateStatement stmt = new UpdateStatement(nameComponents.getLeft(), nameComponents.getRight().getValue(),
+            aliasVar, changeSeq, condition, getVarCounter(), returnExpression);
     return addSourceLocation(stmt, startToken);
   }
 }
