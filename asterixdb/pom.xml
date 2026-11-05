@@ -93,7 +93,7 @@
     <hadoop.version>3.5.0</hadoop.version>
     <jacoco.version>0.8.15</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
-    <awsjavasdk.version>2.57.4</awsjavasdk.version>
+    <awsjavasdk.version>2.57.9</awsjavasdk.version>
     <s3mock.version>5.2.3</s3mock.version>
     <parquet.version>1.18.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
@@ -101,14 +101,14 @@
     <!-- azure-storage-blob vendors relocated Apache Arrow (arrow-format) and FlatBuffers
          (flatbuffers-java) sources, listed in its shade-apache-arrow-format profile; review the
          license accounting for them whenever this version changes. -->
-    <azureblobjavasdk.version>12.37.1</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.36.1</azurecommonjavasdk.version>
+    <azureblobjavasdk.version>12.37.2</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.36.2</azurecommonjavasdk.version>
     <azureidentity.version>1.19.0</azureidentity.version>
-    <azuredatalakejavasdk.version>12.30.1</azuredatalakejavasdk.version>
+    <azuredatalakejavasdk.version>12.30.2</azuredatalakejavasdk.version>
     <azurecore.version>1.61.0</azurecore.version>
     <azurecorehttpnetty.version>1.17.0</azurecorehttpnetty.version>
 
-    <gcsjavasdk.version>2.75.0</gcsjavasdk.version>
+    <gcsjavasdk.version>2.76.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.30</hadoop-gcs.version>
     <io.opencensus.version>0.31.1</io.opencensus.version>
@@ -1452,7 +1452,7 @@
       <dependency>
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
-        <version>3.9.6</version>
+        <version>3.9.7</version>
         <exclusions>
           <exclusion>
             <groupId>com.sun.jmx</groupId>
