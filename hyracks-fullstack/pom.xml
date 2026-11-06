@@ -80,12 +80,12 @@
     <netty.tcnative.version>2.0.85.Final</netty.tcnative.version>
     <asm.version>9.11.1</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
-    <awsjavasdk.version>2.57.4</awsjavasdk.version>
+    <awsjavasdk.version>2.57.9</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
-    <google-cloud-storage.version>2.75.0</google-cloud-storage.version>
+    <google-cloud-storage.version>2.76.0</google-cloud-storage.version>
     <!-- @derived-from: com.google.cloud:google-cloud-storage:${google-cloud-storage.version}#dep:google-cloud-core -->
-    <google-cloud-core.version>2.77.0</google-cloud-core.version>
+    <google-cloud-core.version>2.78.0</google-cloud-core.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
     <azurecore.version>1.60.0</azurecore.version>
@@ -636,7 +636,7 @@
       <dependency>
         <groupId>net.minidev</groupId>
         <artifactId>json-smart</artifactId>
-        <version>2.6.0</version>
+        <version>2.6.1</version>
       </dependency>
       <dependency>
         <groupId>com.nimbusds</groupId>
