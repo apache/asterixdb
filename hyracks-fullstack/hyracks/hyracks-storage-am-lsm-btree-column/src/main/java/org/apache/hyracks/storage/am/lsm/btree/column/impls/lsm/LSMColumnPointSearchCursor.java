@@ -46,4 +46,11 @@ public class LSMColumnPointSearchCursor extends LSMBTreePointSearchCursor {
         IColumnReadContext context = columnOpCtx.createPageZeroContext(projectionInfo);
         return columnBTree.createAccessor(NoOpIndexAccessParameters.INSTANCE, index, projectionInfo, context);
     }
+
+    @Override
+    protected boolean isAccessorBoundToComponent() {
+        // A column accessor's projection is clipped from the newest schema when the accessor is built: a component
+        // flushed later may have columns that schema lacks.
+        return true;
+    }
 }
