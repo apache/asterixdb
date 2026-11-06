@@ -66,7 +66,7 @@
 
   <properties>
     <root.dir>${basedir}/..</root.dir>
-    <itest.excludes>${global.itest.excludes},**/HelmChartIT.java</itest.excludes>
+    <itest.excludes>${global.itest.excludes},**/HelmChartIT.java,**/PodmanEntrypointIT.java</itest.excludes>
   </properties>
 
   <licenses>
@@ -187,7 +187,7 @@
             <id>helm.tests</id>
             <properties>
                 <test.excludes>**/*.java</test.excludes>
-                <itest.includes>**/HelmChartIT.java</itest.includes>
+                <itest.includes>**/HelmChartIT.java,**/PodmanEntrypointIT.java</itest.includes>
                 <itest.excludes>${global.itest.excludes}</itest.excludes>
                 <failIfNoTests>false</failIfNoTests>
             </properties>

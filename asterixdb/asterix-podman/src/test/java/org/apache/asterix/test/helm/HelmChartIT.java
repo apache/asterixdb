@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.asterix.test.podman.ServerImage;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -48,7 +49,6 @@ import org.junit.runner.Description;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Container;
-import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.k3s.K3sContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -68,8 +68,6 @@ public class HelmChartIT {
     private static final String IMAGE_REPOSITORY = "docker.io/asterixdb/helm-it";
     private static final String IMAGE_TAG = "latest";
     private static final String IMAGE = IMAGE_REPOSITORY + ":" + IMAGE_TAG;
-    private static final Path IMAGE_DIR = Path.of("src/main/resources");
-    private static final Path SERVER_DIR = Path.of("../asterix-server/target");
     private static final Path CHART_DIR = Path.of("target/helm/repo");
     private static final Path HELM = Path.of("target/helm/helm");
     private static final String IMAGE_ARCHIVE = "image.tar";
@@ -98,7 +96,7 @@ public class HelmChartIT {
 
     @BeforeClass
     public static void startCluster() throws Exception {
-        String image = buildImage();
+        String image = ServerImage.build(IMAGE_REPOSITORY.substring("docker.io/".length()) + ":" + IMAGE_TAG);
         Path archiveDir = Files.createTempDirectory("helm-it-image");
         Path archive = archiveDir.resolve(IMAGE_ARCHIVE);
         try (InputStream saved = DockerClientFactory.instance().client().saveImageCmd(image).exec()) {
@@ -286,24 +284,6 @@ public class HelmChartIT {
         }
         assertEquals("expected exactly one packaged chart: " + charts, 1, charts.size());
         return charts.get(0);
-    }
-
-    private static String buildImage() throws Exception {
-        Path assembly = serverAssembly();
-        return new ImageFromDockerfile(IMAGE_REPOSITORY.substring("docker.io/".length()) + ":" + IMAGE_TAG, true)
-                .withFileFromPath("Dockerfile", IMAGE_DIR.resolve("Containerfile"))
-                .withFileFromPath("target/entrypoint.sh", IMAGE_DIR.resolve("entrypoint.sh"))
-                .withFileFromPath("target/" + assembly.getFileName(), assembly).get();
-    }
-
-    private static Path serverAssembly() throws IOException {
-        List<Path> assemblies = new ArrayList<>();
-        try (DirectoryStream<Path> stream =
-                Files.newDirectoryStream(SERVER_DIR, "asterix-server-*-binary-assembly.tar.bz2")) {
-            stream.forEach(assemblies::add);
-        }
-        assertEquals("build asterix-server first; found " + assemblies, 1, assemblies.size());
-        return assemblies.get(0);
     }
 
     private static String helm(String... args) throws Exception {
