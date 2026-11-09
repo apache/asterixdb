@@ -283,8 +283,10 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         parserContext.exitCollection(item, listBuilder);
     }
 
+    // depth counts the objects and arrays enclosing a value, so a value nested N levels deep is accepted
+    // with variantDepth N and the scalar at the bottom is not a level of its own.
     private void parseVariant(Variant variant, DataOutput out) throws IOException {
-        parseVariantValue(variant.value(), out, 1);
+        parseVariantValue(variant.value(), out, 0);
     }
 
     // Keep the PhysicalType -> serialized-shape mapping here in sync with getVariantTypeTag's

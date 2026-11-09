@@ -48,6 +48,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg">
+      <compilation-unit name="variant-depth">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-depth</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
       <compilation-unit name="variant-shredded">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">variant-shredded</output-dir>
@@ -255,11 +261,12 @@
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">variant-negative</output-dir>
         <expected-error>ASX0054: Parquet type 'DECIMAL16' is not supported by default. To enable type conversion, recreate the external dataset with the option 'decimal-to-double' enabled</expected-error>
-        <expected-error>ASX1108: External source error. Variant nesting depth exceeds the maximum supported depth of 2</expected-error>
+        <expected-error>ASX1108: External source error. Variant nesting depth exceeds the maximum supported depth of 1</expected-error>
         <expected-error>ASX0047: Invalid value for parameter 'variantDepth': 0</expected-error>
         <expected-error>ASX0047: Invalid value for parameter 'variantDepth': 1001</expected-error>
         <expected-error>ASX0047: Invalid value for parameter 'variantProjectionPushdown': ture</expected-error>
         <expected-error>ASX0047: Invalid value for parameter 'variantStatsPushdown': 1</expected-error>
+        <expected-error>ASX1108: External source error. Variant nesting depth exceeds the maximum supported depth of 999</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg">

@@ -21,4 +21,6 @@ DROP COLLECTION variantNoDecimalToDouble;
 DROP TYPE variantNoDecimalToDouble;
 DROP COLLECTION depthTestVariantLimited;
 DROP TYPE depthTestVariantLimited;
+DROP COLLECTION maxDepthShort;
+DROP TYPE maxDepthShort;
 DROP CATALOG myNessieCatalog;

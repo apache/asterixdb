@@ -106,6 +106,7 @@ import org.apache.iceberg.types.Types;
 import org.apache.iceberg.variants.ShreddedObject;
 import org.apache.iceberg.variants.Variant;
 import org.apache.iceberg.variants.VariantMetadata;
+import org.apache.iceberg.variants.VariantValue;
 import org.apache.iceberg.variants.Variants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -166,6 +167,7 @@ public class IcebergTest {
     private static final TableIdentifier ALL_TYPES_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "allTypesVariant");
     private static final TableIdentifier DEPTH_TEST_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "depthTestVariant");
+    private static final TableIdentifier MAX_DEPTH_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "maxDepthVariant");
     private static final TableIdentifier SHREDDED_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "shreddedVariant");
     private static final TableIdentifier TEMPORAL_PRECISION_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "temporalPrecision");
@@ -322,6 +324,7 @@ public class IcebergTest {
             writeAllTypesTable(catalog);
             writeAllTypesVariantTable(catalog);
             writeDepthTestVariantTable(catalog);
+            writeMaxDepthVariantTable(catalog);
             writeShreddedVariantTable(catalog);
             writePartiallyShreddedVariantTable(catalog);
             writeManyFilesVariantTable(catalog);
@@ -564,12 +567,38 @@ public class IcebergTest {
     }
 
     private static void writeDepthTestVariantData(Table table) throws Exception {
+        writeSingleVariantRow(table, "depth_test_variant.parquet", buildTwoLevelVariant());
+    }
+
+    // 1000 levels is both the largest variantDepth allowed and the deepest value Spark writes.
+    private static final int MAX_VARIANT_NESTING = 1000;
+
+    private static void writeMaxDepthVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, MAX_DEPTH_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={}", table.name());
+        writeSingleVariantRow(table, "max_depth_variant.parquet", buildNestedObjectsVariant(MAX_VARIANT_NESTING));
+    }
+
+    // {"a":{"a":...{"a":1}...}} with the given number of objects
+    private static Variant buildNestedObjectsVariant(int levels) {
+        VariantMetadata metadata = Variants.metadata("a");
+        VariantValue inner = Variants.of(1);
+        for (int i = 0; i < levels; i++) {
+            ShreddedObject object = Variants.object(metadata);
+            object.put("a", inner);
+            inner = object;
+        }
+        return Variant.of(metadata, inner);
+    }
+
+    private static void writeSingleVariantRow(Table table, String fileName, Variant variant) throws Exception {
         GenericRecord template = GenericRecord.create(table.schema());
         Record row = template.copy();
         row.setField("id", 1);
-        row.setField("variant_field", buildDepthThreeVariant());
+        row.setField("variant_field", variant);
 
-        String path = table.location() + "/data/depth_test_variant.parquet";
+        String path = table.location() + "/data/" + fileName;
         OutputFile out = table.io().newOutputFile(path);
         try (FileAppender<Record> writer =
                 Parquet.write(out).schema(table.schema()).createWriterFunc(GenericParquetWriter::create).build()) {
@@ -580,10 +609,10 @@ public class IcebergTest {
         DataFile df = DataFiles.builder(table.spec()).withPath(path).withRecordCount(1).withFileSizeInBytes(bytes)
                 .withFormat(FileFormat.PARQUET).build();
         table.newAppend().appendFile(df).commit();
-        LOGGER.info("[WRITE] depth_test_variant table committed with 1 record");
+        LOGGER.info("[WRITE] {} committed with 1 record", table.name());
     }
 
-    private static Variant buildDepthThreeVariant() {
+    private static Variant buildTwoLevelVariant() {
         VariantMetadata metadata = Variants.metadata("a", "b");
         ShreddedObject depthTwo = Variants.object(metadata);
         depthTwo.put("b", Variants.of(42));
