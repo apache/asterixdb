@@ -324,7 +324,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
             case DECIMAL4:
             case DECIMAL8:
             case DECIMAL16:
-                ensureDecimalToDoubleEnabled(physicalType.toString(), parserContext);
+                ensureVariantDecimalToDoubleEnabled(physicalType, parserContext);
                 serializeDecimal(variantValue.asPrimitive().get(), out);
                 return;
             case STRING:
@@ -602,6 +602,16 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
         }
     }
 
+    // The unshredded part of a VARIANT value is converted whole, so a decimal there can fail a query that never
+    // reads that field; naming the VARIANT keeps the message from reading as if the query had asked for the decimal.
+    private static void ensureVariantDecimalToDoubleEnabled(PhysicalType type, IcebergConverterContext context)
+            throws RuntimeDataException {
+        if (!context.isDecimalToDoubleEnabled()) {
+            throw new RuntimeDataException(ErrorCode.VARIANT_DECIMAL_WITH_OPTION, type.toString(),
+                    ExternalDataConstants.IcebergOptions.DECIMAL_TO_DOUBLE);
+        }
+    }
+
     private static HyracksDataException createUnsupportedException(Type type) {
         return new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Iceberg Parser", type.toString());
     }
@@ -687,7 +697,7 @@ public class IcebergParquetDataParser extends AbstractDataParser implements IRec
             case FLOAT -> ATypeTag.FLOAT;
             case DOUBLE -> ATypeTag.DOUBLE;
             case DECIMAL4, DECIMAL8, DECIMAL16 -> {
-                ensureDecimalToDoubleEnabled(physicalType.toString(), parserContext);
+                ensureVariantDecimalToDoubleEnabled(physicalType, parserContext);
                 yield ATypeTag.DOUBLE;
             }
             case STRING -> ATypeTag.STRING;

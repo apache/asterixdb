@@ -257,10 +257,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg/negative">
+      <compilation-unit name="decimal-without-option">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">decimal-without-option</output-dir>
+        <expected-error>ASX0054: Parquet type 'decimal(10, 4)' is not supported by default. To enable type conversion, recreate the external dataset with the option 'decimal-to-double' enabled</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="variant-negative">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">variant-negative</output-dir>
-        <expected-error>ASX0054: Parquet type 'DECIMAL16' is not supported by default. To enable type conversion, recreate the external dataset with the option 'decimal-to-double' enabled</expected-error>
+        <expected-error>ASX0079: VARIANT value contains a decimal of type 'DECIMAL16', which is not supported by default. To enable type conversion, recreate the external dataset with the option 'decimal-to-double' enabled</expected-error>
+        <expected-error>ASX0079: VARIANT value contains a decimal of type 'DECIMAL16', which is not supported by default. To enable type conversion, recreate the external dataset with the option 'decimal-to-double' enabled</expected-error>
         <expected-error>ASX1108: External source error. Variant nesting depth exceeds the maximum supported depth of 1</expected-error>
         <expected-error>ASX0047: Invalid value for parameter 'variantDepth': 0</expected-error>
         <expected-error>ASX0047: Invalid value for parameter 'variantDepth': 1001</expected-error>
