@@ -532,16 +532,26 @@
     }
 
     dataverseSelected() {
-      if (this.selected == undefined) {
-        this.queryString = 'None';
-      } else if (this.selected === 'None' || this.selected === 'Default') {
-        this.queryString = '';
+      if (this.selected == undefined) return;
+
+      const useStmt = 'USE ' + this.selected + ';\n';
+      let qs = this.queryString || '';
+      const leadingUseRegex = /^\s*USE\s+[^;]+;\s*/i;
+
+      if (this.selected === 'None' || this.selected === 'Default') {
+        qs = qs.replace(leadingUseRegex, '');
         this.selected = 'Default';
       } else {
-        this.queryString = 'USE ' + this.selected + '; \n' + this.queryString;
+        if (leadingUseRegex.test(qs)) {
+          qs = qs.replace(leadingUseRegex, useStmt);
+        } else {
+          qs = useStmt + qs;
+        }
       }
+
+      this.queryString = qs;
       this.editor.getDoc().setValue(this.queryString);
-      this.editor.execCommand('goDocEnd')
+      this.editor.execCommand('goDocEnd');
       this.editor.focus();
     }
 
