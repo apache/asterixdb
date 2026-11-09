@@ -173,6 +173,16 @@ public final class KMeansLoopIO {
      */
     public static void streamRawVectors(MaterializerTaskState state, IHyracksTaskContext ctx, RawVectorConsumer sink)
             throws HyracksDataException {
+        streamRawVectors(state, ctx, 0, sink);
+    }
+
+    /**
+     * As {@link #streamRawVectors(MaterializerTaskState, IHyracksTaskContext, RawVectorConsumer)}, skipping the
+     * first {@code from} vectors without decoding them.
+     */
+    public static void streamRawVectors(MaterializerTaskState state, IHyracksTaskContext ctx, int from,
+            RawVectorConsumer sink) throws HyracksDataException {
+        int seen = 0;
         FrameTupleAccessor accessor = new FrameTupleAccessor(POOL_RD);
         FrameTupleReference tuple = new FrameTupleReference();
         VSizeFrame frame = new VSizeFrame(ctx);
@@ -186,6 +196,9 @@ public final class KMeansLoopIO {
                 accessor.reset(frame.getBuffer());
                 int tupleCount = accessor.getTupleCount();
                 for (int i = 0; i < tupleCount; i++) {
+                    if (seen++ < from) {
+                        continue;
+                    }
                     tuple.reset(accessor, i);
                     sink.accept(readRawVector(tuple.getFieldData(0), tuple.getFieldStart(0), tuple.getFieldLength(0)));
                 }
@@ -193,6 +206,51 @@ public final class KMeansLoopIO {
         } finally {
             reader.close();
         }
+    }
+
+    /** Counts the vectors in a run file from its frame headers, without decoding any vector. */
+    public static int countRawVectors(MaterializerTaskState state, IHyracksTaskContext ctx)
+            throws HyracksDataException {
+        FrameTupleAccessor accessor = new FrameTupleAccessor(POOL_RD);
+        VSizeFrame frame = new VSizeFrame(ctx);
+        RunFileReader reader = state.createReader();
+        reader.open();
+        int count = 0;
+        try {
+            while (reader.nextFrame(frame)) {
+                accessor.reset(frame.getBuffer());
+                count += accessor.getTupleCount();
+            }
+        } finally {
+            reader.close();
+        }
+        return count;
+    }
+
+    /**
+     * Folds a scan against pool members {@code [offset, ..)} into the previous column, which holds each vector's
+     * minimum over members {@code [0, offset)}, read in the same run-file order. A new member wins only on a strict
+     * {@code <}, so ties keep the lower index and the result is the one a single scan over the whole pool gives.
+     * A block that saw no new member ({@code index < 0}) keeps the previous minimum.
+     *
+     * @param previous the previous round's column, not yet advanced
+     * @param offset the number of pool members the previous column was scored against
+     * @param sink receives each block with the merged minima and indexes into the whole pool
+     */
+    public static ScoredBlockConsumer mergeWithPrevious(ScoreColumnReader previous, int offset,
+            ScoredBlockConsumer sink) {
+        return (vectors, count, nearest, index) -> {
+            for (int i = 0; i < count; i++) {
+                previous.advance();
+                if (index[i] >= 0 && nearest[i] < previous.nearest()) {
+                    index[i] += offset;
+                } else {
+                    nearest[i] = previous.nearest();
+                    index[i] = previous.index();
+                }
+            }
+            sink.accept(vectors, count, nearest, index);
+        };
     }
 
     /**
