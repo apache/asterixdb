@@ -73,6 +73,10 @@ public class ExternalFunctionCompilerUtil {
         IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, paramTypes, function.getNullCall());
 
         ExternalFunctionLanguage lang = getExternalFunctionLanguage(function.getLanguage());
+        if (lang == ExternalFunctionLanguage.HTTP) {
+            throw new CompilationException(ErrorCode.EXTERNAL_HTTP_FUNCTION_CALL_UNSUPPORTED,
+                    function.getSignature().toString());
+        }
 
         Boolean deterministic = function.getDeterministic();
         if (deterministic == null) {

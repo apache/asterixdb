@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
+  <test-group name="external-function-http">
+    <test-case FilePath="external-function-http">
+      <compilation-unit name="create-url">
+        <output-dir compare="Text">create-url</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-function-http">
+      <compilation-unit name="create-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1059: Field(s) foo unsupported in the with clause</expected-error>
+        <expected-error>ASX1060: Field 'timeout' in the with clause must be of type</expected-error>
+        <expected-error>ASX1173: Invalid value for parameter 'method', allowed value(s): get, post</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'body': only a POST request has a body</expected-error>
+        <expected-error>ASX1059: Field(s) path unsupported in the with clause</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'headers': header '(X-A|x-a)' is given more than once</expected-error>
+        <expected-error>ASX3119: Parameter 'password' is required if 'username' is provided</expected-error>
+        <expected-error>ASX1110: The parameters 'username' and 'bearerToken' cannot be provided at the same time</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'timeout': must be a positive number of seconds</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'certificate'</expected-error>
+        <expected-error>ASX1059: Field(s) batched unsupported in the with clause</expected-error>
+        <expected-error>ASX1269: Invalid URL 'ftp://api.example.com/x' for an external function: only http and https URLs are supported</expected-error>
+        <expected-error>ASX1269: Invalid URL 'https://api.example.com/x?q={a}' for an external function: a query is not allowed</expected-error>
+        <expected-error>ASX1269: Invalid URL 'https://api.example.com/{b}' for an external function: 'b' is not a parameter of the function</expected-error>
+        <expected-error>ASX1079: Compilation error: Variable number of parameters is not supported for external functions</expected-error>
+        <expected-error>ASX1271: External function cannot use link myLink: links are not supported</expected-error>
+        <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function f</expected-error>
+        <expected-error>ASX1001: Syntax error: Unexpected type declaration for parameter a in function f</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'headers': the value of header 'X-A' must be a string, but found boolean</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'bearerToken': must not be empty</expected-error>
+        <expected-error>ASX3119: Parameter 'oauthTokenUri' is required if 'oauthAllowedScopes' is provided</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'oauthTokenUri': must not reference parameters</expected-error>
+        <expected-error>ASX1173: Invalid value for parameter 'on-error', allowed value(s): fail, null</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'urlencode': only a GET query string or a URLENCODED body is URL-encoded</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'headers': header 'Host' is set by the runtime</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'headers': header 'Authorization' cannot be given with bearerToken</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'headers': header 'Content-Type' is set by the runtime</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'headers': the value of header 'X-A' contains a control character</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'headers': invalid header name '\(x\)'</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'bearerToken': sends a credential, so the URL must use https</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'headers': header 'Authorization' sends a credential, so the URL must use https</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'oauthTokenUri': the client secret is sent to it, so it must use https</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'certificate': applies only to an https URL</expected-error>
+        <expected-error>ASX1272: Calling external HTTP function</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>

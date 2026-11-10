@@ -13667,6 +13667,12 @@
     </test-case>
   </test-group>
   <test-group name="user-defined-functions">
+    <test-case FilePath="external-function-http">
+      <compilation-unit name="disabled">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1268: External HTTP functions are disabled</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="inline-in-expr">
         <output-dir compare="Text">inline-in-expr</output-dir>

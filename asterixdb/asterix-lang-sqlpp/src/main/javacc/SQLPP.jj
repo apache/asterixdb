@@ -1170,11 +1170,12 @@ Statement CreateStatement() throws ParseException:
     stmt = CreateOrReplaceStatement(startToken)
     | stmt = CreateTypeStatement(startToken)
     | stmt = CreateNodegroupStatement(startToken)
+    // ahead of CreateDatasetStatement, and with two tokens of lookahead, since both may start with EXTERNAL
+    | LOOKAHEAD(2) stmt = CreateFunctionStatement(startToken, false)
     | stmt = CreateDatasetStatement(startToken)
     | stmt = CreateIndexStatement(startToken)
     | stmt = CreateDatabaseStatement(startToken)
     | stmt = CreateDataverseStatement(startToken)
-    | stmt = CreateFunctionStatement(startToken, false)
     | stmt = CreateAdapterStatement(startToken)
     | stmt = CreateSynonymStatement(startToken)
     | stmt = CreateFeedStatement(startToken)
@@ -2299,6 +2300,75 @@ CreateFunctionStatement CreateFunctionStatement(Token startStmtToken, boolean or
   <FUNCTION> stmt = FunctionSpecification(startStmtToken, orReplace, false)
   {
     return stmt;
+  }
+  |
+  <EXTERNAL> <FUNCTION> stmt = ExternalFunctionSpecification(startStmtToken, orReplace)
+  {
+    return stmt;
+  }
+}
+
+CreateFunctionStatement ExternalFunctionSpecification(Token startStmtToken, boolean orReplace) throws ParseException:
+{
+  FunctionSignature signature = null;
+  FunctionName fctName = null;
+  Pair<Integer, List<Pair<VarIdentifier,TypeExpression>>> paramsWithArity = null;
+  TypeExpression returnType = null;
+  String url = null;
+  Pair<Namespace,Identifier> linkName = null;
+  RecordConstructor withOptions = null;
+  boolean ifNotExists = false;
+  CreateFunctionStatement stmt = null;
+  DataverseName currentDataverse = defaultDataverse;
+  String currentDatabase = defaultDatabase;
+  Namespace currentNamespace = defaultNamespace;
+}
+{
+  ifNotExists = IfNotExists()
+  fctName = FunctionName()
+  {
+     defaultDataverse = fctName.dataverse;
+     defaultDatabase = fctName.database;
+     defaultNamespace = fctName.namespace;
+  }
+  paramsWithArity = FunctionParameters()
+  {
+    signature = new FunctionSignature(fctName.database, fctName.dataverse, fctName.function,
+      paramsWithArity.getLeft());
+  }
+  {
+    if (ifNotExists == false) {
+        ifNotExists = IfNotExists();
+    }
+  }
+  {
+    if (orReplace && ifNotExists) {
+      throw new SqlppParseException(getSourceLocation(token), "Unexpected IF NOT EXISTS");
+    }
+  }
+  returnType = FunctionReturnType()
+  {
+    // parsed only to be rejected: nothing checks an HTTP response against a declared type
+    ensureNoTypeDeclsInFunction(fctName.function, paramsWithArity.getRight(), returnType, startStmtToken);
+  }
+  <AT>
+  (
+    url = StringLiteral()
+    | linkName = QualifiedName()
+  )
+  (<WITH> withOptions = RecordConstructor())?
+  {
+    try {
+      stmt = new CreateFunctionStatement(signature, paramsWithArity.getRight(), url,
+        linkName != null ? linkName.getLeft() : null, linkName != null ? linkName.getRight().getValue() : null,
+        withOptions, orReplace, ifNotExists);
+    } catch (AlgebricksException e) {
+        throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+    }
+    defaultDataverse = currentDataverse;
+    defaultDatabase = currentDatabase;
+    defaultNamespace = currentNamespace;
+    return addSourceLocation(stmt, startStmtToken);
   }
 }
 

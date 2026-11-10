@@ -81,7 +81,14 @@ public class ExternalProperties extends AbstractProperties {
                 getRangedIntegerType(60, 3600),
                 900,
                 "GCS impersonating service account duration in seconds. "
-                        + "Range from 60 seconds (1 min) to 3600 seconds (1 hour)");
+                        + "Range from 60 seconds (1 min) to 3600 seconds (1 hour)"),
+        EXTERNAL_FUNCTION_HTTP_ENABLED(
+                BOOLEAN,
+                false,
+                "Enable or disable external functions that call HTTP APIs. Such a function sends requests to any "
+                        + "host its definition names, including loopback, link-local (cloud metadata) and private "
+                        + "addresses, which an egress firewall does not cover. Disabling it also stops existing "
+                        + "functions from being called");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -114,6 +121,7 @@ public class ExternalProperties extends AbstractProperties {
                 case AWS_ASSUME_ROLE_PREFETCH_TIME:
                 case AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED:
                 case GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION:
+                case EXTERNAL_FUNCTION_HTTP_ENABLED:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -209,6 +217,10 @@ public class ExternalProperties extends AbstractProperties {
 
     public boolean getAwsAssumeRoleAsyncRefreshEnabled() {
         return accessor.getBoolean(Option.AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED);
+    }
+
+    public boolean isExternalHttpFunctionEnabled() {
+        return accessor.getBoolean(Option.EXTERNAL_FUNCTION_HTTP_ENABLED);
     }
 
     public int getGcpImpersonateServiceAccountDuration() {
