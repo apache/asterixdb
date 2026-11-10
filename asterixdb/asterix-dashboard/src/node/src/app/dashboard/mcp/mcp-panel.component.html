@@ -1,0 +1,174 @@
+<!--/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -->
+<div class="mcp-panel" *ngIf="(mcp$ | async) as mcp" [class.mcp-open]="mcp.open"
+     [class.mcp-resizing]="resizing" [style.width.px]="mcp.open ? panelWidth : 0">
+    <!-- Drag the left edge to resize the side-by-side panel. -->
+    <div class="mcp-resize" (mousedown)="startResize($event)" *ngIf="mcp.open"></div>
+    <header class="mcp-header">
+        <span class="mcp-title">MCP Assistant</span>
+        <span class="flex-spacer"></span>
+        <button mat-button class="mcp-disconnect" *ngIf="mcp.connected" (click)="disconnect()">
+            Disconnect
+        </button>
+        <button mat-icon-button aria-label="Close MCP panel" (click)="close()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </header>
+
+    <mat-progress-bar mode="indeterminate" *ngIf="mcp.connecting || mcp.calling"></mat-progress-bar>
+
+    <!-- Connect form: shown until a session is open. -->
+    <section class="mcp-connect" *ngIf="!mcp.connected">
+        <p class="mcp-hint">Connect to the AsterixDB MCP gateway to browse and invoke its tools.</p>
+        <label class="mcp-field">
+            <span>Endpoint</span>
+            <input type="text" [(ngModel)]="endpoint" placeholder="/mcp" />
+        </label>
+        <label class="mcp-field">
+            <span>Token</span>
+            <input type="password" [(ngModel)]="token" placeholder="bearer token" />
+        </label>
+        <button mat-raised-button color="primary" (click)="connect()" [disabled]="mcp.connecting">
+            Connect
+        </button>
+        <p class="mcp-error" *ngIf="mcp.error">{{ mcp.error }}</p>
+    </section>
+
+    <!-- Connected: Assistant | Tools views. -->
+    <div class="mcp-viewbar" *ngIf="mcp.connected">
+        <button mat-button [class.mcp-active]="mcp.view === 'assistant'"
+                (click)="setView('assistant')">Assistant</button>
+        <button mat-button [class.mcp-active]="mcp.view === 'tools'"
+                (click)="setView('tools')">Tools</button>
+        <button mat-button [class.mcp-active]="mcp.view === 'resources'"
+                (click)="setView('resources')">Resources</button>
+        <button mat-button [class.mcp-active]="mcp.view === 'prompts'"
+                (click)="setView('prompts')">Prompts</button>
+    </div>
+
+    <!-- Natural-language assistant (Antigravity-style chat + inline tool trace). -->
+    <awc-mcp-assistant *ngIf="mcp.connected && mcp.view === 'assistant'" [mcp]="mcp">
+    </awc-mcp-assistant>
+
+    <!-- Manual tool explorer (Inspector-style). -->
+    <section class="mcp-body" *ngIf="mcp.connected && mcp.view === 'tools'">
+        <div class="mcp-toolbar">
+            <span>{{ mcp.tools.length }} tool(s)</span>
+        </div>
+
+        <mat-nav-list class="mcp-tool-list">
+            <a mat-list-item *ngFor="let tool of mcp.tools"
+               [class.mcp-selected]="mcp.selectedTool?.name === tool.name"
+               (click)="selectTool(tool)">
+                <span class="mcp-tool-name">{{ tool.name }}</span>
+            </a>
+        </mat-nav-list>
+
+        <div class="mcp-invoke" *ngIf="mcp.selectedTool as tool">
+            <h4>{{ tool.name }}</h4>
+            <p class="mcp-desc" *ngIf="tool.description">{{ tool.description }}</p>
+            <label class="mcp-field">
+                <span>Arguments (JSON)</span>
+                <textarea rows="6" [(ngModel)]="argsText"></textarea>
+            </label>
+            <button mat-raised-button color="primary" (click)="invoke(tool)" [disabled]="mcp.calling">
+                Invoke
+            </button>
+        </div>
+
+        <p class="mcp-error" *ngIf="mcp.error">{{ mcp.error }}</p>
+
+        <div class="mcp-result" *ngIf="mcp.lastResult">
+            <h4>Result</h4>
+            <pre>{{ mcp.lastResult | json }}</pre>
+        </div>
+    </section>
+
+    <!-- Resource catalog (resources/list + resources/read). User-attached context. -->
+    <section class="mcp-body" *ngIf="mcp.connected && mcp.view === 'resources'">
+        <div class="mcp-toolbar">
+            <span>{{ mcp.resources.length }} resource(s)</span>
+        </div>
+
+        <mat-nav-list class="mcp-tool-list">
+            <a mat-list-item *ngFor="let resource of mcp.resources"
+               [class.mcp-selected]="mcp.selectedResource?.uri === resource.uri"
+               (click)="selectResource(resource)">
+                <span class="mcp-tool-name">{{ resource.name || resource.uri }}</span>
+            </a>
+        </mat-nav-list>
+
+        <div class="mcp-templates" *ngIf="mcp.resourceTemplates.length">
+            <h4>Templates</h4>
+            <ul>
+                <li *ngFor="let template of mcp.resourceTemplates">
+                    <span class="mcp-tool-name">{{ template.name || template.uriTemplate }}</span>
+                    <p class="mcp-desc" *ngIf="template.description">{{ template.description }}</p>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mcp-invoke" *ngIf="mcp.selectedResource as resource">
+            <h4>{{ resource.name || resource.uri }}</h4>
+            <p class="mcp-desc" *ngIf="resource.description">{{ resource.description }}</p>
+            <p class="mcp-hint">{{ resource.uri }}</p>
+        </div>
+
+        <p class="mcp-error" *ngIf="mcp.resourceError">{{ mcp.resourceError }}</p>
+
+        <div class="mcp-result" *ngIf="mcp.resourceContent">
+            <h4>Contents</h4>
+            <pre>{{ mcp.resourceContent | json }}</pre>
+        </div>
+    </section>
+
+    <!-- Prompt catalog (prompts/list + prompts/get). Two-step rule: text only. -->
+    <section class="mcp-body" *ngIf="mcp.connected && mcp.view === 'prompts'">
+        <div class="mcp-toolbar">
+            <span>{{ mcp.prompts.length }} prompt(s)</span>
+        </div>
+
+        <mat-nav-list class="mcp-tool-list">
+            <a mat-list-item *ngFor="let prompt of mcp.prompts"
+               [class.mcp-selected]="mcp.selectedPrompt?.name === prompt.name"
+               (click)="selectPrompt(prompt)">
+                <span class="mcp-tool-name">{{ prompt.name }}</span>
+            </a>
+        </mat-nav-list>
+
+        <div class="mcp-invoke" *ngIf="mcp.selectedPrompt as prompt">
+            <h4>{{ prompt.name }}</h4>
+            <p class="mcp-desc" *ngIf="prompt.description">{{ prompt.description }}</p>
+            <label class="mcp-field" *ngIf="prompt.arguments?.length">
+                <span>Arguments (JSON)</span>
+                <textarea rows="6" [(ngModel)]="promptArgsText"></textarea>
+            </label>
+            <button mat-raised-button color="primary" (click)="getPrompt(prompt)" [disabled]="mcp.gettingPrompt">
+                Get prompt
+            </button>
+        </div>
+
+        <p class="mcp-error" *ngIf="mcp.promptError">{{ mcp.promptError }}</p>
+
+        <div class="mcp-result" *ngIf="mcp.promptResult">
+            <h4>Prompt</h4>
+            <pre>{{ promptText(mcp.promptResult) }}</pre>
+            <button mat-stroked-button color="primary"
+                    (click)="sendPromptToAssistant(mcp.promptResult)" [disabled]="!mcp.llmReady">
+                Send to assistant
+            </button>
+            <p class="mcp-hint" *ngIf="!mcp.llmReady">Configure an LLM in the Assistant tab to send this prompt.</p>
+        </div>
+    </section>
+</div>
