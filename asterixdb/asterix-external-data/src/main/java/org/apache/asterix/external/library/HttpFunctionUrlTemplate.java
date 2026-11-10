@@ -33,8 +33,9 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * The URL of an external HTTP function, whose {@code {name}} references are filled with the function's arguments,
  * each as one path segment.
  * <p>
- * An argument that is empty, {@code .} or {@code ..}, or that contains {@code /} or {@code \}, is refused rather than
- * encoded: encoding leaves {@code .} as it is, and a server may decode an encoded separator back into one. Any other
+ * An argument that is NULL or MISSING, empty, {@code .} or {@code ..}, or that contains {@code /} or {@code \}, is
+ * refused rather than encoded: a path segment is text, with no way to say that there is no value, encoding leaves
+ * {@code .} as it is, and a server may decode an encoded separator back into one. Any other
  * argument is percent-encoded as a path segment, whatever the function's {@code urlencode} option says: a space as
  * {@code %20}, and {@code ?}, {@code #}, {@code %}, {@code +} and non-ASCII characters as their UTF-8 bytes, while
  * unreserved characters stay as they are.
@@ -116,7 +117,8 @@ final class HttpFunctionUrlTemplate {
     /**
      * Appends the URL to {@code url}, with each reference replaced by the text of its argument.
      *
-     * @param arguments the text of each argument, by parameter index. Only those the template references are read.
+     * @param arguments the text of each argument, by parameter index, or {@code null} for a NULL or MISSING argument.
+     *        Only those the template references are read.
      * @throws HyracksDataException if an argument cannot stand as one path segment
      */
     void fill(StringBuilder url, String[] arguments) throws HyracksDataException {
@@ -128,6 +130,10 @@ final class HttpFunctionUrlTemplate {
     }
 
     private String toSegment(int parameterIndex, String value) throws HyracksDataException {
+        // written as text, a NULL would ask for a resource whose name is "null"
+        if (value == null) {
+            throw invalidArgument(parameterIndex, "must not be NULL or MISSING");
+        }
         if (value.isEmpty() || value.equals(CURRENT_SEGMENT) || value.equals(PARENT_SEGMENT)
                 || StringUtils.containsAny(value, SEGMENT_SEPARATOR, BACKSLASH)) {
             throw invalidArgument(parameterIndex, "must not be empty, '" + CURRENT_SEGMENT + "' or '" + PARENT_SEGMENT

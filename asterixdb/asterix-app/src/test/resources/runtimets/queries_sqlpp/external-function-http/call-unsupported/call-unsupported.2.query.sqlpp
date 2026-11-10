@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-SELECT VALUE test.basicAuth(1);
+SELECT VALUE test.oauth(1);

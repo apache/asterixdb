@@ -17,4 +17,4 @@
  * under the License.
  */
 -- bad certificate
-CREATE EXTERNAL FUNCTION test.f(a) AT 'https://api.example.com/{a}' WITH { "certificate": "not a certificate" };
+CREATE EXTERNAL FUNCTION test.f(a) AT 'https://api.example.com/{a}' WITH { "certificates": "not a certificate" };

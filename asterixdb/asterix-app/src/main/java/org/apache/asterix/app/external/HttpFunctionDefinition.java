@@ -20,7 +20,7 @@ package org.apache.asterix.app.external;
 
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_BEARER_TOKEN;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_BODY;
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_CERTIFICATE;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_CERTIFICATES;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_HEADERS;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_METHOD;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_ALLOWED_SCOPES;
@@ -146,13 +146,13 @@ public final class HttpFunctionDefinition {
             throw invalidOption(OPTION_HEADERS, "header '" + HttpHeaders.AUTHORIZATION + "' " + HTTPS_REQUIRED,
                     sourceLoc);
         }
-        String certificate = getNonEmptyString(withOptions, OPTION_CERTIFICATE, sourceLoc);
+        String certificate = getNonEmptyString(withOptions, OPTION_CERTIFICATES, sourceLoc);
         if (certificate != null) {
             if (!isHttps) {
-                throw invalidOption(OPTION_CERTIFICATE, "applies only to an https URL", sourceLoc);
+                throw invalidOption(OPTION_CERTIFICATES, "applies only to an https URL", sourceLoc);
             }
             validateCertificate(certificate, sourceLoc);
-            resources.put(OPTION_CERTIFICATE, certificate);
+            resources.put(OPTION_CERTIFICATES, certificate);
         }
         return new HttpFunctionDefinition(List.of(HttpFunctionConstants.TARGET_URL, url), resources);
     }
@@ -342,11 +342,11 @@ public final class HttpFunctionDefinition {
             certificates = CertificateFactory.getInstance(CERTIFICATE_TYPE)
                     .generateCertificates(new ByteArrayInputStream(certificate.getBytes(StandardCharsets.US_ASCII)));
         } catch (CertificateException e) {
-            throw invalidOption(OPTION_CERTIFICATE,
+            throw invalidOption(OPTION_CERTIFICATES,
                     "not a PEM-encoded " + CERTIFICATE_TYPE + " certificate: " + e.getMessage(), sourceLoc);
         }
         if (certificates.isEmpty()) {
-            throw invalidOption(OPTION_CERTIFICATE, "holds no " + CERTIFICATE_TYPE + " certificate", sourceLoc);
+            throw invalidOption(OPTION_CERTIFICATES, "holds no " + CERTIFICATE_TYPE + " certificate", sourceLoc);
         }
     }
 
@@ -434,7 +434,7 @@ public final class HttpFunctionDefinition {
             options.addAll(scheme.required());
             options.addAll(scheme.optional());
         }
-        options.add(OPTION_CERTIFICATE);
+        options.add(OPTION_CERTIFICATES);
         return Collections.unmodifiableSet(options);
     }
 

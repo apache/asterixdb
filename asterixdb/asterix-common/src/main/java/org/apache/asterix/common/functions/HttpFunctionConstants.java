@@ -51,7 +51,7 @@ public final class HttpFunctionConstants {
     public static final String OPTION_OAUTH_CLIENT_ID = "oauthClientId";
     public static final String OPTION_OAUTH_CLIENT_SECRET = "oauthClientSecret";
     public static final String OPTION_OAUTH_ALLOWED_SCOPES = "oauthAllowedScopes";
-    public static final String OPTION_CERTIFICATE = "certificate";
+    public static final String OPTION_CERTIFICATES = "certificates";
 
     private HttpFunctionConstants() {
     }

@@ -63,6 +63,17 @@ public class HttpFunctionUrlTemplateTest {
     }
 
     @Test
+    public void rejectsNullOrMissing() {
+        try {
+            fill("https://h/items/{a}", null);
+            fail("expected a NULL or MISSING argument to be rejected");
+        } catch (HyracksDataException e) {
+            assertEquals(ErrorCode.EXTERNAL_HTTP_FUNCTION_INVALID_ARGUMENT.intValue(), e.getErrorCode());
+            assertTrue(e.getMessage(), e.getMessage().contains("must not be NULL or MISSING"));
+        }
+    }
+
+    @Test
     public void tracksReferencedParameters() throws HyracksDataException {
         HttpFunctionUrlTemplate template = new HttpFunctionUrlTemplate(TEMPLATE, PARAMETERS, null);
         assertTrue(template.references(0));

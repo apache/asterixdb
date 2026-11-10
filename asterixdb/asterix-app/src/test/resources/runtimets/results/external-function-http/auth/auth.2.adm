@@ -1,0 +1,1 @@
+{ "method": "GET", "path": "/echo", "query": "a=1", "authorization": "Basic YWxpY2U6cGE6c3M=" }

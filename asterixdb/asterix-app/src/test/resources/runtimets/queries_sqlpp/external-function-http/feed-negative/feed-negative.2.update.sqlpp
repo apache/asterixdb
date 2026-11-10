@@ -16,4 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-SELECT VALUE test.form(1);
+
+-- a feed would call the function for every record it ingests
+CONNECT FEED test.ItemFeed TO DATASET test.Items APPLY FUNCTION test.enrich;

@@ -36,7 +36,7 @@
         <expected-error>ASX3119: Parameter 'password' is required if 'username' is provided</expected-error>
         <expected-error>ASX1110: The parameters 'username' and 'bearerToken' cannot be provided at the same time</expected-error>
         <expected-error>ASX1270: Invalid external function option 'timeout': must be a positive number of seconds</expected-error>
-        <expected-error>ASX1270: Invalid external function option 'certificate'</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'certificates'</expected-error>
         <expected-error>ASX1059: Field(s) batched unsupported in the with clause</expected-error>
         <expected-error>ASX1269: Invalid URL 'ftp://api.example.com/x' for an external function: only http and https URLs are supported</expected-error>
         <expected-error>ASX1269: Invalid URL 'https://api.example.com/x?q={a}' for an external function: a query is not allowed</expected-error>
@@ -59,7 +59,7 @@
         <expected-error>ASX1270: Invalid external function option 'bearerToken': sends a credential, so the URL must use https</expected-error>
         <expected-error>ASX1270: Invalid external function option 'headers': header 'Authorization' sends a credential, so the URL must use https</expected-error>
         <expected-error>ASX1270: Invalid external function option 'oauthTokenUri': the client secret is sent to it, so it must use https</expected-error>
-        <expected-error>ASX1270: Invalid external function option 'certificate': applies only to an https URL</expected-error>
+        <expected-error>ASX1270: Invalid external function option 'certificates': applies only to an https URL</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-function-http">
@@ -88,8 +88,34 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-function-http">
+      <compilation-unit name="post-form">
+        <output-dir compare="Text">post-form</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-function-http">
+      <compilation-unit name="feed-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1273: External HTTP function test.enrich(1) cannot be used by a feed</expected-error>
+        <expected-error>ASX1273: External HTTP function test.enrich(1) cannot be used by a feed</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-function-http">
+      <compilation-unit name="auth">
+        <output-dir compare="Text">auth</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-function-http">
+      <compilation-unit name="certificate">
+        <output-dir compare="Text">certificate</output-dir>
+        <expected-error>ASX0205: HTTP request to https://127.0.0.1:19372/echo failed</expected-error>
+        <expected-error>ASX0205: HTTP request to https://127.0.0.1:19372/echo failed</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-function-http">
       <compilation-unit name="null-missing">
         <output-dir compare="Text">null-missing</output-dir>
+        <expected-error>ASX0204: Invalid value for URL parameter 'id': must not be NULL or MISSING</expected-error>
+        <expected-error>ASX0204: Invalid value for URL parameter 'id': must not be NULL or MISSING</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-function-http">
@@ -126,11 +152,7 @@
     <test-case FilePath="external-function-http">
       <compilation-unit name="call-unsupported">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1272: Calling external HTTP function test.basicAuth(1) is not supported: option 'username' is not implemented yet</expected-error>
-        <expected-error>ASX1272: Calling external HTTP function test.bearerAuth(1) is not supported: option 'bearerToken' is not implemented yet</expected-error>
         <expected-error>ASX1272: Calling external HTTP function test.oauth(1) is not supported: option 'oauthTokenUri' is not implemented yet</expected-error>
-        <expected-error>ASX1272: Calling external HTTP function test.trusted(1) is not supported: option 'certificate' is not implemented yet</expected-error>
-        <expected-error>ASX1272: Calling external HTTP function test.form(1) is not supported: option 'body' is not implemented yet</expected-error>
         <expected-error>ASX1272: Calling external HTTP function test.nullOnError(1) is not supported: option 'on-error' is not implemented yet</expected-error>
       </compilation-unit>
     </test-case>

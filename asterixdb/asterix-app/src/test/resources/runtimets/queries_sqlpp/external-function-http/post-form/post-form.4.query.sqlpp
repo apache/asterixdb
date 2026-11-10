@@ -16,4 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-SELECT VALUE test.oauth(1);
+
+-- a field is not JSON, so a value that JSON writes as a string goes without quotes or escapes
+SELECT VALUE test.submitUrlEncoded(7, date("2026-11-20"), uuid("5c0e4a2b-1f3d-4e8a-9b7c-2d6f8a1e3c90"), "say \"hi\" \\ ok");

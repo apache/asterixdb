@@ -5462,12 +5462,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ARecordType outputType = FeedMetadataUtil.getOutputType(feed,
                     feed.getConfiguration().get(ExternalDataConstants.KEY_TYPE_NAME));
             List<FunctionSignature> appliedFunctions = cfs.getAppliedFunctions();
-            for (FunctionSignature func : appliedFunctions) {
-                if (MetadataManager.INSTANCE.getFunction(mdTxnCtx, func) == null) {
-                    throw new CompilationException(ErrorCode.FEED_CONNECT_FEED_APPLIED_INVALID_FUNCTION, sourceLoc,
-                            func.getName());
-                }
-            }
+            FeedMetadataUtil.validateAppliedFunctions(appliedFunctions, mdTxnCtx, sourceLoc);
             fc = MetadataManager.INSTANCE.getFeedConnection(metadataProvider.getMetadataTxnContext(), databaseName,
                     dataverseName, feedName, datasetName);
             if (fc != null) {

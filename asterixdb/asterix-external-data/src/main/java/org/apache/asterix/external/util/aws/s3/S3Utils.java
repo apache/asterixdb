@@ -76,15 +76,8 @@ import static org.apache.asterix.external.util.aws.s3.S3Constants.INPUT_STREAM_T
 import static org.apache.asterix.external.util.aws.s3.S3Constants.PATH_STYLE_ADDRESSING_FIELD_NAME;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyStore;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,8 +87,6 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -105,6 +96,7 @@ import org.apache.asterix.external.input.record.reader.abstracts.AbstractExterna
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.TlsUtils;
 import org.apache.asterix.external.util.aws.AwsUtils;
 import org.apache.asterix.external.util.aws.AwsUtils.CloseableAwsClients;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
@@ -228,36 +220,7 @@ public class S3Utils {
 
     static TrustManager[] buildTrustManagers(String pemCertificates) throws CompilationException {
         try {
-            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-            Collection<? extends Certificate> certificates = certificateFactory.generateCertificates(
-                    new ByteArrayInputStream(pemCertificates.getBytes(StandardCharsets.UTF_8)));
-            if (certificates.isEmpty()) {
-                throw new IllegalArgumentException("No certificates found in the supplied PEM data");
-            }
-
-            TrustManagerFactory defaultTrustManagerFactory =
-                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            defaultTrustManagerFactory.init((KeyStore) null);
-
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keyStore.load(null, null);
-
-            int alias = 0;
-            for (TrustManager trustManager : defaultTrustManagerFactory.getTrustManagers()) {
-                if (trustManager instanceof X509TrustManager x509TrustManager) {
-                    for (X509Certificate certificate : x509TrustManager.getAcceptedIssuers()) {
-                        keyStore.setCertificateEntry("default-ca-" + alias++, certificate);
-                    }
-                }
-            }
-            for (Certificate certificate : certificates) {
-                keyStore.setCertificateEntry("custom-ca-" + alias++, certificate);
-            }
-
-            TrustManagerFactory trustManagerFactory =
-                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(keyStore);
-            return trustManagerFactory.getTrustManagers();
+            return TlsUtils.buildTrustManagers(pemCertificates, true);
         } catch (Exception e) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
         }

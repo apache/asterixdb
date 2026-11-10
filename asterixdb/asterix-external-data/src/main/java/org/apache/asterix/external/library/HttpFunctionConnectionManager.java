@@ -20,24 +20,40 @@ package org.apache.asterix.external.library;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLContext;
+
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.functions.HttpFunctionConstants;
 import org.apache.asterix.common.functions.IHttpEgressPolicy;
+import org.apache.asterix.external.util.TlsUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.DnsResolver;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.conn.SystemDefaultDnsResolver;
+import org.apache.http.protocol.HttpContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Creates the HTTP client that the external HTTP functions of a node share, and bounds each of their calls.
@@ -51,9 +67,13 @@ public final class HttpFunctionConnectionManager {
     // bounds how long a connection opened to an address the egress policy allowed keeps being reused
     private static final long CONNECTION_TIME_TO_LIVE_SECONDS = 60;
     private static final long MAX_IDLE_SECONDS = 60;
+    // a server may close an idle connection just after the pool has checked it and handed it out
+    private static final int STALE_CONNECTION_RETRIES = 1;
     // how often a call is checked for its deadline and for an interrupt: bounds how late either aborts it
     private static final long WATCH_INTERVAL_MILLIS = 100;
     private static final String DEADLINE_THREAD_NAME = "external-http-function-deadline";
+    private static final String SOCKET_FACTORY_ATTRIBUTE = "external-http-function.socket-factory";
+    private static final String TLS_PROTOCOL = "TLS";
     private static final ScheduledThreadPoolExecutor DEADLINE_TIMER = createDeadlineTimer();
 
     private HttpFunctionConnectionManager() {
@@ -61,7 +81,9 @@ public final class HttpFunctionConnectionManager {
 
     /**
      * Creates a pooled client that connects only to addresses {@code policy} allows, follows no redirect, keeps no
-     * cookie, retries nothing and ignores the JVM's proxy settings.
+     * cookie and ignores the JVM's proxy settings. It resends a request once when its pooled connection turns out to
+     * be closed, unless the request has a body that may have been sent, and never after a timeout, an abort, or a
+     * failure to resolve the host, connect to it or set up TLS.
      *
      * @param policy the policy every address a host name resolves to is checked against, before a connection is
      *        opened to it
@@ -70,12 +92,13 @@ public final class HttpFunctionConnectionManager {
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(
                 RegistryBuilder.<ConnectionSocketFactory> create()
                         .register(SCHEME_HTTP, PlainConnectionSocketFactory.getSocketFactory())
-                        .register(SCHEME_HTTPS, SSLConnectionSocketFactory.getSocketFactory()).build(),
+                        .register(SCHEME_HTTPS, new ContextTrustSocketFactory()).build(),
                 null, null, new PolicyDnsResolver(policy), CONNECTION_TIME_TO_LIVE_SECONDS, TimeUnit.SECONDS);
         connectionManager.setMaxTotal(MAX_CONNECTIONS);
         connectionManager.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
         return HttpClients.custom().setConnectionManager(connectionManager).disableRedirectHandling()
-                .disableCookieManagement().disableAutomaticRetries()
+                .disableCookieManagement()
+                .setRetryHandler(new DefaultHttpRequestRetryHandler(STALE_CONNECTION_RETRIES, false))
                 .evictIdleConnections(MAX_IDLE_SECONDS, TimeUnit.SECONDS).build();
     }
 
@@ -85,13 +108,14 @@ public final class HttpFunctionConnectionManager {
      * a cancelled query's are. A socket timeout alone cannot bound a server that keeps sending a byte at a time, and
      * a blocked socket does not notice an interrupt.
      *
+     * @param context a context from {@link #createContext(String, SourceLocation)}
      * @return what {@code handler} returns
      * @throws HyracksDataException if the client's egress policy refused the host, {@code handler} threw it, or the
      *         calling thread was interrupted, in which case it is caused by an {@link InterruptedException}
      * @throws IOException if the request failed. {@link HttpRequestBase#isAborted()} tells whether it was because
      *         the call ran out of time.
      */
-    static <T> T execute(CloseableHttpClient client, HttpRequestBase request, long timeoutMillis,
+    static <T> T execute(CloseableHttpClient client, HttpRequestBase request, HttpContext context, long timeoutMillis,
             ResponseHandler<? extends T> handler) throws IOException {
         Thread caller = Thread.currentThread();
         if (caller.isInterrupted()) {
@@ -104,7 +128,7 @@ public final class HttpFunctionConnectionManager {
             }
         }, WATCH_INTERVAL_MILLIS, WATCH_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
         try {
-            return client.execute(request, handler);
+            return client.execute(request, handler, context);
         } catch (EgressRefusedException e) {
             throw e.getRefusal();
         } catch (IOException e) {
@@ -117,6 +141,37 @@ public final class HttpFunctionConnectionManager {
             throw e;
         } finally {
             watch.cancel(false);
+        }
+    }
+
+    /**
+     * Creates the context of an endpoint's requests.
+     *
+     * @param certificate the PEM-encoded certificates of the only authorities whose HTTPS servers the requests
+     *        trust, or {@code null} to trust those the JVM does
+     * @param sourceLoc the location of the call, which an error reports
+     * @throws HyracksDataException if {@code certificate} cannot be read
+     */
+    static HttpClientContext createContext(String certificate, SourceLocation sourceLoc) throws HyracksDataException {
+        HttpClientContext context = HttpClientContext.create();
+        if (certificate != null) {
+            context.setAttribute(SOCKET_FACTORY_ATTRIBUTE,
+                    new SSLConnectionSocketFactory(createSslContext(certificate, sourceLoc)));
+            // a pooled connection is reused only by requests of the same token, so never by one trusting others
+            context.setUserToken(certificate);
+        }
+        return context;
+    }
+
+    private static SSLContext createSslContext(String certificate, SourceLocation sourceLoc)
+            throws HyracksDataException {
+        try {
+            SSLContext sslContext = SSLContext.getInstance(TLS_PROTOCOL);
+            sslContext.init(null, TlsUtils.buildTrustManagers(certificate, false), null);
+            return sslContext;
+        } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_INVALID_OPTION, e, sourceLoc,
+                    HttpFunctionConstants.OPTION_CERTIFICATES, ExceptionUtils.getMessage(e));
         }
     }
 
@@ -148,6 +203,37 @@ public final class HttpFunctionConnectionManager {
                 throw new EgressRefusedException(host, e);
             }
             return addresses;
+        }
+    }
+
+    /**
+     * Opens HTTPS connections with the socket factory of the request's context, which trusts the authorities of the
+     * request's endpoint, or with the JVM's if it has none. Either verifies the host name.
+     */
+    private static final class ContextTrustSocketFactory implements LayeredConnectionSocketFactory {
+
+        private static final SSLConnectionSocketFactory DEFAULT = SSLConnectionSocketFactory.getSocketFactory();
+
+        @Override
+        public Socket createSocket(HttpContext context) throws IOException {
+            return select(context).createSocket(context);
+        }
+
+        @Override
+        public Socket connectSocket(int connectTimeout, Socket socket, HttpHost host, InetSocketAddress remoteAddress,
+                InetSocketAddress localAddress, HttpContext context) throws IOException {
+            return select(context).connectSocket(connectTimeout, socket, host, remoteAddress, localAddress, context);
+        }
+
+        @Override
+        public Socket createLayeredSocket(Socket socket, String target, int port, HttpContext context)
+                throws IOException {
+            return select(context).createLayeredSocket(socket, target, port, context);
+        }
+
+        private static SSLConnectionSocketFactory select(HttpContext context) {
+            Object factory = context.getAttribute(SOCKET_FACTORY_ATTRIBUTE);
+            return factory == null ? DEFAULT : (SSLConnectionSocketFactory) factory;
         }
     }
 

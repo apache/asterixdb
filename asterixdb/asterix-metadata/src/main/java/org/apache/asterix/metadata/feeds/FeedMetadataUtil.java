@@ -21,7 +21,12 @@ package org.apache.asterix.metadata.feeds;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.rmi.RemoteException;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -33,7 +38,9 @@ import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.external.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.external.adapter.factory.ExternalAdapterFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
@@ -50,8 +57,10 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.entities.DependencyKind;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -63,6 +72,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.NoOpWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * A utility class for providing helper functions for feeds TODO: Refactor this
@@ -94,6 +104,56 @@ public class FeedMetadataUtil {
             throw new CompilationException("Unknown source feed: " + feedName);
         }
         return feed;
+    }
+
+    public static void validateAppliedFunctions(List<FunctionSignature> appliedFunctions,
+            MetadataTransactionContext ctx, SourceLocation sourceLoc) throws AlgebricksException {
+        for (FunctionSignature signature : appliedFunctions) {
+            Function function = MetadataManager.INSTANCE.getFunction(ctx, signature);
+            if (function == null) {
+                throw new CompilationException(ErrorCode.FEED_CONNECT_FEED_APPLIED_INVALID_FUNCTION, sourceLoc,
+                        signature.getName());
+            }
+            // a feed calls its functions for every record it ingests, for as long as it runs, which is not what the
+            // limits and the error handling of an HTTP call are designed for
+            FunctionSignature httpFunction = findExternalHttpFunction(function, ctx);
+            if (httpFunction != null) {
+                throw new CompilationException(ErrorCode.EXTERNAL_HTTP_FUNCTION_FEED_UNSUPPORTED, sourceLoc,
+                        httpFunction.toString());
+            }
+        }
+    }
+
+    // the function itself or any function it calls, however indirectly
+    private static FunctionSignature findExternalHttpFunction(Function function, MetadataTransactionContext ctx)
+            throws AlgebricksException {
+        int functionDependencies = Function.DEPENDENCIES_SCHEMA.indexOf(DependencyKind.FUNCTION);
+        Set<FunctionSignature> seen = new HashSet<>();
+        seen.add(function.getSignature());
+        Deque<Function> pending = new ArrayDeque<>();
+        pending.push(function);
+        while (!pending.isEmpty()) {
+            Function current = pending.pop();
+            if (ExternalFunctionLanguage.HTTP.name().equals(current.getLanguage())) {
+                return current.getSignature();
+            }
+            List<List<DependencyFullyQualifiedName>> dependencies = current.getDependencies();
+            if (dependencies == null || dependencies.size() <= functionDependencies) {
+                continue;
+            }
+            for (DependencyFullyQualifiedName dependency : dependencies.get(functionDependencies)) {
+                FunctionSignature callee =
+                        new FunctionSignature(dependency.getDatabaseName(), dependency.getDataverseName(),
+                                dependency.getSubName1(), Integer.parseInt(dependency.getSubName2()));
+                if (seen.add(callee)) {
+                    Function calleeFunction = MetadataManager.INSTANCE.getFunction(ctx, callee);
+                    if (calleeFunction != null) {
+                        pending.push(calleeFunction);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public static FeedPolicyEntity validateIfPolicyExists(String database, DataverseName dataverseName,

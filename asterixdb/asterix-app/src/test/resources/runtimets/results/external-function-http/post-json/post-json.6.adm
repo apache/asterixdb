@@ -1,0 +1,1 @@
+{ "method": "POST", "path": "/echo", "contentType": "application/json; charset=UTF-8", "body": { "a": "2026-11-20", "b": "say \"hi\" \\ ok" } }

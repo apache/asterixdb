@@ -21,11 +21,14 @@ package org.apache.asterix.external.library;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -33,8 +36,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.IHttpEgressPolicy;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.ExceptionUtils;
@@ -48,6 +54,13 @@ public class HttpFunctionConnectionManagerTest {
     private static final long INTERRUPT_AFTER_MILLIS = 300;
     // well under the timeout: the call ended because of the interrupt, not because it ran out of time
     private static final long MAX_CANCEL_MILLIS = TimeUnit.SECONDS.toMillis(5);
+    private static final long STALE_AFTER_MILLIS = 200;
+    private static final byte[] REQUEST_HEADERS_END = "\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+    private static final byte[] KEEP_ALIVE_RESPONSE =
+            ("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n" + "Connection: keep-alive\r\n\r\n")
+                    .getBytes(StandardCharsets.US_ASCII);
+    private static final String UNREADABLE_CERTIFICATE =
+            "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n";
 
     // accepts connections and never answers, as an endpoint that hangs does
     private ServerSocket server;
@@ -96,7 +109,8 @@ public class HttpFunctionConnectionManagerTest {
         CompletableFuture<Throwable> failure = new CompletableFuture<>();
         Thread caller = new Thread(() -> {
             try {
-                HttpFunctionConnectionManager.execute(client, request, LONG_TIMEOUT_MILLIS, response -> null);
+                HttpFunctionConnectionManager.execute(client, request, HttpClientContext.create(), LONG_TIMEOUT_MILLIS,
+                        response -> null);
                 failure.complete(null);
             } catch (Throwable e) {
                 stillInterrupted.set(Thread.currentThread().isInterrupted());
@@ -121,7 +135,8 @@ public class HttpFunctionConnectionManagerTest {
         Thread caller = new Thread(() -> {
             Thread.currentThread().interrupt();
             try {
-                HttpFunctionConnectionManager.execute(client, new HttpGet(url), LONG_TIMEOUT_MILLIS, response -> null);
+                HttpFunctionConnectionManager.execute(client, new HttpGet(url), HttpClientContext.create(),
+                        LONG_TIMEOUT_MILLIS, response -> null);
                 failure.complete(null);
             } catch (Throwable e) {
                 failure.complete(e);
@@ -138,12 +153,67 @@ public class HttpFunctionConnectionManagerTest {
         HttpGet request = new HttpGet(url);
         Throwable e = null;
         try {
-            HttpFunctionConnectionManager.execute(client, request, INTERRUPT_AFTER_MILLIS, response -> null);
+            HttpFunctionConnectionManager.execute(client, request, HttpClientContext.create(), INTERRUPT_AFTER_MILLIS,
+                    response -> null);
         } catch (IOException thrown) {
             e = thrown;
         }
         assertTrue(String.valueOf(e), e != null && !(e instanceof HyracksDataException));
         assertTrue(request.isAborted());
         assertFalse(Thread.currentThread().isInterrupted());
+    }
+
+    @Test
+    public void resendsGetWhoseIdleConnectionTheServerClosed() throws Exception {
+        try (ServerSocket closing = new ServerSocket(0, 50, InetAddress.getLoopbackAddress())) {
+            AtomicInteger closingConnections = new AtomicInteger();
+            Thread acceptor = new Thread(() -> answerOnceThenClose(closing, closingConnections));
+            acceptor.setDaemon(true);
+            acceptor.start();
+            String closingUrl = "http://127.0.0.1:" + closing.getLocalPort() + "/ok";
+            assertEquals(HttpStatus.SC_OK, get(closingUrl));
+            // well under the pool's validation interval, so that the closed connection is handed out unchecked
+            Thread.sleep(STALE_AFTER_MILLIS);
+            assertEquals(HttpStatus.SC_OK, get(closingUrl));
+            assertEquals(2, closingConnections.get());
+        }
+    }
+
+    @Test
+    public void unreadableCertificateIsAnInvalidOption() {
+        try {
+            HttpFunctionConnectionManager.createContext(UNREADABLE_CERTIFICATE, null);
+            fail("expected the certificate to be refused");
+        } catch (HyracksDataException e) {
+            assertEquals(ErrorCode.EXTERNAL_HTTP_FUNCTION_INVALID_OPTION.intValue(), e.getErrorCode());
+        }
+    }
+
+    private int get(String url) throws IOException {
+        return HttpFunctionConnectionManager.execute(client, new HttpGet(url), HttpClientContext.create(),
+                LONG_TIMEOUT_MILLIS, response -> response.getStatusLine().getStatusCode());
+    }
+
+    // answers one request on each connection, announcing that it keeps it open, then closes it without a word, as
+    // a server whose keep-alive timeout has passed does
+    private static void answerOnceThenClose(ServerSocket server, AtomicInteger connections) {
+        while (!server.isClosed()) {
+            try (Socket socket = server.accept()) {
+                connections.incrementAndGet();
+                InputStream in = socket.getInputStream();
+                int matched = 0;
+                while (matched < REQUEST_HEADERS_END.length) {
+                    int b = in.read();
+                    if (b < 0) {
+                        break;
+                    }
+                    matched = b == REQUEST_HEADERS_END[matched] ? matched + 1 : (b == REQUEST_HEADERS_END[0] ? 1 : 0);
+                }
+                socket.getOutputStream().write(KEEP_ALIVE_RESPONSE);
+                socket.getOutputStream().flush();
+            } catch (IOException e) {
+                return;
+            }
+        }
     }
 }

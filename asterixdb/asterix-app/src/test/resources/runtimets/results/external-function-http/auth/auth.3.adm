@@ -1,0 +1,1 @@
+{ "method": "GET", "path": "/echo", "query": "a=1", "authorization": "Bearer t0ken" }

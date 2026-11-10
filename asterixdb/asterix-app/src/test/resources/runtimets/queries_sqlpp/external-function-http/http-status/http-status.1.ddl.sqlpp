@@ -22,3 +22,5 @@ USE test;
 
 CREATE EXTERNAL FUNCTION status(code) AT 'http://127.0.0.1:19371/status/{code}';
 CREATE EXTERNAL FUNCTION redirect() AT 'http://127.0.0.1:19371/redirect';
+CREATE EXTERNAL FUNCTION postStatus(code) AT 'http://127.0.0.1:19371/status/{code}' WITH { "method": "post" };
+CREATE EXTERNAL FUNCTION content(kind) AT 'http://127.0.0.1:19371/content/{kind}';

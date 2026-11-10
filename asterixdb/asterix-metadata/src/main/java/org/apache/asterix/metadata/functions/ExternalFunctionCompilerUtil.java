@@ -18,16 +18,11 @@
  */
 package org.apache.asterix.metadata.functions;
 
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_BEARER_TOKEN;
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_BODY;
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_CERTIFICATE;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_ALLOWED_SCOPES;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_CLIENT_ID;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_CLIENT_SECRET;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_TOKEN_URI;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_ON_ERROR;
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_PASSWORD;
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_USERNAME;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +33,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.functions.HttpFunctionBodyFormat;
 import org.apache.asterix.common.functions.HttpFunctionOnError;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -56,9 +50,8 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExternalFunctionCompilerUtil {
 
-    private static final List<String> UNIMPLEMENTED_HTTP_OPTIONS = List.of(OPTION_USERNAME, OPTION_PASSWORD,
-            OPTION_BEARER_TOKEN, OPTION_OAUTH_TOKEN_URI, OPTION_OAUTH_CLIENT_ID, OPTION_OAUTH_CLIENT_SECRET,
-            OPTION_OAUTH_ALLOWED_SCOPES, OPTION_CERTIFICATE);
+    private static final List<String> UNIMPLEMENTED_HTTP_OPTIONS = List.of(OPTION_OAUTH_TOKEN_URI,
+            OPTION_OAUTH_CLIENT_ID, OPTION_OAUTH_CLIENT_SECRET, OPTION_OAUTH_ALLOWED_SCOPES);
 
     private ExternalFunctionCompilerUtil() {
         // do nothing
@@ -126,10 +119,6 @@ public class ExternalFunctionCompilerUtil {
             if (resources.containsKey(option)) {
                 return option;
             }
-        }
-        String body = resources.get(OPTION_BODY);
-        if (body != null && !HttpFunctionBodyFormat.JSON.name().equals(body)) {
-            return OPTION_BODY;
         }
         if (HttpFunctionOnError.NULL.name().equals(resources.get(OPTION_ON_ERROR))) {
             return OPTION_ON_ERROR;

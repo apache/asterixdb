@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -42,6 +43,7 @@ import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.HttpEndpoint;
+import org.apache.asterix.common.functions.HttpFunctionBodyFormat;
 import org.apache.asterix.common.functions.HttpFunctionConstants;
 import org.apache.asterix.common.functions.HttpFunctionMethod;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AObjectPrinterFactory;
@@ -64,11 +66,13 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
@@ -90,7 +94,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Calls an external HTTP function once per tuple. The arguments fill the URL template, and the rest go in the query
- * string of a GET or in the JSON object body of a POST. A JSON response becomes the value it holds, and a text
+ * string of a GET or in the body of a POST, as a JSON object, a URL-encoded form or a multipart form. A JSON response becomes the value it holds, and a text
  * response a string.
  */
 class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluator {
@@ -99,9 +103,21 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private static final TypeReference<Map<String, String>> HEADERS_TYPE = new TypeReference<>() {
     };
     private static final String PATH_SEPARATOR = "/";
-    private static final char QUERY_START = '?';
-    private static final char QUERY_PARAMETER_SEPARATOR = '&';
-    private static final String QUERY_NAME_SEPARATOR = "=";
+    private static final String QUERY_START = "?";
+    private static final String NO_SEPARATOR = "";
+    private static final String FORM_FIELD_SEPARATOR = "&";
+    private static final String FORM_NAME_SEPARATOR = "=";
+    private static final String CR = "\r";
+    private static final String LF = "\n";
+    private static final String CRLF = CR + LF;
+    private static final String MULTIPART_DASHES = "--";
+    private static final String MULTIPART_BOUNDARY = "boundary";
+    private static final String MULTIPART_PART_HEADERS = "Content-Disposition: form-data; name=\"%s\"" + CRLF
+            + "Content-Type: text/plain; charset=UTF-8" + CRLF + CRLF;
+    private static final String QUOTE = "\"";
+    private static final String ESCAPED_QUOTE = "%22";
+    private static final String ESCAPED_CR = "%0D";
+    private static final String ESCAPED_LF = "%0A";
     private static final String JSON_STRING_START = "\"";
     private static final char JSON_OBJECT_START = '{';
     private static final char JSON_OBJECT_END = '}';
@@ -114,6 +130,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private static final String REQUEST = "request";
     private static final String RESPONSE = "response";
     private static final String MALFORMED_JSON = "the response is not valid JSON";
+    private static final String INVALID_HEADERS = "not a JSON object of strings";
     private static final int HEADER_SEPARATOR_AND_LINE_END_LENGTH = ": \r\n".length();
     private static final int READ_BUFFER_SIZE = 8192;
 
@@ -121,13 +138,15 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private final SourceLocation sourceLoc;
     private final boolean nullCall;
     private final HttpFunctionMethod method;
+    private final HttpFunctionBodyFormat argumentFormat;
+    private final ContentType bodyContentType;
+    private final String multipartEnd;
     private final boolean urlencode;
     private final int timeoutSeconds;
     private final long timeoutMillis;
     private final RequestConfig requestConfig;
     private final int maxRequestSize;
     private final int maxResponseSize;
-    // each parameter's name as it starts a query parameter of a GET or a field of a POST body
     private final String[] parameterPrefixes;
     private final IPointable[] argValues;
     private final String[] argTexts;
@@ -137,6 +156,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private final ByteArrayAccessibleOutputStream bodyBuffer = new ByteArrayAccessibleOutputStream();
     private final PrintStream bodyStream = new PrintStream(bodyBuffer, false, StandardCharsets.UTF_8);
     private final StringBuilder urlBuilder = new StringBuilder();
+    private final StringBuilder formBuilder = new StringBuilder();
     private final byte[] readBuffer = new byte[READ_BUFFER_SIZE];
     private final ByteArrayAccessibleOutputStream responseBuffer = new ByteArrayAccessibleOutputStream();
     private final ByteArrayAccessibleInputStream responseInput = new ByteArrayAccessibleInputStream(new byte[0], 0, 0);
@@ -147,8 +167,10 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
 
     // resolved by the first call that sends a request
     private CloseableHttpClient client;
+    private HttpClientContext context;
     private HttpFunctionUrlTemplate urlTemplate;
     private Header[] headers;
+    private long headersSize;
 
     ExternalScalarHttpFunctionEvaluator(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args, IAType[] argTypes,
             IEvaluatorContext ctx, SourceLocation sourceLoc) throws HyracksDataException {
@@ -170,13 +192,27 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
                 .setConnectionRequestTimeout(timeoutMillisInt).setSocketTimeout(timeoutMillisInt).build();
         maxRequestSize = externalProperties.getExternalHttpFunctionMaxRequestSize();
         maxResponseSize = externalProperties.getExternalHttpFunctionMaxResponseSize();
+        argumentFormat = method == HttpFunctionMethod.GET ? HttpFunctionBodyFormat.URLENCODED
+                : HttpFunctionBodyFormat.valueOf(resources.get(HttpFunctionConstants.OPTION_BODY));
+        String boundary = UUID.randomUUID().toString();
+        bodyContentType = switch (argumentFormat) {
+            case JSON -> ContentType.APPLICATION_JSON;
+            case URLENCODED -> ContentType.APPLICATION_FORM_URLENCODED.withCharset(StandardCharsets.UTF_8);
+            case FORMDATA -> ContentType.create(ContentType.MULTIPART_FORM_DATA.getMimeType(),
+                    new BasicNameValuePair(MULTIPART_BOUNDARY, boundary));
+        };
+        String multipartDelimiter = MULTIPART_DASHES + boundary;
+        multipartEnd = multipartDelimiter + MULTIPART_DASHES + CRLF;
         List<String> parameterNames = finfo.getParameterNames();
         parameterPrefixes = new String[args.length];
         for (int i = 0; i < args.length; i++) {
             String name = parameterNames.get(i);
-            parameterPrefixes[i] = method == HttpFunctionMethod.GET
-                    ? URLEncoder.encode(name, StandardCharsets.UTF_8) + QUERY_NAME_SEPARATOR
-                    : JSONUtil.quoteAndEscape(name) + JSON_NAME_SEPARATOR;
+            parameterPrefixes[i] = switch (argumentFormat) {
+                case JSON -> JSONUtil.quoteAndEscape(name) + JSON_NAME_SEPARATOR;
+                case URLENCODED -> URLEncoder.encode(name, StandardCharsets.UTF_8) + FORM_NAME_SEPARATOR;
+                case FORMDATA -> multipartDelimiter + CRLF
+                        + String.format(MULTIPART_PART_HEADERS, escapeMultipartName(name));
+            };
         }
         argValues = new IPointable[args.length];
         for (int i = 0; i < args.length; i++) {
@@ -222,11 +258,13 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         String template =
                 path == null ? endpoint.getUrl() : StringUtils.stripEnd(endpoint.getUrl(), PATH_SEPARATOR) + path;
         urlTemplate = new HttpFunctionUrlTemplate(template, finfo.getParameterNames(), sourceLoc);
-        headers = mergeHeaders(endpoint.getHeaders(), resources.get(HttpFunctionConstants.OPTION_HEADERS));
+        headers = mergeHeaders(endpoint.getHeaders(), resources.get(HttpFunctionConstants.OPTION_HEADERS), sourceLoc);
+        headersSize = getHeadersSize(headers);
+        context = HttpFunctionConnectionManager.createContext(endpoint.getCertificate(), sourceLoc);
         client = appCtx.getHttpFunctionClient();
     }
 
-    private static Header[] mergeHeaders(Map<String, String> endpointHeaders, String functionHeaders)
+    static Header[] mergeHeaders(Map<String, String> endpointHeaders, String functionHeaders, SourceLocation sourceLoc)
             throws HyracksDataException {
         // a function's header never replaces one of its endpoint's, whatever the case of its name
         Map<String, String> merged = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -235,7 +273,9 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
             try {
                 OBJECT_MAPPER.readValue(functionHeaders, HEADERS_TYPE).forEach(merged::putIfAbsent);
             } catch (JsonProcessingException e) {
-                throw HyracksDataException.create(e);
+                // not chained: the parser's message can quote the header values, which may be secrets
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_INVALID_OPTION, sourceLoc,
+                        HttpFunctionConstants.OPTION_HEADERS, INVALID_HEADERS);
             }
         }
         return merged.entrySet().stream().map(header -> new BasicHeader(header.getKey(), header.getValue()))
@@ -244,52 +284,87 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
 
     private HttpRequestBase createRequest() throws HyracksDataException {
         for (int i = 0; i < argValues.length; i++) {
-            argTexts[i] = urlTemplate.references(i) ? getArgumentText(i) : null;
+            argTexts[i] = urlTemplate.references(i) && !isNullOrMissing(i) ? getArgumentText(i) : null;
         }
         urlBuilder.setLength(0);
         urlTemplate.fill(urlBuilder, argTexts);
         HttpRequestBase request;
         int bodySize = 0;
         if (method == HttpFunctionMethod.GET) {
-            appendQuery();
+            appendForm(urlBuilder, QUERY_START);
             request = new HttpGet(toUri());
         } else {
             writeBody();
             bodySize = bodyBuffer.size();
             HttpPost post = new HttpPost(toUri());
-            post.setEntity(new ByteArrayEntity(bodyBuffer.getByteArray(), 0, bodySize, ContentType.APPLICATION_JSON));
+            post.setEntity(new ByteArrayEntity(bodyBuffer.getByteArray(), 0, bodySize, bodyContentType));
             request = post;
         }
         request.setConfig(requestConfig);
         request.setHeaders(headers);
         // the whole request, whatever its method: its URL, its headers and its body
-        checkRequestSize((long) urlBuilder.length() + getHeadersSize(request) + bodySize);
+        checkRequestSize((long) urlBuilder.length() + headersSize + bodySize);
         return request;
     }
 
     // a header is sent as its name, ": ", its value and a line end
-    private static long getHeadersSize(HttpRequestBase request) {
+    private static long getHeadersSize(Header[] headers) {
         long size = 0;
-        for (Header header : request.getAllHeaders()) {
+        for (Header header : headers) {
             size += header.getName().length() + header.getValue().length() + HEADER_SEPARATOR_AND_LINE_END_LENGTH;
         }
         return size;
     }
 
-    private void appendQuery() throws HyracksDataException {
-        char separator = QUERY_START;
+    // only with null-call, since a NULL or MISSING argument is otherwise the result
+    private boolean isNullOrMissing(int argIndex) {
+        byte tag = argValues[argIndex].getByteArray()[argValues[argIndex].getStartOffset()];
+        return tag == ATypeTag.SERIALIZED_NULL_TYPE_TAG || tag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
+    }
+
+    private void appendForm(StringBuilder out, String firstSeparator) throws HyracksDataException {
+        String separator = firstSeparator;
         for (int i = 0; i < argValues.length; i++) {
             if (!urlTemplate.references(i)) {
                 String text = getArgumentText(i);
-                urlBuilder.append(separator).append(parameterPrefixes[i])
+                out.append(separator).append(parameterPrefixes[i])
                         .append(urlencode ? URLEncoder.encode(text, StandardCharsets.UTF_8) : text);
-                separator = QUERY_PARAMETER_SEPARATOR;
+                separator = FORM_FIELD_SEPARATOR;
             }
         }
     }
 
     private void writeBody() throws HyracksDataException {
         bodyBuffer.reset();
+        switch (argumentFormat) {
+            case JSON -> writeJsonBody();
+            case URLENCODED -> {
+                formBuilder.setLength(0);
+                appendForm(formBuilder, NO_SEPARATOR);
+                bodyStream.print(formBuilder);
+            }
+            case FORMDATA -> writeMultipartBody();
+        }
+        bodyStream.flush();
+    }
+
+    private void writeMultipartBody() throws HyracksDataException {
+        for (int i = 0; i < argValues.length; i++) {
+            if (!urlTemplate.references(i)) {
+                bodyStream.print(parameterPrefixes[i]);
+                bodyStream.print(getArgumentText(i));
+                bodyStream.print(CRLF);
+            }
+        }
+        bodyStream.print(multipartEnd);
+    }
+
+    // a quoted multipart field name escapes what would end it, as browsers do
+    private static String escapeMultipartName(String name) {
+        return name.replace(QUOTE, ESCAPED_QUOTE).replace(CR, ESCAPED_CR).replace(LF, ESCAPED_LF);
+    }
+
+    private void writeJsonBody() throws HyracksDataException {
         bodyStream.print(JSON_OBJECT_START);
         boolean first = true;
         for (int i = 0; i < argValues.length; i++) {
@@ -304,11 +379,11 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
             }
         }
         bodyStream.print(JSON_OBJECT_END);
-        bodyStream.flush();
     }
 
-    // an argument is sent as its JSON text, except that a value JSON writes as a string, a string or a date or a
-    // uuid alike, is sent as that string's value: quotes belong to JSON, not to a URL
+    // for a URL, a form field or a multipart part, none of which is JSON: a value that JSON writes as a string, a
+    // date or a uuid as much as a string, is sent as that string's value, without JSON's quotes or escapes, and any
+    // other value as its JSON text. A JSON body does not use this: it writes every value as JSON (writeJsonBody).
     private String getArgumentText(int argIndex) throws HyracksDataException {
         IPointable arg = argValues[argIndex];
         byte[] bytes = arg.getByteArray();
@@ -350,7 +425,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
 
     private void send(HttpRequestBase request) throws HyracksDataException {
         try {
-            HttpFunctionConnectionManager.execute(client, request, timeoutMillis, responseHandler);
+            HttpFunctionConnectionManager.execute(client, request, context, timeoutMillis, responseHandler);
         } catch (HyracksDataException e) {
             // a refusal of the egress policy, or an error the response raised, already in its final form
             throw e;
@@ -377,6 +452,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
             readBody(entity.getContent());
         }
         if (responseBuffer.size() == 0) {
+            // a success with nothing to return, as a 201, 202 or 204 to a POST often is, whatever its Content-Type
             resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             return null;
         }

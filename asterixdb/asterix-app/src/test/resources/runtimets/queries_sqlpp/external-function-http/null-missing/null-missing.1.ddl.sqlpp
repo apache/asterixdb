@@ -26,3 +26,5 @@ CREATE EXTERNAL FUNCTION nullCall(a, b) AT 'http://127.0.0.1:19371/echo' WITH {
   "method": "post",
   "null-call": true
 };
+-- the template takes the argument as a path segment
+CREATE EXTERNAL FUNCTION nullPath(id) AT 'http://127.0.0.1:19371/echo/items/{id}' WITH { "null-call": true };
