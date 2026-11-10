@@ -20,6 +20,7 @@ package org.apache.asterix.test.runtime;
 
 import java.util.Collection;
 
+import org.apache.asterix.test.common.HttpFunctionMockServer;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.AfterClass;
@@ -30,20 +31,28 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Runs the SQL++ tests of external HTTP functions, which must be enabled to be created.
+ * Runs the SQL++ tests of external HTTP functions, which must be enabled to be created, against a local
+ * {@link HttpFunctionMockServer}.
  */
 @RunWith(Parameterized.class)
 public class HttpFunctionExecutionTest {
     protected static final String TEST_CONFIG_FILE_NAME = "src/test/resources/cc-http-function.conf";
 
+    private static HttpFunctionMockServer mockServer;
+
     @BeforeClass
     public static void setUp() throws Exception {
+        mockServer = HttpFunctionMockServer.start();
         LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, new TestExecutor());
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        LangExecutionUtil.tearDown();
+        try {
+            LangExecutionUtil.tearDown();
+        } finally {
+            mockServer.stop();
+        }
     }
 
     @Parameters(name = "HttpFunctionExecutionTest {index}: {0}")

@@ -51,6 +51,8 @@ public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorF
                 return new ExternalScalarJavaFunctionEvaluator(finfo, args, argTypes, ctx);
             case PYTHON:
                 return new ExternalScalarPythonFunctionEvaluator(finfo, args, argTypes, ctx, sourceLoc);
+            case HTTP:
+                return new ExternalScalarHttpFunctionEvaluator(finfo, args, argTypes, ctx, sourceLoc);
             default:
                 throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
                         finfo.getLanguage());

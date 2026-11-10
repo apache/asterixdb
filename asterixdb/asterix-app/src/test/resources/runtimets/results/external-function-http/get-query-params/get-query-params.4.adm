@@ -1,0 +1,1 @@
+{ "method": "GET", "path": "/echo", "query": "q=a%20b%26c&page=x+y" }

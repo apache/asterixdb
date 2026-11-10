@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- options that can be defined but not yet called
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+CREATE EXTERNAL FUNCTION basicAuth(a) AT 'https://127.0.0.1:19372/echo' WITH {
+  "username": "alice",
+  "password": "secret"
+};
+
+CREATE EXTERNAL FUNCTION bearerAuth(a) AT 'https://127.0.0.1:19372/echo' WITH { "bearerToken": "token" };
+
+CREATE EXTERNAL FUNCTION oauth(a) AT 'https://127.0.0.1:19372/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "client",
+  "oauthClientSecret": "secret"
+};
+
+CREATE EXTERNAL FUNCTION trusted(a) AT 'https://127.0.0.1:19371/echo' WITH { "certificate": "-----BEGIN CERTIFICATE-----
+MIIBEDCBtgIJAInsPDVr2LNJMAoGCCqGSM49BAMCMA8xDTALBgNVBAMMBHRlc3Qw
+IBcNMjYxMTA1MTY0NTI3WhgPMjEyNjEwMTIxNjQ1MjdaMA8xDTALBgNVBAMMBHRl
+c3QwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAT3MxqNocLGZD8Btg6auxtowje6
+8J5lXSsfB3zAGbfKamIqnQPpEhaaHfhLZv+TOqrXJ6+9ydJTjBKoJyflSZM2MAoG
+CCqGSM49BAMCA0kAMEYCIQDsThyHGTEcd9Ho6iLXZeT374Z1PPL2E+/SCL0N69m7
+2AIhAJsJS1Rh/wkhkbk6dJ3dYGs1lEmsZpML/lGlTvDmXR6w
+-----END CERTIFICATE-----" };
+
+CREATE EXTERNAL FUNCTION form(a) AT 'http://127.0.0.1:19371/echo' WITH { "method": "post", "body": "urlencoded" };
+
+CREATE EXTERNAL FUNCTION nullOnError(a) AT 'http://127.0.0.1:19371/echo' WITH { "on-error": "null" };

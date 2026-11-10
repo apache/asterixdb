@@ -16,5 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
--- calls are not supported yet
-SELECT VALUE test.f(1);
+-- nor the other one
+SELECT VALUE test.item(".");

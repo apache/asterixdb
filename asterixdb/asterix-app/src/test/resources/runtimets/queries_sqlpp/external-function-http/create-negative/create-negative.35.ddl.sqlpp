@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-CREATE EXTERNAL FUNCTION test.f(a) AT 'https://api.example.com/{a}';
+DROP DATAVERSE test;
