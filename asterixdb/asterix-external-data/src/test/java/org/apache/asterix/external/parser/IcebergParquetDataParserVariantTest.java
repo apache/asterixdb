@@ -25,16 +25,12 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.input.filter.NoOpFilterValueEmbedder;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.parser.factory.IcebergTableParquetDataParserFactory;
-import org.apache.hyracks.api.application.INCServiceContext;
-import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -57,33 +53,28 @@ public class IcebergParquetDataParserVariantTest {
             optional(2, "vs", Types.ListType.ofOptional(3, Types.VariantType.get())));
 
     @Test
-    public void disabledRejectsTopLevelVariant() {
-        assertRejected(TOP_LEVEL, record(TOP_LEVEL, "v", VALUE), "v");
+    public void parsesVariant() throws HyracksDataException {
+        Assert.assertTrue(parse(TOP_LEVEL, record(TOP_LEVEL, "v", VALUE)));
+        Assert.assertTrue(parse(IN_LIST, record(IN_LIST, "vs", List.of(VALUE))));
     }
 
     @Test
-    public void disabledRejectsVariantInList() {
-        assertRejected(IN_LIST, record(IN_LIST, "vs", List.of(VALUE)), "vs.element");
-    }
-
-    /** The column is rejected for what it is, not for its values, as the compile-time check does. */
-    @Test
-    public void disabledRejectsNullVariant() {
-        assertRejected(TOP_LEVEL, record(TOP_LEVEL, "v", null), "v");
+    public void parsesNullVariant() throws HyracksDataException {
+        Assert.assertTrue(parse(TOP_LEVEL, record(TOP_LEVEL, "v", null)));
     }
 
     @Test
-    public void disabledParsesColumnsWithoutVariant() throws HyracksDataException {
+    public void parsesColumnsWithoutVariant() throws HyracksDataException {
         Schema idOnly = TOP_LEVEL.select("id");
-        Assert.assertTrue(parse(idOnly, record(idOnly, null, null), false));
+        Assert.assertTrue(parse(idOnly, record(idOnly, null, null)));
     }
 
     @Test
-    public void geometryRejectedWithVariantEnabled() {
+    public void geometryRejected() {
         Schema geo = new Schema(required(1, "id", Types.IntegerType.get()),
                 optional(2, "shape", Types.GeometryType.crs84()));
         try {
-            parse(geo, record(geo, "shape", ByteBuffer.wrap(new byte[] { 1 })), true);
+            parse(geo, record(geo, "shape", ByteBuffer.wrap(new byte[] { 1 })));
             Assert.fail("expected GEOMETRY to be rejected");
         } catch (HyracksDataException e) {
             Assert.assertEquals(ErrorCode.UNSUPPORTED_ICEBERG_TYPE.intValue(), e.getErrorCode());
@@ -96,31 +87,14 @@ public class IcebergParquetDataParserVariantTest {
     public void unknownColumnParses() throws HyracksDataException {
         Schema unknown =
                 new Schema(required(1, "id", Types.IntegerType.get()), optional(2, "nothing", Types.UnknownType.get()));
-        Assert.assertTrue(parse(unknown, record(unknown, "nothing", null), false));
+        Assert.assertTrue(parse(unknown, record(unknown, "nothing", null)));
     }
 
-    @Test
-    public void enabledParsesVariant() throws HyracksDataException {
-        Assert.assertTrue(parse(TOP_LEVEL, record(TOP_LEVEL, "v", VALUE), true));
-        Assert.assertTrue(parse(IN_LIST, record(IN_LIST, "vs", List.of(VALUE)), true));
-    }
-
-    private static void assertRejected(Schema schema, Record record, String column) {
-        try {
-            parse(schema, record, false);
-            Assert.fail("expected VARIANT to be rejected");
-        } catch (HyracksDataException e) {
-            Assert.assertEquals(ErrorCode.UNSUPPORTED_ICEBERG_TYPE.intValue(), e.getErrorCode());
-            Assert.assertTrue(e.getMessage(),
-                    e.getMessage().contains("Unsupported Iceberg type 'variant' for column '" + column + "'"));
-        }
-    }
-
-    private static boolean parse(Schema schema, Record record, boolean variantEnabled) throws HyracksDataException {
+    private static boolean parse(Schema schema, Record record) throws HyracksDataException {
         IcebergTableParquetDataParserFactory factory = new IcebergTableParquetDataParserFactory();
         factory.configure(Collections.emptyMap());
         factory.setProjectedSchema(schema);
-        IRecordDataParser<Record> parser = factory.createRecordParser(runtimeContext(variantEnabled));
+        IRecordDataParser<Record> parser = factory.createRecordParser(runtimeContext());
         return parser.parse(new GenericRecord<>(record), new ArrayBackedValueStorage().getDataOutput());
     }
 
@@ -133,17 +107,8 @@ public class IcebergParquetDataParserVariantTest {
         return record;
     }
 
-    private static IExternalDataRuntimeContext runtimeContext(boolean variantEnabled) {
-        ExternalProperties externalProperties = Mockito.mock(ExternalProperties.class);
-        Mockito.when(externalProperties.isIcebergVariantEnabled()).thenReturn(variantEnabled);
-        IApplicationContext appCtx = Mockito.mock(IApplicationContext.class);
-        Mockito.when(appCtx.getExternalProperties()).thenReturn(externalProperties);
-        INCServiceContext serviceCtx = Mockito.mock(INCServiceContext.class);
-        Mockito.when(serviceCtx.getApplicationContext()).thenReturn(appCtx);
-        IHyracksJobletContext jobletCtx = Mockito.mock(IHyracksJobletContext.class);
-        Mockito.when(jobletCtx.getServiceContext()).thenReturn(serviceCtx);
+    private static IExternalDataRuntimeContext runtimeContext() {
         IHyracksTaskContext taskCtx = Mockito.mock(IHyracksTaskContext.class);
-        Mockito.when(taskCtx.getJobletContext()).thenReturn(jobletCtx);
         Mockito.when(taskCtx.getWarningCollector()).thenReturn(Mockito.mock(IWarningCollector.class));
         IExternalDataRuntimeContext context = Mockito.mock(IExternalDataRuntimeContext.class);
         Mockito.when(context.getTaskContext()).thenReturn(taskCtx);

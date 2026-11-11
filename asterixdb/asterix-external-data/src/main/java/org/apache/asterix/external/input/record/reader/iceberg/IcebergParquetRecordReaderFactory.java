@@ -177,13 +177,12 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
     /**
      * Rejects the scan when a column it reads, at any depth, has a type that cannot be read.
      *
-     * @param schema         the columns the scan reads
-     * @param variantEnabled whether VARIANT columns can be read
+     * @param schema the columns the scan reads
      * @throws CompilationException naming the type and the column, if {@code schema} has such a column
-     * @see IcebergParquetDataParser#findUnsupportedColumn(Schema, boolean)
+     * @see IcebergParquetDataParser#findUnsupportedColumn(Schema)
      */
-    static void ensureTypesSupported(Schema schema, boolean variantEnabled) throws CompilationException {
-        Integer id = IcebergParquetDataParser.findUnsupportedColumn(schema, variantEnabled);
+    static void ensureTypesSupported(Schema schema) throws CompilationException {
+        Integer id = IcebergParquetDataParser.findUnsupportedColumn(schema);
         if (id != null) {
             throw CompilationException.create(ErrorCode.UNSUPPORTED_ICEBERG_TYPE, schema.findType(id).toString(),
                     schema.findColumnName(id));
@@ -289,7 +288,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             fileIoDescriptor = IcebergFileIoDescriptor.capture(table.io());
 
             projectedSchema = selectRequestedColumns(schemaAtSnapshot, configuration);
-            ensureTypesSupported(projectedSchema, appCtx.getExternalProperties().isIcebergVariantEnabled());
+            ensureTypesSupported(projectedSchema);
             scan = scan.project(projectedSchema);
             Expression filterExpression =
                     ((IcebergTableFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();

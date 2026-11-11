@@ -20,7 +20,6 @@ package org.apache.asterix.external.parser.factory;
 
 import java.util.List;
 
-import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
@@ -68,10 +67,7 @@ public class IcebergTableParquetDataParserFactory extends IcebergParserFactory<R
      *                              reader factory makes at compile time
      */
     private IcebergParquetDataParser createParser(IExternalDataRuntimeContext context) throws HyracksDataException {
-        IApplicationContext appCtx = (IApplicationContext) context.getTaskContext().getJobletContext()
-                .getServiceContext().getApplicationContext();
-        Integer id = IcebergParquetDataParser.findUnsupportedColumn(projectedSchema,
-                appCtx.getExternalProperties().isIcebergVariantEnabled());
+        Integer id = IcebergParquetDataParser.findUnsupportedColumn(projectedSchema);
         if (id != null) {
             throw RuntimeDataException.create(ErrorCode.UNSUPPORTED_ICEBERG_TYPE,
                     projectedSchema.findType(id).toString(), projectedSchema.findColumnName(id));
