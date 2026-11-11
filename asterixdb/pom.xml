@@ -93,9 +93,9 @@
     <hadoop.version>3.5.0</hadoop.version>
     <jacoco.version>0.8.15</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
-    <awsjavasdk.version>2.57.12</awsjavasdk.version>
+    <awsjavasdk.version>2.57.13</awsjavasdk.version>
     <s3mock.version>5.2.3</s3mock.version>
-    <parquet.version>1.18.1</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
+    <parquet.version>1.18.2</parquet.version> <!-- NOTICE: please update transitives from parquet below on any change -->
     <hadoop-awsjavasdk.version>1.12.797</hadoop-awsjavasdk.version>
 
     <!-- azure-storage-blob vendors relocated Apache Arrow (arrow-format) and FlatBuffers
@@ -1789,7 +1789,7 @@
       <dependency>
         <groupId>com.github.luben</groupId>
         <artifactId>zstd-jni</artifactId>
-        <version>1.5.7-15</version>
+        <version>1.5.7-24</version>
       </dependency>
       <!-- @pinned-with: ${parquet.version} -->
       <dependency>
