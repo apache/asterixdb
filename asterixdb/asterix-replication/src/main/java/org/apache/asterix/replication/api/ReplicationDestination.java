@@ -160,10 +160,18 @@ public class ReplicationDestination implements IReplicationDestination {
     }
 
     public synchronized void recycleConnection(PartitionReplica partitionReplica) {
-        ArrayDeque<PartitionReplica> partitionReplicas = replicasConnPool.get(partitionReplica.getIdentifier());
-        if (partitionReplicas != null) {
-            partitionReplicas.add(partitionReplica);
+        ReplicaIdentifier id = partitionReplica.getIdentifier();
+        if (replicas.stream().anyMatch(r -> r.getIdentifier().equals(id))) {
+            replicasConnPool.computeIfAbsent(id, k -> new ArrayDeque<>()).add(partitionReplica);
+        } else {
+            // the replica was removed while the connection was in use
+            replicasConnPool.remove(id);
+            partitionReplica.close();
         }
+    }
+
+    public synchronized boolean isRegistered(IPartitionReplica replica) {
+        return replicas.contains(replica);
     }
 
     public synchronized void closeConnections() {
