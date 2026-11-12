@@ -1,0 +1,59 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: build
+
+on:
+  schedule:
+    - cron: "15 4 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Compile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup Java & Maven
+        uses: ./.github/actions/setup-maven
+        with:
+          java-version: 21
+          cache: maven
+      - name: Compile
+        run: mvn clean install -DskipTests -Drat.skip
+      - name: Stage image inputs
+        run: >-
+          cp asterixdb/asterix-server/target/asterix-server-*-binary-assembly.tar.bz2
+          asterixdb/asterix-podman/src/main/resources/entrypoint.sh
+          asterixdb/asterix-podman/target/
+      - name: Set up buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: asterixdb/asterix-podman
+          file: asterixdb/asterix-podman/src/main/resources/Containerfile
+          platforms: linux/amd64
+          push: false
+          tags: apache-asterixdb-test-amd64
+          labels: |
+            org.opencontainers.image.title=Apache AsterixDB
+            org.opencontainers.image.description=Apache AsterixDB (AMD64)
+            org.opencontainers.image.vendor=Apache AsterixDB PMC

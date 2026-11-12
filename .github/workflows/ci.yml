@@ -1,0 +1,107 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Runs every pull request check, so that branch protection can require the single ci-passed job rather than
+# each suite's check, whose names change with matrix entries and which do not all apply to every target branch.
+name: ci
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The cheap checks gate the rest, which also keeps this workflow within the ASF limit of 15 concurrent jobs.
+  asf-allowlist-check:
+    uses: ./.github/workflows/asf-allowlist-check.yml
+  source-format:
+    uses: ./.github/workflows/source-format.yml
+
+  asterix-app:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/asterix-app.yml
+  asterix-app-sql-execution:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/asterix-app-sql-execution.yml
+  cancellation-test:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/cancellation-test.yml
+  cloud-nons3-test:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/cloud-nons3-test.yml
+  cloud-test:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/cloud-test.yml
+  dockerized-tests:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/dockerized-tests.yml
+  hyracks:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/hyracks.yml
+  module-tests:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/module-tests.yml
+  source-assemblies:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/source-assemblies.yml
+  ssl-compression:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/ssl-compression.yml
+  verify-asterix-app:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/verify-asterix-app.yml
+  verify-storage:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/verify-storage.yml
+  verify-txnlog:
+    needs: [asf-allowlist-check, source-format]
+    uses: ./.github/workflows/verify-txnlog.yml
+
+  # Suites skipped because they do not apply to the target branch count as passed; anything else must succeed.
+  ci-passed:
+    if: always()
+    needs:
+      - asf-allowlist-check
+      - source-format
+      - asterix-app
+      - asterix-app-sql-execution
+      - cancellation-test
+      - cloud-nons3-test
+      - cloud-test
+      - dockerized-tests
+      - hyracks
+      - module-tests
+      - source-assemblies
+      - ssl-compression
+      - verify-asterix-app
+      - verify-storage
+      - verify-txnlog
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check results
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS"
+          exit 1

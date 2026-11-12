@@ -1,0 +1,63 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+name: "Maven Setup"
+description: "Setup Java and Maven"
+inputs:
+  # Composite actions do not support typed parameters. Everything is treated as a string
+  # See: https://github.com/actions/runner/issues/2238
+  java-version:
+    description: "Java version to use"
+    default: "21"
+  cache:
+    description: "Dependency cache to enable in actions/setup-java (e.g. maven); empty disables it"
+    default: ""
+  cache-dependency-path:
+    description: "Glob of files keying the dependency cache; needed when the repo is checked out to a subdirectory"
+    default: ""
+  maven-version:
+    description: "Apache Maven version to install; empty uses the runner's preinstalled Maven"
+    default: "3.9.16"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Java
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: ${{ inputs.java-version }}
+        cache: ${{ inputs.cache }}
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}
+    # Fetched directly rather than via a third-party setup action, which the ASF action allowlist
+    # would have to approve. Maven Central keeps every release and, unlike archive.apache.org, is
+    # not throttled.
+    - name: Setup Maven
+      if: inputs.maven-version != ''
+      shell: bash
+      env:
+        MAVEN_VERSION: ${{ inputs.maven-version }}
+      run: |
+        set -euo pipefail
+        name="apache-maven-${MAVEN_VERSION}"
+        url="https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/${name}-bin.tar.gz"
+        cd "$RUNNER_TEMP"
+        curl -fsSL --retry 3 -o "${name}-bin.tar.gz" "$url"
+        echo "$(curl -fsSL --retry 3 "${url}.sha512")  ${name}-bin.tar.gz" | sha512sum -c -
+        tar -xzf "${name}-bin.tar.gz"
+        echo "$RUNNER_TEMP/${name}/bin" >> "$GITHUB_PATH"
+        "$RUNNER_TEMP/${name}/bin/mvn" -v
