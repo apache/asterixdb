@@ -1,0 +1,1 @@
+{ "method": "GET", "path": "/oauth/echo", "query": "a=1", "authorization": "Bearer scoped.1.read+write" }

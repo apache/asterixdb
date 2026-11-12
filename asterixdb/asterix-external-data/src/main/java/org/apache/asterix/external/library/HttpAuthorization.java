@@ -16,4 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-SELECT VALUE test.oauth(1);
+package org.apache.asterix.external.library;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+/**
+ * Builds the {@code Authorization} header values that external HTTP functions send.
+ */
+final class HttpAuthorization {
+
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String BASIC_PREFIX = "Basic ";
+    private static final String BASIC_SEPARATOR = ":";
+
+    private HttpAuthorization() {
+    }
+
+    static String basic(String username, String password) {
+        String credentials = username + BASIC_SEPARATOR + password;
+        return BASIC_PREFIX + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+    }
+
+    static String bearer(String token) {
+        return BEARER_PREFIX + token;
+    }
+}

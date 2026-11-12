@@ -146,7 +146,7 @@ final class HttpFunctionUrlTemplate {
     }
 
     // leaves out user info, query and fragment, which may hold credentials; a template holds no argument
-    private static String toDisplayUrl(String template) {
+    static String toDisplayUrl(String template) {
         int authorityStart = template.indexOf(SCHEME_SEPARATOR) + SCHEME_SEPARATOR.length();
         int end = StringUtils.indexOfAny(template, QUERY_OR_FRAGMENT_START);
         String url = end < 0 ? template : template.substring(0, end);

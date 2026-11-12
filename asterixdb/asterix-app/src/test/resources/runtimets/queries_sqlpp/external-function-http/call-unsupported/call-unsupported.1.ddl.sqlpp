@@ -21,10 +21,4 @@ DROP DATAVERSE test IF EXISTS;
 CREATE DATAVERSE test;
 USE test;
 
-CREATE EXTERNAL FUNCTION oauth(a) AT 'https://127.0.0.1:19372/echo' WITH {
-  "oauthTokenUri": "https://127.0.0.1:19372/token",
-  "oauthClientId": "client",
-  "oauthClientSecret": "secret"
-};
-
 CREATE EXTERNAL FUNCTION nullOnError(a) AT 'http://127.0.0.1:19371/echo' WITH { "on-error": "null" };

@@ -18,10 +18,6 @@
  */
 package org.apache.asterix.metadata.functions;
 
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_ALLOWED_SCOPES;
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_CLIENT_ID;
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_CLIENT_SECRET;
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_TOKEN_URI;
 import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_ON_ERROR;
 
 import java.util.ArrayList;
@@ -49,9 +45,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExternalFunctionCompilerUtil {
-
-    private static final List<String> UNIMPLEMENTED_HTTP_OPTIONS = List.of(OPTION_OAUTH_TOKEN_URI,
-            OPTION_OAUTH_CLIENT_ID, OPTION_OAUTH_CLIENT_SECRET, OPTION_OAUTH_ALLOWED_SCOPES);
 
     private ExternalFunctionCompilerUtil() {
         // do nothing
@@ -115,11 +108,6 @@ public class ExternalFunctionCompilerUtil {
      * @return the first option of an HTTP function that calling the function does not support yet, or {@code null}
      */
     private static String findUnimplementedHttpOption(Map<String, String> resources) {
-        for (String option : UNIMPLEMENTED_HTTP_OPTIONS) {
-            if (resources.containsKey(option)) {
-                return option;
-            }
-        }
         if (HttpFunctionOnError.NULL.name().equals(resources.get(OPTION_ON_ERROR))) {
             return OPTION_ON_ERROR;
         }

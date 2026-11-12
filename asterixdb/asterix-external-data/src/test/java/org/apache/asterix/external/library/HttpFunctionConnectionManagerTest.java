@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.IHttpEgressPolicy;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -57,7 +58,7 @@ public class HttpFunctionConnectionManagerTest {
     private static final long STALE_AFTER_MILLIS = 200;
     private static final byte[] REQUEST_HEADERS_END = "\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
     private static final byte[] KEEP_ALIVE_RESPONSE =
-            ("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n" + "Connection: keep-alive\r\n\r\n")
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n"
                     .getBytes(StandardCharsets.US_ASCII);
     private static final String UNREADABLE_CERTIFICATE =
             "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n";
@@ -109,8 +110,7 @@ public class HttpFunctionConnectionManagerTest {
         CompletableFuture<Throwable> failure = new CompletableFuture<>();
         Thread caller = new Thread(() -> {
             try {
-                HttpFunctionConnectionManager.execute(client, request, HttpClientContext.create(), LONG_TIMEOUT_MILLIS,
-                        response -> null);
+                execute(request, LONG_TIMEOUT_MILLIS, response -> null);
                 failure.complete(null);
             } catch (Throwable e) {
                 stillInterrupted.set(Thread.currentThread().isInterrupted());
@@ -135,8 +135,7 @@ public class HttpFunctionConnectionManagerTest {
         Thread caller = new Thread(() -> {
             Thread.currentThread().interrupt();
             try {
-                HttpFunctionConnectionManager.execute(client, new HttpGet(url), HttpClientContext.create(),
-                        LONG_TIMEOUT_MILLIS, response -> null);
+                execute(new HttpGet(url), LONG_TIMEOUT_MILLIS, response -> null);
                 failure.complete(null);
             } catch (Throwable e) {
                 failure.complete(e);
@@ -151,14 +150,12 @@ public class HttpFunctionConnectionManagerTest {
     @Test
     public void deadlineStillAbortsCall() throws Exception {
         HttpGet request = new HttpGet(url);
-        Throwable e = null;
         try {
-            HttpFunctionConnectionManager.execute(client, request, HttpClientContext.create(), INTERRUPT_AFTER_MILLIS,
-                    response -> null);
-        } catch (IOException thrown) {
-            e = thrown;
+            execute(request, INTERRUPT_AFTER_MILLIS, response -> null);
+            fail("expected the call to time out");
+        } catch (HyracksDataException e) {
+            assertEquals(ErrorCode.EXTERNAL_HTTP_FUNCTION_TIMEOUT.intValue(), e.getErrorCode());
         }
-        assertTrue(String.valueOf(e), e != null && !(e instanceof HyracksDataException));
         assertTrue(request.isAborted());
         assertFalse(Thread.currentThread().isInterrupted());
     }
@@ -189,9 +186,14 @@ public class HttpFunctionConnectionManagerTest {
         }
     }
 
-    private int get(String url) throws IOException {
-        return HttpFunctionConnectionManager.execute(client, new HttpGet(url), HttpClientContext.create(),
-                LONG_TIMEOUT_MILLIS, response -> response.getStatusLine().getStatusCode());
+    private int get(String url) throws HyracksDataException {
+        return execute(new HttpGet(url), LONG_TIMEOUT_MILLIS, response -> response.getStatusLine().getStatusCode());
+    }
+
+    private <T> T execute(HttpGet request, long timeoutMillis, ResponseHandler<T> handler) throws HyracksDataException {
+        return HttpFunctionConnectionManager.execute(client, request, HttpClientContext.create(),
+                System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis), handler, null,
+                request.getURI().toString(), (int) TimeUnit.MILLISECONDS.toSeconds(timeoutMillis));
     }
 
     // answers one request on each connection, announcing that it keeps it open, then closes it without a word, as

@@ -24,7 +24,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
@@ -55,9 +54,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
@@ -67,7 +66,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -143,7 +141,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private final String multipartEnd;
     private final boolean urlencode;
     private final int timeoutSeconds;
-    private final long timeoutMillis;
+    private final long timeoutNanos;
     private final RequestConfig requestConfig;
     private final int maxRequestSize;
     private final int maxResponseSize;
@@ -163,10 +161,13 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private final JSONDataParser responseParser;
     private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private final ResponseHandler<Void> responseHandler = this::readResponse;
+    private final ResponseHandler<Boolean> responseHandler = this::readResponse;
+    // whether the request being sent is sent again, with another token, if its endpoint answers 401
+    private boolean retryOnUnauthorized;
 
     // resolved by the first call that sends a request
     private CloseableHttpClient client;
+    private HttpFunctionNodeTokenSource tokenSource;
     private HttpClientContext context;
     private HttpFunctionUrlTemplate urlTemplate;
     private Header[] headers;
@@ -186,10 +187,8 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         timeoutSeconds = (int) Math.min(
                 timeout == null ? externalProperties.getExternalHttpFunctionTimeout() : Long.parseLong(timeout),
                 externalProperties.getExternalHttpFunctionMaxTimeout());
-        timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds);
-        int timeoutMillisInt = Math.toIntExact(timeoutMillis);
-        requestConfig = RequestConfig.custom().setConnectTimeout(timeoutMillisInt)
-                .setConnectionRequestTimeout(timeoutMillisInt).setSocketTimeout(timeoutMillisInt).build();
+        timeoutNanos = TimeUnit.SECONDS.toNanos(timeoutSeconds);
+        requestConfig = HttpFunctionConnectionManager.createRequestConfig(timeoutSeconds);
         maxRequestSize = externalProperties.getExternalHttpFunctionMaxRequestSize();
         maxResponseSize = externalProperties.getExternalHttpFunctionMaxResponseSize();
         argumentFormat = method == HttpFunctionMethod.GET ? HttpFunctionBodyFormat.URLENCODED
@@ -247,7 +246,12 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         if (client == null) {
             resolveEndpoint();
         }
-        send(createRequest());
+        long deadlineNanos = System.nanoTime() + timeoutNanos;
+        String token = tokenSource == null ? null : tokenSource.getToken(deadlineNanos, null);
+        if (!send(createRequest(token), deadlineNanos, token != null)) {
+            // a token can be revoked before it expires, so a rejected one is worth replacing once
+            send(createRequest(tokenSource.getToken(deadlineNanos, token)), deadlineNanos, false);
+        }
         result.set(resultStorage);
     }
 
@@ -262,6 +266,8 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         headersSize = getHeadersSize(headers);
         context = HttpFunctionConnectionManager.createContext(endpoint.getCertificate(), sourceLoc);
         client = appCtx.getHttpFunctionClient();
+        tokenSource = endpoint.getOAuthClient() == null ? null
+                : new HttpFunctionNodeTokenSource(endpoint, appCtx.getServiceContext(), sourceLoc, timeoutSeconds);
     }
 
     static Header[] mergeHeaders(Map<String, String> endpointHeaders, String functionHeaders, SourceLocation sourceLoc)
@@ -282,7 +288,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
                 .toArray(Header[]::new);
     }
 
-    private HttpRequestBase createRequest() throws HyracksDataException {
+    private HttpRequestBase createRequest(String token) throws HyracksDataException {
         for (int i = 0; i < argValues.length; i++) {
             argTexts[i] = urlTemplate.references(i) && !isNullOrMissing(i) ? getArgumentText(i) : null;
         }
@@ -302,18 +308,28 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         }
         request.setConfig(requestConfig);
         request.setHeaders(headers);
+        long requestHeadersSize = headersSize;
+        if (token != null) {
+            String authorization = HttpAuthorization.bearer(token);
+            request.setHeader(HttpHeaders.AUTHORIZATION, authorization);
+            requestHeadersSize += getHeaderSize(HttpHeaders.AUTHORIZATION, authorization);
+        }
         // the whole request, whatever its method: its URL, its headers and its body
-        checkRequestSize((long) urlBuilder.length() + headersSize + bodySize);
+        checkRequestSize((long) urlBuilder.length() + requestHeadersSize + bodySize);
         return request;
     }
 
-    // a header is sent as its name, ": ", its value and a line end
     private static long getHeadersSize(Header[] headers) {
         long size = 0;
         for (Header header : headers) {
-            size += header.getName().length() + header.getValue().length() + HEADER_SEPARATOR_AND_LINE_END_LENGTH;
+            size += getHeaderSize(header.getName(), header.getValue());
         }
         return size;
+    }
+
+    // a header is sent as its name, ": ", its value and a line end
+    private static long getHeaderSize(String name, String value) {
+        return name.length() + value.length() + HEADER_SEPARATOR_AND_LINE_END_LENGTH;
     }
 
     // only with null-call, since a NULL or MISSING argument is otherwise the result
@@ -423,24 +439,22 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         }
     }
 
-    private void send(HttpRequestBase request) throws HyracksDataException {
-        try {
-            HttpFunctionConnectionManager.execute(client, request, context, timeoutMillis, responseHandler);
-        } catch (HyracksDataException e) {
-            // a refusal of the egress policy, or an error the response raised, already in its final form
-            throw e;
-        } catch (IOException e) {
-            if (request.isAborted() || e instanceof SocketTimeoutException || e instanceof ConnectTimeoutException) {
-                // not chained: an InterruptedIOException at the root of the cause would report the job as cancelled
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_TIMEOUT, sourceLoc,
-                        urlTemplate.getDisplayUrl(), timeoutSeconds);
-            }
-            throw requestFailed(e, ExceptionUtils.getMessage(e));
-        }
+    /**
+     * @return {@code false} if the endpoint answered 401 and {@code retryOnUnauthorized} is set, else {@code true},
+     *         with the result in {@link #resultStorage}
+     */
+    private boolean send(HttpRequestBase request, long deadlineNanos, boolean retryOnUnauthorized)
+            throws HyracksDataException {
+        this.retryOnUnauthorized = retryOnUnauthorized;
+        return HttpFunctionConnectionManager.execute(client, request, context, deadlineNanos, responseHandler,
+                sourceLoc, urlTemplate.getDisplayUrl(), timeoutSeconds);
     }
 
-    private Void readResponse(HttpResponse response) throws IOException {
+    private Boolean readResponse(HttpResponse response) throws IOException {
         int status = response.getStatusLine().getStatusCode();
+        if (status == HttpStatus.SC_UNAUTHORIZED && retryOnUnauthorized) {
+            return false;
+        }
         if (status < HttpStatus.SC_OK || status >= HttpStatus.SC_MULTIPLE_CHOICES) {
             throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_HTTP_ERROR, sourceLoc,
                     urlTemplate.getDisplayUrl(), status);
@@ -454,7 +468,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         if (responseBuffer.size() == 0) {
             // a success with nothing to return, as a 201, 202 or 204 to a POST often is, whatever its Content-Type
             resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-            return null;
+            return true;
         }
         ContentType contentType = getContentType(entity);
         String mimeType = contentType == null ? null : contentType.getMimeType().toLowerCase(Locale.ROOT);
@@ -471,7 +485,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         } else {
             throw requestFailed(null, "unsupported Content-Type '" + mimeType + "'");
         }
-        return null;
+        return true;
     }
 
     // the stream is left open: closing it would read the rest of a body the cap has just refused. The client

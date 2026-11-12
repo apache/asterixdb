@@ -112,6 +112,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-function-http">
+      <compilation-unit name="oauth">
+        <output-dir compare="Text">oauth</output-dir>
+        <expected-error>ASX0207: HTTP request to https://127.0.0.1:19372/status/401 returned status 401</expected-error>
+        <expected-error>ASX0207: HTTP request to https://127.0.0.1:19372/token returned status 401</expected-error>
+        <expected-error>ASX0205: HTTP request to https://127.0.0.1:19372/token failed: the response has no access token</expected-error>
+        <expected-error>ASX0205: HTTP request to https://127.0.0.1:19372/token failed: unsupported token type 'mac'</expected-error>
+        <expected-error>ASX0208: HTTP request to https://127.0.0.1:19372/slow timed out after 1 seconds</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-function-http">
       <compilation-unit name="null-missing">
         <output-dir compare="Text">null-missing</output-dir>
         <expected-error>ASX0204: Invalid value for URL parameter 'id': must not be NULL or MISSING</expected-error>
@@ -152,7 +162,6 @@
     <test-case FilePath="external-function-http">
       <compilation-unit name="call-unsupported">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1272: Calling external HTTP function test.oauth(1) is not supported: option 'oauthTokenUri' is not implemented yet</expected-error>
         <expected-error>ASX1272: Calling external HTTP function test.nullOnError(1) is not supported: option 'on-error' is not implemented yet</expected-error>
       </compilation-unit>
     </test-case>

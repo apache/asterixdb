@@ -60,12 +60,14 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.IDataPartitioningProvider;
 import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.external.IExternalStatsTracker;
+import org.apache.asterix.common.functions.IHttpEgressPolicy;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
+import org.apache.asterix.external.library.HttpFunctionConnectionManager;
 import org.apache.asterix.metadata.utils.DataPartitioningProvider;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.asterix.runtime.job.listener.NodeJobTracker;
@@ -75,6 +77,7 @@ import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.asterix.runtime.utils.NoOpCoordinationService;
 import org.apache.asterix.runtime.utils.RequestTracker;
 import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -135,6 +138,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final INamespacePathResolver namespacePathResolver;
     private final INamespaceResolver namespaceResolver;
     private final IExternalStatsTracker externalStatsTracker;
+    private volatile CloseableHttpClient httpFunctionClient;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, HyracksConnection hcc,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
@@ -436,5 +440,27 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IQueryPlanCache getQueryPlanCache() {
         return cache;
+    }
+
+    @Override
+    public CloseableHttpClient getHttpFunctionClient() {
+        CloseableHttpClient client = httpFunctionClient;
+        if (client == null) {
+            synchronized (this) {
+                client = httpFunctionClient;
+                if (client == null) {
+                    httpFunctionClient = client = HttpFunctionConnectionManager.createClient(getHttpEgressPolicy());
+                }
+            }
+        }
+        return client;
+    }
+
+    /**
+     * @return the policy that decides which addresses the cluster controller may get the access tokens of external
+     *         HTTP functions from. Extensions override it, as they do the nodes'.
+     */
+    protected IHttpEgressPolicy getHttpEgressPolicy() {
+        return IHttpEgressPolicy.ALLOW_ALL;
     }
 }

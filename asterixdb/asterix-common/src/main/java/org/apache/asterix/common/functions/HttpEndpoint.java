@@ -29,19 +29,23 @@ public final class HttpEndpoint {
     private final String url;
     private final Map<String, String> headers;
     private final String certificate;
+    private final HttpOAuthClient oauthClient;
 
     /**
      * @param url the URL requests are sent to. It may contain the {@code {param}} placeholders that the function's
      *        arguments fill.
      * @param headers headers sent with every request. A function's own headers cannot replace them, so they are
      *        where credentials go.
-     * @param certificate the PEM-encoded certificates of the authorities that an HTTPS endpoint's certificate must be
-     *        issued by, in place of the JVM's, or {@code null} to use the JVM's
+     * @param certificate the PEM-encoded certificates of the authorities that the HTTPS certificates of the endpoint
+     *        and of its token endpoint must be issued by, in place of the JVM's, or {@code null} to use the JVM's
+     * @param oauthClient the client whose access token is sent with every request, as its {@code Authorization}
+     *        header, or {@code null}
      */
-    public HttpEndpoint(String url, Map<String, String> headers, String certificate) {
+    public HttpEndpoint(String url, Map<String, String> headers, String certificate, HttpOAuthClient oauthClient) {
         this.url = Objects.requireNonNull(url);
         this.headers = Map.copyOf(headers);
         this.certificate = certificate;
+        this.oauthClient = oauthClient;
     }
 
     public String getUrl() {
@@ -54,5 +58,9 @@ public final class HttpEndpoint {
 
     public String getCertificate() {
         return certificate;
+    }
+
+    public HttpOAuthClient getOAuthClient() {
+        return oauthClient;
     }
 }

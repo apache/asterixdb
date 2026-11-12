@@ -38,6 +38,7 @@ import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -174,4 +175,10 @@ public interface ICcApplicationContext extends IApplicationContext {
     IOManager getIoManager();
 
     IQueryPlanCache getQueryPlanCache();
+
+    /**
+     * @return the client that the cluster controller gets the access tokens of external HTTP functions with. It
+     *         applies the cluster controller's egress policy and does not follow redirects.
+     */
+    CloseableHttpClient getHttpFunctionClient();
 }

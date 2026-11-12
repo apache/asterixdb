@@ -24,6 +24,7 @@ import static java.net.HttpURLConnection.HTTP_MULT_CHOICE;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,12 +32,15 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,8 +66,10 @@ import com.sun.net.httpserver.HttpsServer;
 /**
  * The HTTP server that the external HTTP functions of the tests call, at {@code http://127.0.0.1:19371}, and over TLS
  * at {@code https://127.0.0.1:19372} with the self-signed certificate of {@code security/http-function/server.p12},
- * issued to {@code IP:127.0.0.1}. Each route answers a request the same way every time, so a result does not depend
- * on how many partitions call it or in which order:
+ * issued to {@code IP:127.0.0.1}. Each route but {@code /token} and {@code /oauth/echo} answers a request the same way
+ * every time, so a result does not depend on how many partitions call it or in which order. Those two share the tokens
+ * issued, and each token issued to a client revokes its previous one, so a test that shows a token uses a client that
+ * no other test uses, from a single query that calls it from one partition.
  * <ul>
  * <li>{@code /echo...}: a JSON object describing the request: its method, raw path, raw query, {@code X-} headers,
  * {@code Authorization} header, Content-Type without its multipart boundary, and either its JSON body or, for an
@@ -76,6 +82,15 @@ import com.sun.net.httpserver.HttpsServer;
  * <li>{@code /redirect}: a 302 to {@code /echo}</li>
  * <li>{@code /sized/<length>}: a JSON string body of exactly that many bytes</li>
  * <li>{@code /slow}: a response that comes later than the timeout of any test</li>
+ * <li>{@code /token}: an OAuth 2.0 token endpoint for the client credentials grant, authenticating a client by its id
+ * and secret form-encoded into Basic credentials. Every client has the secret {@code CLIENT_SECRET}, which form
+ * encoding changes, so a client that does not encode it is refused. A token is {@code <client id>.<n>}, the nth issued
+ * to that client, followed by {@code .<scope>} form-encoded when a scope is requested, and expires in an hour; but the
+ * tokens of client {@code short} expire in 30 seconds, the response to {@code malformed} has no token, and that to
+ * {@code mac} is of type {@code mac}. A request without the client's credentials is answered with a 401, any other bad
+ * request with a 400.</li>
+ * <li>{@code /oauth/echo...}: as {@code /echo} if the request carries, as its bearer token, the token issued last to a
+ * client, and a 401 otherwise. The expiry of a token is not checked.</li>
  * </ul>
  */
 public final class HttpFunctionMockServer {
@@ -115,9 +130,37 @@ public final class HttpFunctionMockServer {
     private static final byte[] NO_BODY = new byte[0];
     private static final int NO_RESPONSE_BODY = -1;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String METHOD_POST = "POST";
+    private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
+    private static final String BASIC_SCHEME = "Basic";
+    private static final String BEARER_SCHEME = "Bearer";
+    private static final String SCHEME_SEPARATOR = " ";
+    private static final String BASIC_CREDENTIALS_SEPARATOR = ":";
+    private static final String CLIENT_SECRET = "se+cr:et";
+    private static final String GRANT_TYPE = "grant_type";
+    private static final String CLIENT_CREDENTIALS_GRANT = "client_credentials";
+    private static final String SCOPE = "scope";
+    private static final String ACCESS_TOKEN = "access_token";
+    private static final String TOKEN_TYPE = "token_type";
+    private static final String MAC_TOKEN_TYPE = "mac";
+    private static final String EXPIRES_IN = "expires_in";
+    private static final long TOKEN_LIFETIME_SECONDS = TimeUnit.HOURS.toSeconds(1);
+    private static final long SHORT_TOKEN_LIFETIME_SECONDS = 30;
+    private static final String SHORT_LIVED_TOKEN_CLIENT = "short";
+    private static final String NO_TOKEN_CLIENT = "malformed";
+    private static final String MAC_TOKEN_CLIENT = "mac";
+    private static final String TOKEN_PART_SEPARATOR = ".";
+    private static final String OAUTH_ERROR = "error";
+    private static final String INVALID_CLIENT = "invalid_client";
+    private static final String INVALID_REQUEST = "invalid_request";
+    private static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
+    private static final String INVALID_TOKEN = "invalid_token";
 
     private final List<HttpServer> servers;
     private final ExecutorService executor;
+    // by client id; guarded by this
+    private final Map<String, Integer> issuedTokenCounts = new HashMap<>();
+    private final Map<String, String> currentTokens = new HashMap<>();
 
     private HttpFunctionMockServer() throws IOException, GeneralSecurityException {
         HttpsServer tlsServer = HttpsServer.create(new InetSocketAddress(HOST, TLS_PORT), 0);
@@ -134,6 +177,8 @@ public final class HttpFunctionMockServer {
         });
         route("/sized/", HttpFunctionMockServer::sized);
         route("/slow", HttpFunctionMockServer::slow);
+        route("/token", this::token);
+        route("/oauth/echo", this::oauthEcho);
     }
 
     public static HttpFunctionMockServer start() throws IOException, GeneralSecurityException {
@@ -316,6 +361,99 @@ public final class HttpFunctionMockServer {
         respond(exchange, HTTP_OK, APPLICATION_JSON, "{}");
     }
 
+    private void token(HttpExchange exchange, byte[] body) throws IOException {
+        ClientCredentials client = clientCredentials(exchange);
+        if (client == null || !CLIENT_SECRET.equals(client.secret())) {
+            challenge(exchange, BASIC_SCHEME, INVALID_CLIENT);
+            return;
+        }
+        String contentType = exchange.getRequestHeaders().getFirst(HEADER_CONTENT_TYPE);
+        if (!METHOD_POST.equals(exchange.getRequestMethod()) || contentType == null
+                || !contentType.split(MEDIA_TYPE_PARAMETER_SEPARATOR)[0].trim().equalsIgnoreCase(FORM_URLENCODED)) {
+            respondOAuthError(exchange, HTTP_BAD_REQUEST, INVALID_REQUEST);
+            return;
+        }
+        ObjectNode form;
+        try {
+            form = parseUrlEncoded(body);
+        } catch (IllegalArgumentException e) {
+            respondOAuthError(exchange, HTTP_BAD_REQUEST, INVALID_REQUEST);
+            return;
+        }
+        if (!CLIENT_CREDENTIALS_GRANT.equals(form.path(GRANT_TYPE).textValue())) {
+            respondOAuthError(exchange, HTTP_BAD_REQUEST, UNSUPPORTED_GRANT_TYPE);
+            return;
+        }
+        ObjectNode response = OBJECT_MAPPER.createObjectNode();
+        if (!NO_TOKEN_CLIENT.equals(client.id())) {
+            response.put(ACCESS_TOKEN, issueToken(client.id(), form.path(SCOPE).textValue()));
+        }
+        response.put(TOKEN_TYPE, MAC_TOKEN_CLIENT.equals(client.id()) ? MAC_TOKEN_TYPE : BEARER_SCHEME);
+        response.put(EXPIRES_IN,
+                SHORT_LIVED_TOKEN_CLIENT.equals(client.id()) ? SHORT_TOKEN_LIFETIME_SECONDS : TOKEN_LIFETIME_SECONDS);
+        respond(exchange, HTTP_OK, APPLICATION_JSON, OBJECT_MAPPER.writeValueAsBytes(response));
+    }
+
+    private synchronized String issueToken(String clientId, String scope) {
+        String token = clientId + TOKEN_PART_SEPARATOR + issuedTokenCounts.merge(clientId, 1, Integer::sum);
+        if (scope != null) {
+            token += TOKEN_PART_SEPARATOR + URLEncoder.encode(scope, StandardCharsets.UTF_8);
+        }
+        currentTokens.put(clientId, token);
+        return token;
+    }
+
+    private synchronized boolean isCurrentToken(String token) {
+        return currentTokens.containsValue(token);
+    }
+
+    private void oauthEcho(HttpExchange exchange, byte[] body) throws IOException {
+        String token = credentials(exchange, BEARER_SCHEME);
+        if (token == null || !isCurrentToken(token)) {
+            challenge(exchange, BEARER_SCHEME, INVALID_TOKEN);
+            return;
+        }
+        echo(exchange, body);
+    }
+
+    private static ClientCredentials clientCredentials(HttpExchange exchange) {
+        String credentials = credentials(exchange, BASIC_SCHEME);
+        if (credentials == null) {
+            return null;
+        }
+        try {
+            String decoded = new String(Base64.getDecoder().decode(credentials), StandardCharsets.UTF_8);
+            int separator = decoded.indexOf(BASIC_CREDENTIALS_SEPARATOR);
+            return separator < 0 ? null
+                    : new ClientCredentials(URLDecoder.decode(decoded.substring(0, separator), StandardCharsets.UTF_8),
+                            URLDecoder.decode(decoded.substring(separator + 1), StandardCharsets.UTF_8));
+        } catch (IllegalArgumentException e) {
+            // not Base64, or not form-encoded
+            return null;
+        }
+    }
+
+    /**
+     * @return the credentials of the request's Authorization header if it uses the given scheme, else {@code null}
+     */
+    private static String credentials(HttpExchange exchange, String scheme) {
+        String authorization = exchange.getRequestHeaders().getFirst(HEADER_AUTHORIZATION);
+        String prefix = scheme + SCHEME_SEPARATOR;
+        // an authentication scheme is case-insensitive
+        return authorization != null && authorization.regionMatches(true, 0, prefix, 0, prefix.length())
+                ? authorization.substring(prefix.length()) : null;
+    }
+
+    private static void challenge(HttpExchange exchange, String scheme, String error) throws IOException {
+        exchange.getResponseHeaders().set(HEADER_WWW_AUTHENTICATE, scheme);
+        respondOAuthError(exchange, HTTP_UNAUTHORIZED, error);
+    }
+
+    private static void respondOAuthError(HttpExchange exchange, int status, String error) throws IOException {
+        respond(exchange, status, APPLICATION_JSON,
+                OBJECT_MAPPER.writeValueAsBytes(OBJECT_MAPPER.createObjectNode().put(OAUTH_ERROR, error)));
+    }
+
     private static String lastPathSegment(HttpExchange exchange) {
         String path = exchange.getRequestURI().getPath();
         return path.substring(path.lastIndexOf('/') + 1);
@@ -348,5 +486,8 @@ public final class HttpFunctionMockServer {
     @FunctionalInterface
     private interface Handler {
         void handle(HttpExchange exchange, byte[] body) throws IOException;
+    }
+
+    private record ClientCredentials(String id, String secret) {
     }
 }

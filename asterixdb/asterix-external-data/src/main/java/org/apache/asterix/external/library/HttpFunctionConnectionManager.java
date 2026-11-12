@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.ScheduledFuture;
@@ -38,9 +39,11 @@ import org.apache.asterix.external.util.TlsUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.DnsResolver;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
@@ -103,25 +106,27 @@ public final class HttpFunctionConnectionManager {
     }
 
     /**
-     * Sends a request and hands its response to {@code handler}, aborting the request if the whole call, reading
-     * the response included, takes longer than {@code timeoutMillis}, or if the calling thread is interrupted, as
-     * a cancelled query's are. A socket timeout alone cannot bound a server that keeps sending a byte at a time, and
-     * a blocked socket does not notice an interrupt.
+     * Sends a request and hands its response to {@code handler}, aborting the request if it has not ended, reading
+     * the response included, by {@code deadlineNanos}, or if the calling thread is interrupted, as a cancelled
+     * query's are. A socket timeout alone cannot bound a server that keeps sending a byte at a time, and a blocked
+     * socket does not notice an interrupt.
      *
      * @param context a context from {@link #createContext(String, SourceLocation)}
+     * @param deadlineNanos the {@link System#nanoTime()} by which the call that sends the request must end
+     * @param displayUrl the request's URL as errors show it
+     * @param timeoutSeconds the timeout of the call, as errors show it
      * @return what {@code handler} returns
-     * @throws HyracksDataException if the client's egress policy refused the host, {@code handler} threw it, or the
-     *         calling thread was interrupted, in which case it is caused by an {@link InterruptedException}
-     * @throws IOException if the request failed. {@link HttpRequestBase#isAborted()} tells whether it was because
-     *         the call ran out of time.
+     * @throws HyracksDataException if the client's egress policy refused the host, {@code handler} threw it, the
+     *         deadline passed, the request failed, or the calling thread was interrupted, in which case it is caused
+     *         by an {@link InterruptedException}
      */
-    static <T> T execute(CloseableHttpClient client, HttpRequestBase request, HttpContext context, long timeoutMillis,
-            ResponseHandler<? extends T> handler) throws IOException {
+    static <T> T execute(CloseableHttpClient client, HttpRequestBase request, HttpContext context, long deadlineNanos,
+            ResponseHandler<? extends T> handler, SourceLocation sourceLoc, String displayUrl, int timeoutSeconds)
+            throws HyracksDataException {
         Thread caller = Thread.currentThread();
         if (caller.isInterrupted()) {
             throw HyracksDataException.create(new InterruptedException());
         }
-        long deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
         ScheduledFuture<?> watch = DEADLINE_TIMER.scheduleWithFixedDelay(() -> {
             if (caller.isInterrupted() || System.nanoTime() - deadlineNanos >= 0) {
                 request.abort();
@@ -131,6 +136,9 @@ public final class HttpFunctionConnectionManager {
             return client.execute(request, handler, context);
         } catch (EgressRefusedException e) {
             throw e.getRefusal();
+        } catch (HyracksDataException e) {
+            // an error the response raised, already in its final form
+            throw e;
         } catch (IOException e) {
             if (caller.isInterrupted()) {
                 // the interrupt stays set, so that the job is reported as cancelled rather than as failed
@@ -138,7 +146,13 @@ public final class HttpFunctionConnectionManager {
                 interrupted.addSuppressed(e);
                 throw HyracksDataException.create(interrupted);
             }
-            throw e;
+            if (request.isAborted() || e instanceof SocketTimeoutException || e instanceof ConnectTimeoutException) {
+                // not chained: an InterruptedIOException at the root of the cause would report the job as cancelled
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_TIMEOUT, sourceLoc, displayUrl,
+                        timeoutSeconds);
+            }
+            throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_REQUEST_FAILED, e, sourceLoc, displayUrl,
+                    ExceptionUtils.getMessage(e));
         } finally {
             watch.cancel(false);
         }
@@ -153,21 +167,45 @@ public final class HttpFunctionConnectionManager {
      * @throws HyracksDataException if {@code certificate} cannot be read
      */
     static HttpClientContext createContext(String certificate, SourceLocation sourceLoc) throws HyracksDataException {
+        return createContext(certificate, false, sourceLoc);
+    }
+
+    /**
+     * Creates the context of an endpoint's requests.
+     *
+     * @param certificate the PEM-encoded certificates of authorities whose HTTPS servers the requests trust, or
+     *        {@code null} to trust those the JVM does
+     * @param jvmAuthorities whether the requests also trust the authorities the JVM does when {@code certificate} is
+     *        given
+     * @param sourceLoc the location of the call, which an error reports
+     * @throws HyracksDataException if {@code certificate} cannot be read
+     */
+    static HttpClientContext createContext(String certificate, boolean jvmAuthorities, SourceLocation sourceLoc)
+            throws HyracksDataException {
         HttpClientContext context = HttpClientContext.create();
         if (certificate != null) {
             context.setAttribute(SOCKET_FACTORY_ATTRIBUTE,
-                    new SSLConnectionSocketFactory(createSslContext(certificate, sourceLoc)));
+                    new SSLConnectionSocketFactory(createSslContext(certificate, jvmAuthorities, sourceLoc)));
             // a pooled connection is reused only by requests of the same token, so never by one trusting others
-            context.setUserToken(certificate);
+            context.setUserToken(new Trust(certificate, jvmAuthorities));
         }
         return context;
     }
 
-    private static SSLContext createSslContext(String certificate, SourceLocation sourceLoc)
+    /**
+     * Creates the configuration of a call's requests, which bounds each wait of a request by the call's timeout.
+     */
+    static RequestConfig createRequestConfig(int timeoutSeconds) {
+        int timeoutMillis = Math.toIntExact(TimeUnit.SECONDS.toMillis(timeoutSeconds));
+        return RequestConfig.custom().setConnectTimeout(timeoutMillis).setConnectionRequestTimeout(timeoutMillis)
+                .setSocketTimeout(timeoutMillis).build();
+    }
+
+    private static SSLContext createSslContext(String certificate, boolean jvmAuthorities, SourceLocation sourceLoc)
             throws HyracksDataException {
         try {
             SSLContext sslContext = SSLContext.getInstance(TLS_PROTOCOL);
-            sslContext.init(null, TlsUtils.buildTrustManagers(certificate, false), null);
+            sslContext.init(null, TlsUtils.buildTrustManagers(certificate, jvmAuthorities), null);
             return sslContext;
         } catch (GeneralSecurityException | IOException e) {
             throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_INVALID_OPTION, e, sourceLoc,
@@ -253,5 +291,8 @@ public final class HttpFunctionConnectionManager {
         private HyracksDataException getRefusal() {
             return (HyracksDataException) getCause();
         }
+    }
+
+    private record Trust(String certificate, boolean jvmAuthorities) {
     }
 }

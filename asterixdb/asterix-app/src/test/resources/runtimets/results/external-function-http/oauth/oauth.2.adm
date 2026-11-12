@@ -1,0 +1,1 @@
+[ { "method": "GET", "path": "/oauth/echo", "query": "a=1", "authorization": "Bearer shared.1" }, { "method": "GET", "path": "/oauth/echo", "query": "a=2", "authorization": "Bearer shared.1" }, { "method": "GET", "path": "/echo", "query": "a=3", "authorization": "Bearer shared.1" } ]

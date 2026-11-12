@@ -1,0 +1,192 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+-- every client of the mock server has the secret 'se+cr:et', which form encoding changes; the token cache outlives a
+-- query and is shared by the node, so each query that shows a token uses a client that no other query uses
+CREATE EXTERNAL FUNCTION oauth(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "shared",
+  "oauthClientSecret": "se+cr:et",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION oauthShared(a) AT 'https://127.0.0.1:19372/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "shared",
+  "oauthClientSecret": "se+cr:et",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION oauthScoped(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "scoped",
+  "oauthClientSecret": "se+cr:et",
+  "oauthAllowedScopes": "read write",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION shortLived(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "short",
+  "oauthClientSecret": "se+cr:et",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION rotating(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "rotating",
+  "oauthClientSecret": "se+cr:et",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+-- gets a token for client rotating itself, which revokes the one the node has cached for it
+CREATE EXTERNAL FUNCTION issue(grant_type) AT 'https://127.0.0.1:19372/token' WITH {
+  "method": "post",
+  "body": "urlencoded",
+  "headers": { "Authorization": "Basic cm90YXRpbmc6c2UlMkJjciUzQWV0" },
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION rejected(a) AT 'https://127.0.0.1:19372/status/401' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "rejected",
+  "oauthClientSecret": "se+cr:et",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION badSecret(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "badSecret",
+  "oauthClientSecret": "secret",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION noToken(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "malformed",
+  "oauthClientSecret": "se+cr:et",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION macToken(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "mac",
+  "oauthClientSecret": "se+cr:et",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION slowToken(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "oauthTokenUri": "https://127.0.0.1:19372/slow",
+  "oauthClientId": "slow",
+  "oauthClientSecret": "se+cr:et",
+  "timeout": 1,
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};

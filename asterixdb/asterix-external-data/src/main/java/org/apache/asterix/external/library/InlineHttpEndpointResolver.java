@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.library;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +25,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.HttpEndpoint;
 import org.apache.asterix.common.functions.HttpFunctionConstants;
+import org.apache.asterix.common.functions.HttpOAuthClient;
 import org.apache.asterix.common.functions.IHttpEndpointResolver;
 import org.apache.http.HttpHeaders;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -41,9 +40,6 @@ public final class InlineHttpEndpointResolver implements IHttpEndpointResolver {
 
     private static final int TARGET_INDEX = 0;
     private static final int URL_INDEX = 1;
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final String BASIC_PREFIX = "Basic ";
-    private static final String BASIC_SEPARATOR = ":";
 
     private InlineHttpEndpointResolver() {
     }
@@ -55,7 +51,7 @@ public final class InlineHttpEndpointResolver implements IHttpEndpointResolver {
             String authorization = getAuthorization(resources);
             return new HttpEndpoint(externalIdentifier.get(URL_INDEX),
                     authorization == null ? Map.of() : Map.of(HttpHeaders.AUTHORIZATION, authorization),
-                    resources.get(HttpFunctionConstants.OPTION_CERTIFICATES));
+                    resources.get(HttpFunctionConstants.OPTION_CERTIFICATES), getOAuthClient(resources));
         }
         // the link's name is the last element of its identifier
         throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_LINK_UNSUPPORTED,
@@ -66,13 +62,20 @@ public final class InlineHttpEndpointResolver implements IHttpEndpointResolver {
     private static String getAuthorization(Map<String, String> resources) {
         String bearerToken = resources.get(HttpFunctionConstants.OPTION_BEARER_TOKEN);
         if (bearerToken != null) {
-            return BEARER_PREFIX + bearerToken;
+            return HttpAuthorization.bearer(bearerToken);
         }
         String username = resources.get(HttpFunctionConstants.OPTION_USERNAME);
         if (username != null) {
-            String credentials = username + BASIC_SEPARATOR + resources.get(HttpFunctionConstants.OPTION_PASSWORD);
-            return BASIC_PREFIX + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+            return HttpAuthorization.basic(username, resources.get(HttpFunctionConstants.OPTION_PASSWORD));
         }
         return null;
+    }
+
+    private static HttpOAuthClient getOAuthClient(Map<String, String> resources) {
+        String tokenUri = resources.get(HttpFunctionConstants.OPTION_OAUTH_TOKEN_URI);
+        return tokenUri == null ? null
+                : new HttpOAuthClient(tokenUri, resources.get(HttpFunctionConstants.OPTION_OAUTH_CLIENT_ID),
+                        resources.get(HttpFunctionConstants.OPTION_OAUTH_CLIENT_SECRET),
+                        resources.get(HttpFunctionConstants.OPTION_OAUTH_ALLOWED_SCOPES));
     }
 }
