@@ -29,6 +29,7 @@ import org.apache.asterix.column.metadata.schema.ISchemaNodeVisitor;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
+import org.apache.asterix.column.metadata.schema.collection.MapSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.values.IColumnBatchWriter;
 import org.apache.asterix.column.values.IColumnValuesWriter;
@@ -87,6 +88,9 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
         objectNode.setCounter(0);
         objectNode.setNumberOfVisitedColumnsInBatch(0);
         columnSchemaMetadata.clearDefinitionLevels(objectNode);
+        if (columnSchemaMetadata.isCollapseDetectorEnabled()) {
+            objectNode.resetBatchStatistics();
+        }
         objectNode.needAllColumns(false);
         needAllColumns = previousNeedAllColumns;
         level--;
@@ -100,6 +104,10 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
         boolean previousNeedAllColumns = needAllColumns;
         needAllColumns = needAllColumns | collectionNode.needAllColumns();
         columnSchemaMetadata.flushDefinitionLevels(level - 1, arg, collectionNode);
+        if (collectionNode instanceof MapSchemaNode) {
+            // The key column sits beside the shared value node rather than inside it, so it needs visiting too.
+            ((MapSchemaNode) collectionNode).getKeyNode().accept(this, collectionNode);
+        }
         collectionNode.getItemNode().accept(this, collectionNode);
         collectionNode.setCounter(0);
         collectionNode.setNumberOfVisitedColumnsInBatch(0);

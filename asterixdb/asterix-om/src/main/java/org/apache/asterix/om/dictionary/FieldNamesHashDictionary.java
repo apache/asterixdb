@@ -106,6 +106,11 @@ public class FieldNamesHashDictionary extends AbstractFieldNamesDictionary {
         return hashToFieldNameIndexMap.getOrDefault(getHash(lookupStorage), -1);
     }
 
+    @Override
+    public int getFieldNameIndex(IValueReference fieldName) throws HyracksDataException {
+        return hashToFieldNameIndexMap.getOrDefault(getHash(fieldName), -1);
+    }
+
     private int getHash(IValueReference fieldName) throws HyracksDataException {
         byte[] object = fieldName.getByteArray();
         int start = fieldName.getStartOffset();

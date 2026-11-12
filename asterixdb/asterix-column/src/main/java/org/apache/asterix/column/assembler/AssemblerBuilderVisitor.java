@@ -19,6 +19,7 @@
 package org.apache.asterix.column.assembler;
 
 import static org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary.DUMMY_FIELD_NAME_INDEX;
+import static org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary.MAP_FIELD_NAME_INDEX;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -34,6 +35,7 @@ import org.apache.asterix.column.metadata.schema.ISchemaNodeVisitor;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
+import org.apache.asterix.column.metadata.schema.collection.MapSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.operation.query.QueryColumnMetadata;
 import org.apache.asterix.column.values.IColumnValuesReader;
@@ -98,19 +100,23 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         int effectiveNumberOfChildren = childrenFieldNameIndexes.size();
         ObjectValueAssembler objectAssembler = new ObjectValueAssembler(level, info);
         level++;
-        BitSet declaredFields = handleDeclaredFields(objectNode, info, objectAssembler);
+        BitSet declaredFields = handleDeclaredFields(objectNode, info, objectAssembler, objectNode.isCollapsed());
         int numberOfAddedChildren = declaredFields.cardinality();
         if (numberOfAddedChildren < childrenFieldNameIndexes.size()) {
             // Now handle any open fields
             for (int i = 0; i < childrenFieldNameIndexes.size(); i++) {
                 int fieldNameIdx = childrenFieldNameIndexes.getInt(i);
+                if (fieldNameIdx == MAP_FIELD_NAME_INDEX) {
+                    // Visited after the loop, see below
+                    continue;
+                }
                 AbstractSchemaNode childNode = objectNode.getChild(fieldNameIdx);
                 if (fieldNameIdx == DUMMY_FIELD_NAME_INDEX || !declaredFields.get(fieldNameIdx)) {
                     numberOfAddedChildren++;
                     IAType childType = getChildType(childNode, BuiltinType.ANY);
                     IValueReference fieldName = columnMetadata.getFieldNamesDictionary().getFieldName(fieldNameIdx);
-                    //The last child should be a delegate
-                    boolean delegate = numberOfAddedChildren == childrenFieldNameIndexes.size();
+                    boolean delegate =
+                            !objectNode.isCollapsed() && numberOfAddedChildren == childrenFieldNameIndexes.size();
                     AssemblerInfo childInfo = new AssemblerInfo(childType, objectAssembler, delegate, fieldName);
                     if (childNode instanceof UnionSchemaNode) {
                         //UnionSchemaNode does not actually exist. We know the parent of the union could have items of multiple types.
@@ -120,6 +126,15 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
                     childNode.accept(this, childInfo);
                 }
             }
+            /*
+             * The collapsed child must be the delegate — the delegate is whichever child ends the parent record — and
+             * so it must also be visited last: were it visited before another child, it would end the record, and
+             * that child's start() would then reset the record builder and drop everything already assembled.
+             */
+            MapSchemaNode mapNode = objectNode.getMapNode();
+            if (mapNode != null) {
+                mapNode.accept(this, new AssemblerInfo(BuiltinType.ANY, objectAssembler, true));
+            }
         }
 
         objectAssembler.setNumberOfEffectiveFields(effectiveNumberOfChildren);
@@ -128,7 +143,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
     }
 
     private BitSet handleDeclaredFields(ObjectSchemaNode objectNode, AssemblerInfo info,
-            ObjectValueAssembler objectAssembler) throws HyracksDataException {
+            ObjectValueAssembler objectAssembler, boolean mapIsDelegate) throws HyracksDataException {
         ARecordType declaredType = (ARecordType) info.getDeclaredType();
         if (declaredType == DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE) {
             return NO_DECLARED_FIELDS;
@@ -148,7 +163,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
                 addedChildren++;
                 IAType childType = getChildType(childNode, declaredFieldTypes[i]);
                 processedFields.set(fieldNameIndex);
-                boolean delegate = addedChildren == requestedChildren;
+                boolean delegate = !mapIsDelegate && addedChildren == requestedChildren;
                 AssemblerInfo childInfo = new AssemblerInfo(childType, objectAssembler, delegate, i);
                 childNode.accept(this, childInfo);
             }
@@ -159,6 +174,9 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
     @Override
     public AbstractValueAssembler visit(AbstractCollectionSchemaNode collectionNode, AssemblerInfo info)
             throws HyracksDataException {
+        if (collectionNode instanceof MapSchemaNode) {
+            return visitMap((MapSchemaNode) collectionNode, info);
+        }
         AbstractCollectionType declaredType = (AbstractCollectionType) info.getDeclaredType();
         AbstractSchemaNode itemNode = collectionNode.getItemNode();
 
@@ -184,8 +202,8 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
             IColumnValuesReader reader = delegateAssembler.getReader();
             int numberOfDelimiters = reader.getNumberOfDelimiters();
             // End of group assembler is responsible to finalize array/multiset builders
-            EndOfRepeatedGroupAssembler endOfGroupAssembler =
-                    new EndOfRepeatedGroupAssembler(endOfGroupPrimitiveReaders, arrayAssembler, delimiters.size());
+            EndOfRepeatedGroupAssembler endOfGroupAssembler = new EndOfRepeatedGroupAssembler(
+                    endOfGroupPrimitiveReaders, arrayAssembler, arrayAssembler.getFirstValueIndex(), delimiters.size());
             previousEndOfGroupPrimitiveReaders.addAll(endOfGroupPrimitiveReaders);
             valueAssemblers.add(endOfGroupAssembler);
         }
@@ -255,6 +273,52 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
 
         // Declared types are not (and cannot be) normalized
         return declaredType.getTypeTag();
+    }
+
+    /**
+     * Mirrors the collection case, with one extra child: the key column. Key is visited first so that its assembler
+     * precedes the value's in the ordered assembler array, matching the order the two columns were written in and so
+     * the pairing in {@link MapValueAssembler} holds.
+     */
+    private AbstractValueAssembler visitMap(MapSchemaNode mapNode, AssemblerInfo info) throws HyracksDataException {
+        AbstractSchemaNode itemNode = mapNode.getItemNode();
+        MapValueAssembler mapAssembler = new MapValueAssembler(level, info, valueAssemblers.size());
+        delimiters.add(level - 1);
+        level++;
+
+        RepeatedPrimitiveValueAssembler previousDelegate = delegateAssembler;
+        delegateAssembler = null;
+        List<IColumnValuesReader> previousEndOfGroupPrimitiveReaders = endOfGroupPrimitiveReaders;
+        endOfGroupPrimitiveReaders = new ArrayList<>();
+
+        AssemblerInfo keyInfo = new AssemblerInfo(BuiltinType.ASTRING, mapAssembler, false);
+        mapAssembler.setKeyAssembler(mapNode.getKeyNode().accept(this, keyInfo));
+        mapAssembler.setRequestedKeys(mapNode.getRequestedKeys());
+        boolean unionValue = itemNode != null && itemNode.getTypeTag() == ATypeTag.UNION;
+        mapAssembler.setUnionValue(unionValue);
+        // The key, plus each value arm: a union's arms all report to the map directly, as the union node has no assembler
+        int valueArms = itemNode == null ? 0 : unionValue ? ((UnionSchemaNode) itemNode).getChildren().size() : 1;
+        mapAssembler.setReporters(1 + valueArms);
+
+        if (itemNode != null) {
+            IAType itemDeclaredType = getChildType(itemNode, BuiltinType.ANY);
+            itemNode.accept(this, new AssemblerInfo(itemDeclaredType, mapAssembler, false));
+        }
+
+        if (delegateAssembler != null) {
+            EndOfRepeatedGroupAssembler endOfGroupAssembler = new EndOfRepeatedGroupAssembler(
+                    endOfGroupPrimitiveReaders, mapAssembler, mapAssembler.getFirstValueIndex(), delimiters.size());
+            previousEndOfGroupPrimitiveReaders.addAll(endOfGroupPrimitiveReaders);
+            valueAssemblers.add(endOfGroupAssembler);
+        }
+
+        level--;
+        delimiters.removeInt(delimiters.size() - 1);
+        if (previousDelegate != null && !delimiters.isEmpty()) {
+            delegateAssembler = previousDelegate;
+        }
+        endOfGroupPrimitiveReaders = previousEndOfGroupPrimitiveReaders;
+        return mapAssembler;
     }
 
     private int[] getDelimiters() {

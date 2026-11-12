@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.column.ColumnManagerFactory;
 import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.operation.query.QueryColumnTupleProjector;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.parser.ADMDataParser;
@@ -129,6 +130,8 @@ public class ReusedSearchCursorTest {
         }
         ITypeTraits[] typeTraits = new ITypeTraits[] { TypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.AINT64),
                 TypeTraitProvider.INSTANCE.getTypeTrait(KEYED_TYPE) };
+        // A node registers the storage options with its configuration; this harness's own does not.
+        harness.getNCConfig().getConfigManager().register(StorageProperties.Option.values());
         lsmBtree = LSMColumnBTreeUtil.createLSMTree(harness.getNCConfig(), ioManager, virtualBufferCaches,
                 harness.getFileReference(), diskBufferCache, columnBufferPool, typeTraits, CMP_FACTORIES,
                 new int[] { 0 }, 0.01, harness.getMergePolicy(), harness.getOperationTracker(),

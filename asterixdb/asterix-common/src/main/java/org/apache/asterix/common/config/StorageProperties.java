@@ -92,7 +92,20 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_COLUMN_BUFFER_POOL_MAX_SIZE(getRangedIntegerType(1, 50000), 8000),
         STORAGE_COLUMN_BUFFER_ACQUIRE_TIMEOUT(LONG, TimeUnit.SECONDS.toMillis(120)),
         STORAGE_MAX_SAMPLE_LEAF_ATTEMPTS(POSITIVE_INTEGER, 500),
-        STORAGE_SAMPLE_LEAF_DRAW_BATCH_SIZE(POSITIVE_INTEGER, 32768);
+        STORAGE_SAMPLE_LEAF_DRAW_BATCH_SIZE(POSITIVE_INTEGER, 32768),
+        STORAGE_COLUMN_COLLAPSE_ENABLED(BOOLEAN, true),
+        STORAGE_COLUMN_COLLAPSE_MIN_CHILDREN(POSITIVE_INTEGER, 64),
+        STORAGE_COLUMN_COLLAPSE_MIN_COLUMNS(POSITIVE_INTEGER, 1024),
+        STORAGE_COLUMN_COLLAPSE_WINDOW_DOCUMENTS(POSITIVE_INTEGER, 32),
+        STORAGE_COLUMN_COLLAPSE_WINDOW_NEW_NAMES(POSITIVE_INTEGER, 16),
+        STORAGE_COLUMN_COLLAPSE_SLOW_WINDOWS(POSITIVE_INTEGER, 8),
+        STORAGE_COLUMN_COLLAPSE_WINDOW_MAX_NEW_NAMES(POSITIVE_INTEGER, 256),
+        STORAGE_COLUMN_COLLAPSE_WINDOW_MAX_NEW_COLUMNS(POSITIVE_INTEGER, 256),
+        STORAGE_COLUMN_COLLAPSE_GROWING_WINDOWS(POSITIVE_INTEGER, 4),
+        STORAGE_COLUMN_COLLAPSE_GROWING_CHILDREN(POSITIVE_INTEGER, 8),
+        STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_ABSENT(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.9d),
+        STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_FRESH(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.5d),
+        STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_VISITS(POSITIVE_INTEGER, 8);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -216,6 +229,41 @@ public class StorageProperties extends AbstractProperties {
                             + "cursor however large a sample is requested. Lowering it below the sample size only "
                             + "costs I/O locality - batches are always consumed in full, so it cannot affect which "
                             + "tuples the sample contains.";
+                case STORAGE_COLUMN_COLLAPSE_ENABLED:
+                    return "Whether flushes may collapse an object whose field names keep arriving (ids, timestamps "
+                            + "used as keys) into a map node. Disabling it stops new collapses; a node that has "
+                            + "collapsed stays collapsed, as its components hold its map. A collapsed schema cannot be "
+                            + "read by an older version, so once a node collapses, downgrading is no longer possible";
+                case STORAGE_COLUMN_COLLAPSE_MIN_CHILDREN:
+                    return "The number of fields an object needs before it may collapse, unless it already has "
+                            + "storage.column.collapse.min.columns columns";
+                case STORAGE_COLUMN_COLLAPSE_MIN_COLUMNS:
+                    return "The number of columns under an object that also lets it collapse, whatever its number "
+                            + "of fields";
+                case STORAGE_COLUMN_COLLAPSE_WINDOW_DOCUMENTS:
+                    return "The number of visits of an object over which its new field names are counted";
+                case STORAGE_COLUMN_COLLAPSE_WINDOW_NEW_NAMES:
+                    return "The number of new field names that make a window count as fast growth";
+                case STORAGE_COLUMN_COLLAPSE_SLOW_WINDOWS:
+                    return "The number of consecutive windows that each added a field name after which an object "
+                            + "collapses";
+                case STORAGE_COLUMN_COLLAPSE_WINDOW_MAX_NEW_NAMES:
+                    return "The number of new field names that close a window early, as a fast one";
+                case STORAGE_COLUMN_COLLAPSE_WINDOW_MAX_NEW_COLUMNS:
+                    return "The number of columns created by a window's new field names that close it early, as a "
+                            + "fast one";
+                case STORAGE_COLUMN_COLLAPSE_GROWING_WINDOWS:
+                    return "The number of consecutive fast windows after which an object collapses";
+                case STORAGE_COLUMN_COLLAPSE_GROWING_CHILDREN:
+                    return "The number of an object's fields that must have started growing before it collapses";
+                case STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_ABSENT:
+                    return "The fraction of an object's fields absent from a batch that, with "
+                            + "storage.column.collapse.sparsity.min.fresh, collapses it";
+                case STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_FRESH:
+                    return "The fraction of the fields present in a batch that must be new in it for the sparsity "
+                            + "trigger";
+                case STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_VISITS:
+                    return "The number of visits of an object a batch needs before its sparsity is judged";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }

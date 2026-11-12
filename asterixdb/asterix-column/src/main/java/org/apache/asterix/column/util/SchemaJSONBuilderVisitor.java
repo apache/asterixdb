@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.util;
 
+import static org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary.MAP_FIELD_NAME_INDEX;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,7 +93,7 @@ public class SchemaJSONBuilderVisitor implements ISchemaNodeVisitor<JsonNode, Vo
         level++;
         for (int i = 0; i < children.size(); i++) {
             int index = fieldNameIndexes.getInt(i);
-            String fieldName = index < 0 ? "<empty>" : fieldNames.get(index);
+            String fieldName = index == MAP_FIELD_NAME_INDEX ? "<map>" : index < 0 ? "<empty>" : fieldNames.get(index);
             AbstractSchemaNode child = children.get(i);
             JsonNode childNode = child.accept(this, null);
             fieldsNode.putIfAbsent(fieldName, childNode);

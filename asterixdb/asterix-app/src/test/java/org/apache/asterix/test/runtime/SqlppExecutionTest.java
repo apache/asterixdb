@@ -71,7 +71,7 @@ public class SqlppExecutionTest {
         LangExecutionUtil.test(tcCtx);
     }
 
-    private static void setNcEndpoints(TestExecutor testExecutor) {
+    protected static void setNcEndpoints(TestExecutor testExecutor) {
         final NodeControllerService[] ncs = ExecutionTestUtil.integrationUtil.ncs;
         final Map<String, InetSocketAddress> ncEndPoints = new HashMap<>();
         final String ip = InetAddress.getLoopbackAddress().getHostAddress();

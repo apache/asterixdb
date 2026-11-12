@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.util;
 
+import static org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary.MAP_FIELD_NAME_INDEX;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,7 +82,7 @@ public class SchemaStringBuilderVisitor implements ISchemaNodeVisitor<Void, Void
 
         for (int i = 0; i < children.size(); i++) {
             int index = fieldNameIndexes.getInt(i);
-            String fieldName = index < 0 ? "<empty>" : fieldNames.get(index);
+            String fieldName = index == MAP_FIELD_NAME_INDEX ? "<map>" : index < 0 ? "<empty>" : fieldNames.get(index);
             AbstractSchemaNode child = children.get(i);
             append(fieldName, index, child);
             child.accept(this, null);

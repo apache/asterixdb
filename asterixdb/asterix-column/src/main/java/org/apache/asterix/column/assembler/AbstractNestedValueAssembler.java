@@ -20,6 +20,7 @@ package org.apache.asterix.column.assembler;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public abstract class AbstractNestedValueAssembler extends AbstractValueAssembler {
@@ -56,6 +57,15 @@ public abstract class AbstractNestedValueAssembler extends AbstractValueAssemble
      */
     void addMissing() throws HyracksDataException {
         //By default, we ignore missing
+    }
+
+    /**
+     * Add a field whose name is resolved at read time. Only record-shaped assemblers can honour this; a collapsed map
+     * node is always a child of an object, so no other assembler should ever receive it.
+     */
+    void addOpenField(IValueReference taggedFieldName, IValueReference value) throws HyracksDataException {
+        throw new UnsupportedOperationException(
+                getClass().getSimpleName() + " cannot accept a dynamically named field");
     }
 
     @Override

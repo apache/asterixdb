@@ -63,6 +63,14 @@ public class FieldNamesTrieDictionary extends AbstractFieldNamesDictionary {
     }
 
     @Override
+    public int getFieldNameIndex(IValueReference fieldName) throws HyracksDataException {
+        if (fieldName == DUMMY_FIELD_NAME) {
+            return DUMMY_FIELD_NAME_INDEX;
+        }
+        return dictionary.lookup(fieldName);
+    }
+
+    @Override
     public int getFieldNameIndex(String fieldName) throws HyracksDataException {
         lookupStorage.reset();
         serializeFieldName(fieldName, lookupStorage);

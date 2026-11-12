@@ -1,0 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+-- Every entry of both components, by value type. 2000 * 2 strings from the first component plus 400 from the second;
+-- 400 bigints and 400 objects from the second.
+SELECT VALUE {"firstComponentStrings": COUNT(CASE WHEN c.id <= 2000 AND is_string(p.`value`) THEN 1 END),
+              "strings": COUNT(CASE WHEN is_string(p.`value`) THEN 1 END),
+              "numbers": COUNT(CASE WHEN is_number(p.`value`) THEN 1 END),
+              "objects": COUNT(CASE WHEN is_object(p.`value`) THEN 1 END),
+              "entries": COUNT(*)}
+FROM ColumnDataset c, OBJECT_PAIRS(c.m) p;

@@ -18,9 +18,11 @@
  */
 package org.apache.asterix.column.filter.iterable.evaluator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.column.filter.FilterAccessorProvider;
+import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.ColumnFilterEvaluatorContext;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
@@ -29,20 +31,37 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ * The pushed-down filter, as the conjuncts of its top-level AND (a single one if it has none). A conjunct reading a
+ * path that crosses a collapsed node's map is dropped for the component: its value may sit in a map entry, which no
+ * filter reader sees. The others still filter, so one such conjunct does not disable the filter as a whole.
+ */
 public class ColumnIterableFilterEvaluatorFactory implements IColumnIterableFilterEvaluatorFactory {
-    private static final long serialVersionUID = 171140626152211361L;
-    private final IScalarEvaluatorFactory evaluatorFactory;
+    private static final long serialVersionUID = 171140626152211362L;
+    private final IScalarEvaluatorFactory[] conjunctFactories;
 
-    public ColumnIterableFilterEvaluatorFactory(IScalarEvaluatorFactory evaluatorFactory) {
-        this.evaluatorFactory = evaluatorFactory;
+    public ColumnIterableFilterEvaluatorFactory(IScalarEvaluatorFactory... conjunctFactories) {
+        this.conjunctFactories = conjunctFactories;
     }
 
     @Override
     public IColumnIterableFilterEvaluator create(ColumnFilterEvaluatorContext context) throws HyracksDataException {
-        IScalarEvaluator evaluator = evaluatorFactory.createScalarEvaluator(context);
         FilterAccessorProvider filterAccessorProvider = context.getFilterAccessorProvider();
-        // Readers are populated by evaluatorFactory.createScalarEvaluator()
+        List<IScalarEvaluator> conjuncts = new ArrayList<>(conjunctFactories.length);
+        for (IScalarEvaluatorFactory conjunctFactory : conjunctFactories) {
+            filterAccessorProvider.clearPathCrossesCollapsedMap();
+            // Readers are populated by createScalarEvaluator()
+            IScalarEvaluator conjunct = conjunctFactory.createScalarEvaluator(context);
+            if (!filterAccessorProvider.pathCrossesCollapsedMap()) {
+                conjuncts.add(conjunct);
+            }
+        }
         List<IColumnValuesReader> readers = filterAccessorProvider.getFilterColumnReaders();
+        if (conjuncts.isEmpty()) {
+            // Every conjunct may hold a value in a map entry: filter nothing, as if no filter had been pushed down.
+            readers.clear();
+            return TrueColumnFilterEvaluator.INSTANCE;
+        }
 
         if (readers.isEmpty()) {
             throw new NullPointerException("Readers are empty");
@@ -51,6 +70,7 @@ public class ColumnIterableFilterEvaluatorFactory implements IColumnIterableFilt
         // Initialize column filter readers by including a primary key level reader
         filterAccessorProvider.initializeFilterReaders();
 
+        IScalarEvaluator evaluator = conjuncts.size() == 1 ? conjuncts.get(0) : new ConjunctionEvaluator(conjuncts);
         if (readers.stream().anyMatch(IColumnValuesReader::isRepeated)) {
             return new ColumnarRepeatedIterableFilterEvaluator(evaluator, readers);
         }

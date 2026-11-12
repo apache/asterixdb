@@ -35,6 +35,8 @@ import org.apache.asterix.column.filter.range.accessor.MissingColumnRangeFilterV
 import org.apache.asterix.column.filter.range.accessor.NoOpColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
+import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
+import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.PathExtractorVisitor;
@@ -58,6 +60,12 @@ public class FilterAccessorProvider {
     private final List<IColumnRangeFilterValueAccessor> filterAccessors;
     private final List<IColumnValuesReader> filterColumnReaders;
     private final IValueGetterFactory valueGetterFactory;
+    /**
+     * Set once a filtered path crosses a collapsed node's map. The value may then sit in a map entry, which no filter
+     * reader sees, so no row of this component may be filtered out on it. Filters only skip: the query still
+     * evaluates its predicate on whatever the scan returns.
+     */
+    private boolean pathCrossesCollapsedMap;
 
     public FilterAccessorProvider(ObjectSchemaNode root, SchemaClipperVisitor clipperVisitor,
             IColumnValuesReaderFactory readerFactory, IValueGetterFactory valueGetterFactory) {
@@ -86,6 +94,9 @@ public class FilterAccessorProvider {
         PrimitiveSchemaNode node = cachedNodes.get(path);
         if (node == null) {
             AbstractSchemaNode pathNode = getNode(path);
+            if (pathNode == null) {
+                return NoOpColumnRangeFilterValueAccessor.INSTANCE;
+            }
             node = (PrimitiveSchemaNode) (pathNode.isNested() ? MissingFieldSchemaNode.INSTANCE : pathNode);
             cachedNodes.put(path, node);
         }
@@ -124,6 +135,19 @@ public class FilterAccessorProvider {
         return new UnionColumnFilterValueAccessorEvaluator(unionReaders, valueGetters);
     }
 
+    /**
+     * Whether a filtered path crossed a collapsed node's map since {@link #clearPathCrossesCollapsedMap()}, so this
+     * component's rows must not be filtered on the expressions built since.
+     */
+    public boolean pathCrossesCollapsedMap() {
+        return pathCrossesCollapsedMap;
+    }
+
+    /** Starts watching for a path crossing a collapsed node's map afresh: before building one conjunct of a filter. */
+    public void clearPathCrossesCollapsedMap() {
+        pathCrossesCollapsedMap = false;
+    }
+
     public void initializeFilterReaders() {
         // This primary key level reader will help us avoid skipping filter values when an anti-matter is encountered
         IColumnValuesReader primaryKeyLevelReader = readerFactory.createValueReader(ATypeTag.MISSING, 0, 1, true);
@@ -156,26 +180,68 @@ public class FilterAccessorProvider {
         }
     }
 
+    /** @return the path's leaf, or null when the path crosses a collapsed node's map and must not be filtered on */
     private AbstractSchemaNode getNode(ARecordType path) throws HyracksDataException {
         ObjectSchemaNode dataPath = (ObjectSchemaNode) path.accept(clipperVisitor, root);
+        if (crossesCollapsedMap(dataPath)) {
+            return null;
+        }
         AbstractSchemaNode node = dataPath.accept(pathExtractorVisitor, null);
         if (node.getTypeTag() == ATypeTag.MISSING && metaRoot != null) {
             //Try meta
             ObjectSchemaNode metaPath = (ObjectSchemaNode) path.accept(clipperVisitor, metaRoot);
+            if (crossesCollapsedMap(metaPath)) {
+                return null;
+            }
             node = metaPath.accept(pathExtractorVisitor, null);
         }
 
         return node;
     }
 
+    /**
+     * Whether a clipped path holds a collapsed node's map. The clipper adds the map wherever the requested name may
+     * live in it, and the path extractor follows only an object's first child, so a filter built from the path would
+     * read the column alone -- or the map's shared values -- and drop rows whose value sits in a map entry.
+     */
+    private static boolean crossesCollapsedMap(AbstractSchemaNode node) {
+        if (node instanceof ObjectSchemaNode object) {
+            if (object.isMapified()) {
+                return true;
+            }
+            for (AbstractSchemaNode child : object.getChildren()) {
+                if (crossesCollapsedMap(child)) {
+                    return true;
+                }
+            }
+        } else if (node instanceof AbstractCollectionSchemaNode collection) {
+            return collection.getItemNode() != null && crossesCollapsedMap(collection.getItemNode());
+        } else if (node instanceof UnionSchemaNode union) {
+            for (AbstractSchemaNode child : union.getChildren().values()) {
+                if (crossesCollapsedMap(child)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private List<IColumnValuesReader> createReaders(ARecordType path) throws HyracksDataException {
         List<IColumnValuesReader> readers = Collections.emptyList();
         if (!cachedNodes.containsKey(path)) {
             ObjectSchemaNode dataPath = (ObjectSchemaNode) path.accept(clipperVisitor, root);
+            if (crossesCollapsedMap(dataPath)) {
+                pathCrossesCollapsedMap = true;
+                return Collections.emptyList();
+            }
             readers = pathExtractorVisitor.getOrCreateReaders(dataPath, filterColumnReaders);
             if (readers.isEmpty() && metaRoot != null) {
                 //Try meta
                 ObjectSchemaNode metaPath = (ObjectSchemaNode) path.accept(clipperVisitor, metaRoot);
+                if (crossesCollapsedMap(metaPath)) {
+                    pathCrossesCollapsedMap = true;
+                    return Collections.emptyList();
+                }
                 readers = pathExtractorVisitor.getOrCreateReaders(metaPath, filterColumnReaders);
             }
 

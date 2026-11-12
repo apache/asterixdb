@@ -39,6 +39,7 @@ import org.apache.asterix.column.common.row.DummyLSMBTreeTupleReference;
 import org.apache.asterix.column.common.row.NoOpRowTupleWriter;
 import org.apache.asterix.column.common.test.TestBase;
 import org.apache.asterix.column.common.test.TestCase;
+import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleWriter;
 import org.apache.asterix.column.operation.query.ColumnAssembler;
@@ -122,10 +123,15 @@ public abstract class AbstractBytesTest extends TestBase {
         Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
         IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
         FlushColumnMetadata columnMetadata = new FlushColumnMetadata(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, null,
-                Collections.emptyList(), null, writerFactory, multiPageOpRef);
+                Collections.emptyList(), null, writerFactory, multiPageOpRef, collapseDetectorSettings());
         IColumnWriteMultiPageOp multiPageOp = new TestWriteMultiPageOp(dummyBufferCache, fileId);
         columnMetadata.init(multiPageOp);
         return columnMetadata;
+    }
+
+    /** The collapse detector's thresholds for the schemas this test writes: the defaults, unless it says otherwise. */
+    protected CollapseDetectorSettings collapseDetectorSettings() {
+        return CollapseDetectorSettings.DEFAULT;
     }
 
     protected void clear() {

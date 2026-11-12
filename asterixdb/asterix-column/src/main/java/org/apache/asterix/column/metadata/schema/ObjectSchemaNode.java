@@ -19,6 +19,7 @@
 package org.apache.asterix.column.metadata.schema;
 
 import static org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary.DUMMY_FIELD_NAME_INDEX;
+import static org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary.MAP_FIELD_NAME_INDEX;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.column.metadata.PathInfoSerializer;
+import org.apache.asterix.column.metadata.schema.collection.MapSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.util.RunLengthIntArray;
@@ -37,6 +39,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.util.annotations.CriticalPath;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
@@ -46,9 +50,27 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntUnaryOperator;
 
 public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final Int2IntMap fieldNameIndexToChildIndexMap;
     private final List<AbstractSchemaNode> children;
     private IntUnaryOperator nextIndex;
+
+    /**
+     * Cached view of the collapsed child, which is stored among {@link #children} under
+     * {@link org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary#MAP_FIELD_NAME_INDEX} like any other child
+     * — so it serializes and is walked by every visitor without special handling. Non-null once this node's
+     * field-name set was judged unbounded. Children discovered before that point stay as ordinary columns forever
+     * (bounded, and required for merge: column indexes are append-only, so nothing may be withdrawn from an
+     * already-written component). Everything discovered after lands in the map.
+     */
+    private MapSchemaNode mapNode;
+    /**
+     * Decides whether this node collapses, while a flush with collapsing enabled visits it; null on every node a query,
+     * a merge or a clipper builds, once the node has collapsed, and after a rolled-back flush, whose counts it would
+     * otherwise carry over. See {@link CollapseDetector}.
+     */
+    private CollapseDetector detector;
 
     public ObjectSchemaNode() {
         fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
@@ -73,6 +95,7 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
 
         children = new ArrayList<>();
         numberOfColumns = deserializeChildren(input, children, numberOfChildren, definitionLevels);
+        restoreCollapsedChild();
         previousNumberOfColumns = numberOfColumns;
     }
 
@@ -84,9 +107,16 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         int childIndex = fieldNameIndexToChildIndexMap.getOrDefault(fieldNameIndex, nextIndex.apply(fieldNameIndex));
         AbstractSchemaNode currentChild = childIndex == numberOfChildren ? null : children.get(childIndex);
         AbstractSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, childTypeTag, previouslyMissing);
+        CollapseDetector collapseDetector = detector(columnMetadata);
+        if (collapseDetector != null) {
+            collapseDetector.onChildPresent(childIndex, currentChild != null);
+        }
         if (currentChild == null) {
             children.add(childIndex, newChild);
             fieldNameIndexToChildIndexMap.put(fieldNameIndex, childIndex);
+            if (collapseDetector != null) {
+                collapseDetector.onNewName(columnMetadata);
+            }
         } else if (currentChild != newChild) {
             numberOfColumns -= currentChild.getNumberOfColumns();
             children.set(childIndex, newChild);
@@ -100,10 +130,138 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         return newChild;
     }
 
+    public boolean isMapified() {
+        return mapNode != null;
+    }
+
+    /**
+     * Set when the detector decides to collapse, before the map exists. The map is built by the first key routed to it
+     * ({@link #getOrCreateMapNode}), or, if the document that decided routed none, as that document's visit of this
+     * node ends -- never at the decision itself, which can come mid-document, outside the level context the map is
+     * built in. Not serialized: the map is what records the collapse.
+     */
+    private boolean collapsePending;
+
+    /** True once this node collapsed, including the window between the decision and the map's first entry. */
+    public boolean isCollapsed() {
+        return mapNode != null || collapsePending;
+    }
+
+    /** The map, created on first use in the enclosing object's level context -- the context it is always built in. */
+    public MapSchemaNode getOrCreateMapNode(FlushColumnMetadata columnMetadata) throws HyracksDataException {
+        if (mapNode == null) {
+            mapNode = columnMetadata.createMapNode();
+            addChild(MAP_FIELD_NAME_INDEX, mapNode);
+            numberOfColumns += mapNode.getNumberOfColumns();
+            collapsePending = false;
+        }
+        return mapNode;
+    }
+
+    public MapSchemaNode getMapNode() {
+        return mapNode;
+    }
+
+    /**
+     * This node's detector, built on first use by a flush that collapses; null when the flush does not, or once this
+     * node has collapsed -- the detector's work is then finished.
+     */
+    private CollapseDetector detector(FlushColumnMetadata columnMetadata) {
+        if (detector == null && !isCollapsed() && columnMetadata.isCollapseDetectorEnabled()) {
+            detector = new CollapseDetector(this, columnMetadata.getCollapseDetectorSettings());
+        }
+        return isCollapsed() ? null : detector;
+    }
+
+    /** Called once per document that contains this node; see {@link CollapseDetector#onDocumentVisited}. */
+    public void onDocumentVisited(FlushColumnMetadata columnMetadata) throws HyracksDataException {
+        CollapseDetector collapseDetector = detector(columnMetadata);
+        if (collapseDetector != null) {
+            collapseDetector.onDocumentVisited(columnMetadata);
+        }
+    }
+
+    /** Called with the columns the subtree of a name this node has just minted created. */
+    public void onNewChildColumns(int columns, FlushColumnMetadata columnMetadata) throws HyracksDataException {
+        CollapseDetector collapseDetector = detector(columnMetadata);
+        if (collapseDetector != null) {
+            collapseDetector.onNewChildColumns(columns, columnMetadata);
+        }
+    }
+
+    /** Called when the child {@code fieldName} has just started growing ({@link #isGrowing}). */
+    public void onChildGrowing(IValueReference fieldName, FlushColumnMetadata columnMetadata)
+            throws HyracksDataException {
+        CollapseDetector collapseDetector = detector(columnMetadata);
+        if (collapseDetector != null) {
+            int fieldNameIndex = columnMetadata.getFieldNamesDictionary().getFieldNameIndex(fieldName);
+            collapseDetector.onChildGrowing(fieldNameIndexToChildIndexMap.get(fieldNameIndex), columnMetadata);
+        }
+    }
+
+    /** Called when a batch closes. */
+    public void resetBatchStatistics() {
+        if (detector != null) {
+            detector.resetBatchStatistics();
+        }
+    }
+
+    /**
+     * Whether this node has shown a key set growing: it collapsed, kept minting names after its first visit, or has a
+     * child that grew. A record mints its fields on its first visit and few after; a node keyed by event ID keeps
+     * minting on every one. Weaker evidence than a collapse -- a record whose optional fields trickle in also counts --
+     * but a node visited by only a few dozen documents never sees enough windows to collapse. The child case carries
+     * growth up through a fixed field: a day holding its event IDs under {@code events} mints no names of its own.
+     * Without a detector, only what the schema records: a collapse at or under this node.
+     */
+    public boolean isGrowing() {
+        if (isCollapsed()) {
+            return true;
+        }
+        if (detector != null) {
+            return detector.isGrowing();
+        }
+        for (AbstractSchemaNode child : children) {
+            if (child instanceof ObjectSchemaNode object && object.isGrowing()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Called by the detector once it decides this node collapses. */
+    void markCollapsed(FlushColumnMetadata columnMetadata, String trigger) {
+        collapsePending = true;
+        detector = null;
+        columnMetadata.onRoutingChanged();
+        // Logged above trace: a collapse is permanent, and changes the node's storage format. Key names are user data.
+        LOGGER.info("collapsing an object node with {} children ({} trigger); names first seen from now on route to "
+                + "its map", children.size(), trigger);
+    }
+
+    /**
+     * @return true when this field must be written through the map rather than getting a column of its own. Resolved
+     *         without interning the name, so map keys never enter the field-name dictionary.
+     */
+    public boolean routesToMap(IValueReference fieldName, FlushColumnMetadata columnMetadata)
+            throws HyracksDataException {
+        if (!isCollapsed()) {
+            return false;
+        }
+        int fieldNameIndex = columnMetadata.getFieldNamesDictionary().getFieldNameIndex(fieldName);
+        return fieldNameIndex < 0 || !fieldNameIndexToChildIndexMap.containsKey(fieldNameIndex);
+    }
+
     public void addChild(int fieldNameIndex, AbstractSchemaNode child) {
         int childIndex = children.size();
         fieldNameIndexToChildIndexMap.put(fieldNameIndex, childIndex);
         children.add(child);
+        if (fieldNameIndex == MAP_FIELD_NAME_INDEX) {
+            // Keeps the collapsed-child cache true of any node that has one, including the clipped copies the
+            // clipper builds -- those are assembled through addChild and never deserialized, so without this
+            // isCollapsed() reads false for them and the assembler's delegate rule silently stops applying.
+            cacheCollapsedChild(child);
+        }
     }
 
     public AbstractSchemaNode setEmptyObject(FlushColumnMetadata columnMetadata) throws HyracksDataException {
@@ -190,6 +348,23 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
 
         children.clear();
         deserializeChildren(input, children, numberOfChildren, definitionLevels);
+        restoreCollapsedChild();
+        collapsePending = false;
+        detector = null;
+    }
+
+    /** Restores the collapsed-child cache after the children have been read back. */
+    private void restoreCollapsedChild() {
+        mapNode = null;
+        if (!fieldNameIndexToChildIndexMap.containsKey(MAP_FIELD_NAME_INDEX)) {
+            return;
+        }
+        cacheCollapsedChild(children.get(fieldNameIndexToChildIndexMap.get(MAP_FIELD_NAME_INDEX)));
+    }
+
+    /** Points the collapsed-child cache at {@code child}. */
+    private void cacheCollapsedChild(AbstractSchemaNode child) {
+        mapNode = (MapSchemaNode) child;
     }
 
     private static void deserializeFieldNameIndexToChildIndex(DataInput input, Int2IntMap fieldNameIndexToChildIndexMap,

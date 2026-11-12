@@ -32,6 +32,7 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.column.ColumnManagerFactory;
 import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.operation.query.QueryColumnTupleProjector;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.NullIntrospector;
@@ -267,6 +268,8 @@ public class ColumnSampleBenchHarness {
                 Collections.singletonList(Collections.singletonList(PK_FIELD)), Collections.singletonList(0), PAGE_SIZE,
                 MAX_TUPLE_COUNT, TOLERANCE, MAX_LEAF_NODE_SIZE);
 
+        // A node registers the storage options with its configuration; this harness's own does not.
+        harness.getNCConfig().getConfigManager().register(StorageProperties.Option.values());
         lsmBtree = LSMColumnBTreeUtil.createLSMTree(harness.getNCConfig(), ioManager, virtualBufferCaches,
                 harness.getFileReference(), diskBufferCache, columnBufferPool, typeTraits, cmpFactories,
                 bloomFilterKeyFields, BLOOM_FILTER_FALSE_POSITIVE_RATE, harness.getMergePolicy(),

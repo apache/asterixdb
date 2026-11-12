@@ -121,6 +121,16 @@ public class ObjectValueAssembler extends AbstractNestedValueAssembler {
     // Internal helpers
     // -------------------------------------------------------------------------
 
+    /**
+     * Adds a field whose name is only known at read time, as produced by a
+     * {@link MapValueAssembler} splicing a collapsed node's entries back into this record. Deliberately does not touch
+     * the visited-field accounting: the map child reports itself once, independent of how many entries it carried.
+     */
+    void addOpenField(IValueReference taggedFieldName, IValueReference fieldValue) throws HyracksDataException {
+        hasNonMissingValue = true;
+        recordBuilder.addField(taggedFieldName, fieldValue);
+    }
+
     private void addField(AbstractValueAssembler value, IValueReference fieldValue) throws HyracksDataException {
         int fieldIndex = value.getFieldIndex();
         if (fieldIndex >= 0) {
