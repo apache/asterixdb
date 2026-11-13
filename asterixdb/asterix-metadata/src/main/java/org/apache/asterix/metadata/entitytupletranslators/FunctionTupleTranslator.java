@@ -36,8 +36,6 @@ import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RESOURCES_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_WITHPARAMS_FIELD_NAME;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.PROPERTIES_NAME_FIELD_NAME;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.PROPERTIES_VALUE_FIELD_NAME;
 
 import java.io.DataOutput;
 import java.util.ArrayList;
@@ -293,9 +291,9 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             while (cursor.next()) {
                 ARecord field = (ARecord) cursor.get();
                 final ARecordType fieldType = field.getType();
-                final int keyIdx = fieldType.getFieldIndex(PROPERTIES_NAME_FIELD_NAME);
+                final int keyIdx = fieldType.getFieldIndex(FIELD_NAME_NAME);
                 String key = keyIdx >= 0 ? ((AString) field.getValueByPos(keyIdx)).getStringValue() : "";
-                final int valueIdx = fieldType.getFieldIndex(PROPERTIES_VALUE_FIELD_NAME);
+                final int valueIdx = fieldType.getFieldIndex(FIELD_NAME_VALUE);
                 String value = valueIdx >= 0 ? ((AString) field.getValueByPos(valueIdx)).getStringValue() : "";
                 adaptorConfiguration.put(key, value);
             }
