@@ -105,7 +105,22 @@ public class ExternalProperties extends AbstractProperties {
         EXTERNAL_FUNCTION_HTTP_MAX_RESPONSE_SIZE(
                 POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(32, StorageUtil.StorageUnit.MEGABYTE),
-                "Maximum size in bytes of the response body an external HTTP function accepts, after decompression");
+                "Maximum size in bytes of the response body an external HTTP function accepts, after decompression"),
+        EXTERNAL_FUNCTION_HTTP_RATE_LIMIT(
+                NONNEGATIVE_INTEGER,
+                10,
+                "Maximum number of requests a second that the external HTTP functions of a node send, retries "
+                        + "included, or 0 for no limit. Up to a second's worth may be sent at once after a quieter "
+                        + "spell. The time a call waits for its turn does not count against its timeout"),
+        EXTERNAL_FUNCTION_HTTP_MAX_RETRIES(
+                NONNEGATIVE_INTEGER,
+                3,
+                "Maximum number of times an external HTTP function resends a request its endpoint throttles"),
+        EXTERNAL_FUNCTION_HTTP_RETRY_DELAY(
+                POSITIVE_INTEGER,
+                250,
+                "Delay in milliseconds before an external HTTP function first resends a throttled request, when the "
+                        + "endpoint sends no Retry-After. It doubles with each further retry");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -143,6 +158,9 @@ public class ExternalProperties extends AbstractProperties {
                 case EXTERNAL_FUNCTION_HTTP_MAX_TIMEOUT:
                 case EXTERNAL_FUNCTION_HTTP_MAX_REQUEST_SIZE:
                 case EXTERNAL_FUNCTION_HTTP_MAX_RESPONSE_SIZE:
+                case EXTERNAL_FUNCTION_HTTP_RATE_LIMIT:
+                case EXTERNAL_FUNCTION_HTTP_MAX_RETRIES:
+                case EXTERNAL_FUNCTION_HTTP_RETRY_DELAY:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -258,6 +276,18 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getExternalHttpFunctionMaxResponseSize() {
         return accessor.getInt(Option.EXTERNAL_FUNCTION_HTTP_MAX_RESPONSE_SIZE);
+    }
+
+    public int getExternalHttpFunctionRateLimit() {
+        return accessor.getInt(Option.EXTERNAL_FUNCTION_HTTP_RATE_LIMIT);
+    }
+
+    public int getExternalHttpFunctionMaxRetries() {
+        return accessor.getInt(Option.EXTERNAL_FUNCTION_HTTP_MAX_RETRIES);
+    }
+
+    public int getExternalHttpFunctionRetryDelay() {
+        return accessor.getInt(Option.EXTERNAL_FUNCTION_HTTP_RETRY_DELAY);
     }
 
     public int getGcpImpersonateServiceAccountDuration() {

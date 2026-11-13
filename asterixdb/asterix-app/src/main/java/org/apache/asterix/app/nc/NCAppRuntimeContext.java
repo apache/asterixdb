@@ -64,6 +64,7 @@ import org.apache.asterix.common.context.DiskWriteRateLimiterProvider;
 import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.external.IExternalStatsTracker;
+import org.apache.asterix.common.functions.HttpFunctionRateLimiter;
 import org.apache.asterix.common.functions.IHttpEgressPolicy;
 import org.apache.asterix.common.functions.IHttpEndpointResolver;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -188,6 +189,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private volatile HyracksConnection hcc;
     private volatile ResultSet resultSet;
     private volatile CloseableHttpClient httpFunctionClient;
+    private final HttpFunctionRateLimiter httpFunctionRateLimiter;
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private IReplicaManager replicaManager;
     private IReceptionist receptionist;
@@ -225,6 +227,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         this.namespacePathResolver = namespacePathResolver;
         this.namespaceResolver = namespaceResolver;
         externalStatsTracker = new ExternalStatsTracker();
+        httpFunctionRateLimiter = new HttpFunctionRateLimiter(externalProperties.getExternalHttpFunctionRateLimit());
     }
 
     @Override
@@ -800,6 +803,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             }
         }
         return client;
+    }
+
+    @Override
+    public HttpFunctionRateLimiter getHttpFunctionRateLimiter() {
+        return httpFunctionRateLimiter;
     }
 
     /**

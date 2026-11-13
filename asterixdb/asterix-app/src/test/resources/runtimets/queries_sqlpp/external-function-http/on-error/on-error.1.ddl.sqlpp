@@ -1,0 +1,65 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+CREATE EXTERNAL FUNCTION echo(a) AT 'http://127.0.0.1:19371/echo' WITH { "on-error": "null" };
+CREATE EXTERNAL FUNCTION status(code) AT 'http://127.0.0.1:19371/status/{code}' WITH { "on-error": "null" };
+CREATE EXTERNAL FUNCTION content(kind) AT 'http://127.0.0.1:19371/content/{kind}' WITH { "on-error": "null" };
+CREATE EXTERNAL FUNCTION sized(length) AT 'http://127.0.0.1:19371/sized/{length}' WITH { "on-error": "null" };
+CREATE EXTERNAL FUNCTION slow() AT 'http://127.0.0.1:19371/slow' WITH { "on-error": "null", "timeout": 1 };
+-- nothing listens on port 1
+CREATE EXTERNAL FUNCTION refused() AT 'http://127.0.0.1:1/refused' WITH { "on-error": "null" };
+CREATE EXTERNAL FUNCTION throttled(status, failures, id, after)
+  AT 'http://127.0.0.1:19371/throttled/{status}/{failures}/{id}' WITH { "on-error": "null" };
+CREATE EXTERNAL FUNCTION item(id) AT 'http://127.0.0.1:19371/echo/{id}' WITH { "on-error": "null" };
+CREATE EXTERNAL FUNCTION untrusted(a) AT 'https://127.0.0.1:19372/echo' WITH { "on-error": "null" };
+CREATE EXTERNAL FUNCTION wrongSecret(a) AT 'https://127.0.0.1:19372/oauth/echo' WITH {
+  "on-error": "null",
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "on-error",
+  "oauthClientSecret": "wrong",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};
+CREATE EXTERNAL FUNCTION rejectedOnError(a) AT 'https://127.0.0.1:19372/status/401' WITH {
+  "on-error": "null",
+  "oauthTokenUri": "https://127.0.0.1:19372/token",
+  "oauthClientId": "rejectedOnError",
+  "oauthClientSecret": "se+cr:et",
+  "certificates": "-----BEGIN CERTIFICATE-----
+MIIBUTCB+KADAgECAggxBTH93Sc6kzAKBggqhkjOPQQDAjAUMRIwEAYDVQQDEwkx
+MjcuMC4wLjEwIBcNMjYxMTA5MjAxOTA1WhgPMjEyNjEwMTYyMDE5MDVaMBQxEjAQ
+BgNVBAMTCTEyNy4wLjAuMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHnNSvgh
+kUlVlzs7WxjekuGCWnTP1LwHFiM0KJjxIg0eeQc2/guaxN3Xa3vrBRH5mgOBoRmG
+R0oWS4X8otn0RLejMjAwMB0GA1UdDgQWBBQKBDoFywwkCxcfctfZVZivU7UfhDAP
+BgNVHREECDAGhwR/AAABMAoGCCqGSM49BAMCA0gAMEUCIHRTVnKlOW/AF/zhhaqc
+t8j3Ab29/4U6mjqRv7cFmA4SAiEAtKtOvva8FwlE8WC8WZo2Jn8pB+IY/cuHcsQ+
+qX7PRcM=
+-----END CERTIFICATE-----"
+};

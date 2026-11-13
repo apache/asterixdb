@@ -16,4 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-SELECT VALUE test.nullOnError(1);
+-- param max-warnings:json=100
+
+-- a failure of the endpoint, or of reaching it, is NULL with a warning
+SELECT VALUE [ test.echo("a").query, test.status(500), test.content("xml"), test.content("malformed"),
+               test.sized(8192), test.echo(repeat("x", 2000)), test.slow(), test.refused(),
+               test.throttled(429, 1, "onError", "120") ];

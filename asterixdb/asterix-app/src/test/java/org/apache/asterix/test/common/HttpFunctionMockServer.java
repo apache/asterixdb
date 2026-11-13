@@ -91,6 +91,9 @@ import com.sun.net.httpserver.HttpsServer;
  * request with a 400.</li>
  * <li>{@code /oauth/echo...}: as {@code /echo} if the request carries, as its bearer token, the token issued last to a
  * client, and a 401 otherwise. The expiry of a token is not checked.</li>
+ * <li>{@code /throttled/<status>/<failures>/<key>}: that status for the first {@code failures} requests for
+ * {@code key}, with the query parameter {@code after} as its {@code Retry-After} header if given, and then the number
+ * of requests for {@code key} as {@code {"attempts": n}}. A test uses a key that no other test uses.</li>
  * </ul>
  */
 public final class HttpFunctionMockServer {
@@ -155,12 +158,16 @@ public final class HttpFunctionMockServer {
     private static final String INVALID_REQUEST = "invalid_request";
     private static final String UNSUPPORTED_GRANT_TYPE = "unsupported_grant_type";
     private static final String INVALID_TOKEN = "invalid_token";
+    private static final String HEADER_RETRY_AFTER = "Retry-After";
+    private static final String RETRY_AFTER_PARAMETER = "after";
 
     private final List<HttpServer> servers;
     private final ExecutorService executor;
     // by client id; guarded by this
     private final Map<String, Integer> issuedTokenCounts = new HashMap<>();
     private final Map<String, String> currentTokens = new HashMap<>();
+    // by key of /throttled; guarded by this
+    private final Map<String, Integer> throttledRequestCounts = new HashMap<>();
 
     private HttpFunctionMockServer() throws IOException, GeneralSecurityException {
         HttpsServer tlsServer = HttpsServer.create(new InetSocketAddress(HOST, TLS_PORT), 0);
@@ -179,6 +186,7 @@ public final class HttpFunctionMockServer {
         route("/slow", HttpFunctionMockServer::slow);
         route("/token", this::token);
         route("/oauth/echo", this::oauthEcho);
+        route("/throttled/", this::throttled);
     }
 
     public static HttpFunctionMockServer start() throws IOException, GeneralSecurityException {
@@ -414,6 +422,29 @@ public final class HttpFunctionMockServer {
             return;
         }
         echo(exchange, body);
+    }
+
+    private void throttled(HttpExchange exchange, byte[] body) throws IOException {
+        URI uri = exchange.getRequestURI();
+        String[] segments = uri.getPath().split("/");
+        int status = Integer.parseInt(segments[2]);
+        int failures = Integer.parseInt(segments[3]);
+        int attempts;
+        synchronized (this) {
+            attempts = throttledRequestCounts.merge(segments[4], 1, Integer::sum);
+        }
+        if (attempts > failures) {
+            respond(exchange, HTTP_OK, APPLICATION_JSON, "{\"attempts\":" + attempts + "}");
+            return;
+        }
+        if (uri.getRawQuery() != null) {
+            String retryAfter = parseUrlEncoded(uri.getRawQuery().getBytes(StandardCharsets.US_ASCII))
+                    .path(RETRY_AFTER_PARAMETER).textValue();
+            if (retryAfter != null) {
+                exchange.getResponseHeaders().set(HEADER_RETRY_AFTER, retryAfter);
+            }
+        }
+        respond(exchange, status, APPLICATION_JSON, "{\"status\":" + status + "}");
     }
 
     private static ClientCredentials clientCredentials(HttpExchange exchange) {

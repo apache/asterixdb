@@ -30,12 +30,18 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
+import java.security.cert.CertificateException;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.ExternalProperties;
@@ -45,6 +51,8 @@ import org.apache.asterix.common.functions.HttpEndpoint;
 import org.apache.asterix.common.functions.HttpFunctionBodyFormat;
 import org.apache.asterix.common.functions.HttpFunctionConstants;
 import org.apache.asterix.common.functions.HttpFunctionMethod;
+import org.apache.asterix.common.functions.HttpFunctionOnError;
+import org.apache.asterix.common.functions.HttpFunctionRateLimiter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AObjectPrinterFactory;
 import org.apache.asterix.external.parser.JSONDataParser;
 import org.apache.asterix.external.parser.factory.JSONDataParserFactory;
@@ -54,6 +62,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -66,6 +76,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.DateUtils;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -75,7 +86,11 @@ import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IError;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.util.ErrorMessageUtil;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -93,7 +108,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Calls an external HTTP function once per tuple. The arguments fill the URL template, and the rest go in the query
  * string of a GET or in the body of a POST, as a JSON object, a URL-encoded form or a multipart form. A JSON response becomes the value it holds, and a text
- * response a string.
+ * response a string. A request the endpoint throttles is sent again a few times, within the call's timeout.
  */
 class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluator {
 
@@ -131,10 +146,17 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private static final String INVALID_HEADERS = "not a JSON object of strings";
     private static final int HEADER_SEPARATOR_AND_LINE_END_LENGTH = ": \r\n".length();
     private static final int READ_BUFFER_SIZE = 8192;
+    private static final long NO_RETRY_AFTER = -1;
+    private static final Set<IError> NULL_ON_ERRORS = Set.of(ErrorCode.EXTERNAL_HTTP_FUNCTION_REQUEST_FAILED,
+            ErrorCode.EXTERNAL_HTTP_FUNCTION_SIZE_LIMIT_EXCEEDED, ErrorCode.EXTERNAL_HTTP_FUNCTION_HTTP_ERROR,
+            ErrorCode.EXTERNAL_HTTP_FUNCTION_TIMEOUT, ErrorCode.EXTERNAL_HTTP_FUNCTION_RATE_LIMITED);
 
     private final INcApplicationContext appCtx;
     private final SourceLocation sourceLoc;
     private final boolean nullCall;
+    private final boolean nullOnError;
+    private final IWarningCollector warningCollector;
+    private final HttpFunctionRateLimiter rateLimiter;
     private final HttpFunctionMethod method;
     private final HttpFunctionBodyFormat argumentFormat;
     private final ContentType bodyContentType;
@@ -145,6 +167,8 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private final RequestConfig requestConfig;
     private final int maxRequestSize;
     private final int maxResponseSize;
+    private final int maxRetries;
+    private final long firstRetryDelayNanos;
     private final String[] parameterPrefixes;
     private final IPointable[] argValues;
     private final String[] argTexts;
@@ -161,9 +185,18 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private final JSONDataParser responseParser;
     private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private final ResponseHandler<Boolean> responseHandler = this::readResponse;
+    private final ResponseHandler<Outcome> responseHandler = this::readResponse;
     // whether the request being sent is sent again, with another token, if its endpoint answers 401
     private boolean retryOnUnauthorized;
+    // whether the request being sent carries a token that replaced one its endpoint rejected
+    private boolean replacementToken;
+    // whether the endpoint rejected the replacement token too, which fails the query whatever on-error says
+    private boolean tokenRejected;
+    private boolean retryOnThrottled;
+    // the System.nanoTime() by which the call must end, moved on by each wait for the node's rate limiter
+    private long deadlineNanos;
+    private int throttledStatus;
+    private long retryAfterNanos;
 
     // resolved by the first call that sends a request
     private CloseableHttpClient client;
@@ -181,6 +214,10 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         ExternalProperties externalProperties = appCtx.getExternalProperties();
         Map<String, String> resources = finfo.getResources();
         nullCall = finfo.getNullCall();
+        nullOnError = HttpFunctionOnError.valueOf(resources.get(HttpFunctionConstants.OPTION_ON_ERROR))
+                == HttpFunctionOnError.NULL;
+        warningCollector = ctx.getWarningCollector();
+        rateLimiter = appCtx.getHttpFunctionRateLimiter();
         method = HttpFunctionMethod.valueOf(resources.get(HttpFunctionConstants.OPTION_METHOD));
         urlencode = Boolean.parseBoolean(resources.get(HttpFunctionConstants.OPTION_URLENCODE));
         String timeout = resources.get(HttpFunctionConstants.OPTION_TIMEOUT);
@@ -191,6 +228,8 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         requestConfig = HttpFunctionConnectionManager.createRequestConfig(timeoutSeconds);
         maxRequestSize = externalProperties.getExternalHttpFunctionMaxRequestSize();
         maxResponseSize = externalProperties.getExternalHttpFunctionMaxResponseSize();
+        maxRetries = externalProperties.getExternalHttpFunctionMaxRetries();
+        firstRetryDelayNanos = TimeUnit.MILLISECONDS.toNanos(externalProperties.getExternalHttpFunctionRetryDelay());
         argumentFormat = method == HttpFunctionMethod.GET ? HttpFunctionBodyFormat.URLENCODED
                 : HttpFunctionBodyFormat.valueOf(resources.get(HttpFunctionConstants.OPTION_BODY));
         String boundary = UUID.randomUUID().toString();
@@ -246,11 +285,11 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         if (client == null) {
             resolveEndpoint();
         }
-        long deadlineNanos = System.nanoTime() + timeoutNanos;
+        deadlineNanos = System.nanoTime() + timeoutNanos;
         String token = tokenSource == null ? null : tokenSource.getToken(deadlineNanos, null);
-        if (!send(createRequest(token), deadlineNanos, token != null)) {
+        if (!send(token, token != null)) {
             // a token can be revoked before it expires, so a rejected one is worth replacing once
-            send(createRequest(tokenSource.getToken(deadlineNanos, token)), deadlineNanos, false);
+            send(tokenSource.getToken(deadlineNanos, token), false);
         }
         result.set(resultStorage);
     }
@@ -440,20 +479,107 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     }
 
     /**
+     * Sends the call's request, again while its endpoint throttles it and retries are left. With on-error NULL, a
+     * failure of the endpoint, or of reaching it, makes the result NULL, with a warning.
+     *
      * @return {@code false} if the endpoint answered 401 and {@code retryOnUnauthorized} is set, else {@code true},
      *         with the result in {@link #resultStorage}
      */
-    private boolean send(HttpRequestBase request, long deadlineNanos, boolean retryOnUnauthorized)
-            throws HyracksDataException {
+    private boolean send(String token, boolean retryOnUnauthorized) throws HyracksDataException {
         this.retryOnUnauthorized = retryOnUnauthorized;
-        return HttpFunctionConnectionManager.execute(client, request, context, deadlineNanos, responseHandler,
-                sourceLoc, urlTemplate.getDisplayUrl(), timeoutSeconds);
+        replacementToken = token != null && !retryOnUnauthorized;
+        tokenRejected = false;
+        try {
+            HttpRequestBase request = createRequest(token);
+            for (int retries = 0;; retries++) {
+                retryOnThrottled = retries < maxRetries;
+                waitForRateLimiter();
+                Outcome outcome = HttpFunctionConnectionManager.execute(client, request, context, deadlineNanos,
+                        responseHandler, sourceLoc, urlTemplate.getDisplayUrl(), timeoutSeconds);
+                if (outcome != Outcome.THROTTLED) {
+                    return outcome == Outcome.RESULT;
+                }
+                waitToRetry(retries);
+            }
+        } catch (HyracksDataException e) {
+            if (!nullOnError || tokenRejected || !isNullOnError(e)) {
+                throw e;
+            }
+            warnNull(e);
+            resultStorage.assign(PointableHelper.NULL_REF);
+            return true;
+        }
     }
 
-    private Boolean readResponse(HttpResponse response) throws IOException {
+    // the wait is the node's, not the endpoint's: it does not count against the call's timeout, so a busy node never
+    // fails a call, or makes it NULL; cancelling the query still interrupts it
+    private void waitForRateLimiter() throws HyracksDataException {
+        long waitNanos = rateLimiter.reserve(System.nanoTime());
+        sleep(waitNanos);
+        deadlineNanos += waitNanos;
+    }
+
+    private void waitToRetry(int retries) throws HyracksDataException {
+        long delayNanos;
+        if (retryAfterNanos == NO_RETRY_AFTER) {
+            long backoffNanos = firstRetryDelayNanos << retries;
+            delayNanos = backoffNanos + ThreadLocalRandom.current().nextLong(backoffNanos / 2 + 1);
+        } else {
+            delayNanos = retryAfterNanos;
+        }
+        if (delayNanos > deadlineNanos - System.nanoTime()) {
+            throw rateLimited("the endpoint answered " + throttledStatus + " and the retry would wait "
+                    + TimeUnit.NANOSECONDS.toMillis(delayNanos) + " ms");
+        }
+        sleep(delayNanos);
+    }
+
+    private static void sleep(long nanos) throws HyracksDataException {
+        try {
+            TimeUnit.NANOSECONDS.sleep(nanos);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    private HyracksDataException rateLimited(String reason) {
+        return new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_RATE_LIMITED, sourceLoc,
+                urlTemplate.getDisplayUrl(), timeoutSeconds, reason);
+    }
+
+    // a certificate the endpoint failed always fails the query too: which servers to trust is part of the function's
+    // definition, as its URL is. So does cancelling it, which the client can report as a failed request.
+    private static boolean isNullOnError(HyracksDataException e) {
+        return !Thread.currentThread().isInterrupted() && e.getError().filter(NULL_ON_ERRORS::contains).isPresent()
+                && ExceptionUtils.indexOfType(e, CertificateException.class) < 0
+                && ExceptionUtils.indexOfType(e, SSLPeerUnverifiedException.class) < 0;
+    }
+
+    private void warnNull(HyracksDataException e) {
+        if (warningCollector.shouldWarn()) {
+            // the failure's own message without its source location, which the warning shows
+            String failure = ErrorMessageUtil.formatMessage(e.getComponent(), e.getErrorCode(),
+                    e.getError().get().errorMessage(), null, e.getParams());
+            warningCollector.warn(Warning.of(sourceLoc, ErrorCode.EXTERNAL_HTTP_FUNCTION_NULL_ON_ERROR,
+                    finfo.getFunctionIdentifier().getName(), failure));
+        }
+    }
+
+    private Outcome readResponse(HttpResponse response) throws IOException {
         int status = response.getStatusLine().getStatusCode();
-        if (status == HttpStatus.SC_UNAUTHORIZED && retryOnUnauthorized) {
-            return false;
+        if (status == HttpStatus.SC_UNAUTHORIZED) {
+            if (retryOnUnauthorized) {
+                return Outcome.UNAUTHORIZED;
+            }
+            // a fresh token rejected too points at the definition, as a token that cannot be got does; were it NULL,
+            // each row would get the token replaced again
+            tokenRejected = replacementToken;
+        }
+        if (retryOnThrottled && isThrottled(status)) {
+            throttledStatus = status;
+            retryAfterNanos = getRetryAfterNanos(response.getFirstHeader(HttpHeaders.RETRY_AFTER));
+            return Outcome.THROTTLED;
         }
         if (status < HttpStatus.SC_OK || status >= HttpStatus.SC_MULTIPLE_CHOICES) {
             throw new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_HTTP_ERROR, sourceLoc,
@@ -468,7 +594,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         if (responseBuffer.size() == 0) {
             // a success with nothing to return, as a 201, 202 or 204 to a POST often is, whatever its Content-Type
             resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-            return true;
+            return Outcome.RESULT;
         }
         ContentType contentType = getContentType(entity);
         String mimeType = contentType == null ? null : contentType.getMimeType().toLowerCase(Locale.ROOT);
@@ -485,7 +611,27 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         } else {
             throw requestFailed(null, "unsupported Content-Type '" + mimeType + "'");
         }
-        return true;
+        return Outcome.RESULT;
+    }
+
+    // a 503 may answer a POST its endpoint has acted on, which sending it again would repeat
+    private boolean isThrottled(int status) {
+        return status == HttpStatus.SC_TOO_MANY_REQUESTS
+                || (status == HttpStatus.SC_SERVICE_UNAVAILABLE && method == HttpFunctionMethod.GET);
+    }
+
+    // a Retry-After is a number of seconds or an HTTP date
+    private static long getRetryAfterNanos(Header retryAfter) {
+        if (retryAfter == null) {
+            return NO_RETRY_AFTER;
+        }
+        String value = retryAfter.getValue().trim();
+        if (StringUtils.isNumeric(value)) {
+            return TimeUnit.SECONDS.toNanos(NumberUtils.toLong(value, Long.MAX_VALUE));
+        }
+        Date date = DateUtils.parseDate(value);
+        return date == null ? NO_RETRY_AFTER
+                : TimeUnit.MILLISECONDS.toNanos(Math.max(0, date.getTime() - System.currentTimeMillis()));
     }
 
     // the stream is left open: closing it would read the rest of a body the cap has just refused. The client
@@ -539,5 +685,15 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private HyracksDataException requestFailed(Throwable cause, String reason) {
         return new RuntimeDataException(ErrorCode.EXTERNAL_HTTP_FUNCTION_REQUEST_FAILED, cause, sourceLoc,
                 urlTemplate.getDisplayUrl(), reason);
+    }
+
+    // what the response to a request asks of the call that sent it
+    private enum Outcome {
+        // the result is in resultStorage
+        RESULT,
+        // send it again with another token
+        UNAUTHORIZED,
+        // send it again later
+        THROTTLED
     }
 }

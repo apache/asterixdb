@@ -24,6 +24,7 @@ import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.functions.HttpFunctionRateLimiter;
 import org.apache.asterix.common.functions.IHttpEndpointResolver;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
@@ -174,4 +175,9 @@ public interface INcApplicationContext extends IApplicationContext {
      *         egress policy and does not follow redirects.
      */
     CloseableHttpClient getHttpFunctionClient();
+
+    /**
+     * @return the limiter of the rate at which external HTTP functions send requests from this node
+     */
+    HttpFunctionRateLimiter getHttpFunctionRateLimiter();
 }

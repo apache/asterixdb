@@ -16,9 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
--- options that can be defined but not yet called
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
-USE test;
-
-CREATE EXTERNAL FUNCTION nullOnError(a) AT 'http://127.0.0.1:19371/echo' WITH { "on-error": "null" };
+-- and a token that cannot be got
+SELECT VALUE test.wrongSecret(1);

@@ -167,9 +167,28 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-function-http">
-      <compilation-unit name="call-unsupported">
-        <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1272: Calling external HTTP function test.nullOnError(1) is not supported: option 'on-error' is not implemented yet</expected-error>
+      <compilation-unit name="retry">
+        <output-dir compare="Text">retry</output-dir>
+        <expected-error>ASX0207: HTTP request to http://127.0.0.1:19371/throttled/{status}/{failures}/{id} returned status 503</expected-error>
+        <expected-error>ASX0207: HTTP request to http://127.0.0.1:19371/throttled/{status}/{failures}/{id} returned status 429</expected-error>
+        <expected-error>ASX0209: HTTP request to http://127.0.0.1:19371/throttled/{status}/{failures}/{id} could not be sent within its timeout of 4 seconds: the endpoint answered 429 and the retry would wait 120000 ms</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-function-http" check-warnings="true">
+      <compilation-unit name="on-error">
+        <output-dir compare="Text">on-error</output-dir>
+        <expected-warn>ASX0210: External function status returned NULL on error: ASX0207: HTTP request to http://127.0.0.1:19371/status/{code} returned status 500</expected-warn>
+        <expected-warn>ASX0210: External function content returned NULL on error: ASX0205: HTTP request to http://127.0.0.1:19371/content/{kind} failed: unsupported Content-Type 'application/xml'</expected-warn>
+        <expected-warn>ASX0210: External function content returned NULL on error: ASX0205: HTTP request to http://127.0.0.1:19371/content/{kind} failed: the response is not valid JSON</expected-warn>
+        <expected-warn>ASX0210: External function sized returned NULL on error: ASX0206: HTTP response for http://127.0.0.1:19371/sized/{length} exceeds the limit of 4096 bytes</expected-warn>
+        <expected-warn>ASX0210: External function echo returned NULL on error: ASX0206: HTTP request for http://127.0.0.1:19371/echo exceeds the limit of 1024 bytes</expected-warn>
+        <expected-warn>ASX0210: External function slow returned NULL on error: ASX0208: HTTP request to http://127.0.0.1:19371/slow timed out after 1 seconds</expected-warn>
+        <expected-warn>ASX0210: External function refused returned NULL on error: ASX0205: HTTP request to http://127.0.0.1:1/refused failed</expected-warn>
+        <expected-warn>ASX0210: External function throttled returned NULL on error: ASX0209: HTTP request to http://127.0.0.1:19371/throttled/{status}/{failures}/{id} could not be sent within its timeout of 3 seconds: the endpoint answered 429 and the retry would wait 120000 ms</expected-warn>
+        <expected-error>ASX0204: Invalid value for URL parameter 'id'</expected-error>
+        <expected-error>ASX0205: HTTP request to https://127.0.0.1:19372/echo failed</expected-error>
+        <expected-error>ASX0207: HTTP request to https://127.0.0.1:19372/token returned status 401</expected-error>
+        <expected-error>ASX0207: HTTP request to https://127.0.0.1:19372/status/401 returned status 401</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

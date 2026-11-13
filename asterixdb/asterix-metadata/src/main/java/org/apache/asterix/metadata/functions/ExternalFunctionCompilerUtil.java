@@ -18,18 +18,14 @@
  */
 package org.apache.asterix.metadata.functions;
 
-import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_ON_ERROR;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.functions.HttpFunctionOnError;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Function;
@@ -83,11 +79,6 @@ public class ExternalFunctionCompilerUtil {
             if (!metadataProvider.getApplicationContext().getExternalProperties().isExternalHttpFunctionEnabled()) {
                 throw new CompilationException(ErrorCode.EXTERNAL_HTTP_FUNCTION_DISABLED);
             }
-            String unimplementedOption = findUnimplementedHttpOption(function.getResources());
-            if (unimplementedOption != null) {
-                throw new CompilationException(ErrorCode.EXTERNAL_HTTP_FUNCTION_CALL_UNSUPPORTED,
-                        function.getSignature().toString(), unimplementedOption);
-            }
         }
 
         Boolean deterministic = function.getDeterministic();
@@ -102,16 +93,6 @@ public class ExternalFunctionCompilerUtil {
                 function.getParameterNames(), paramTypes, returnType, typeComputer, lang, libraryNamespace,
                 function.getLibraryName(), function.getExternalIdentifier(), function.getResources(), deterministic,
                 function.getNullCall(), function.getBatched());
-    }
-
-    /**
-     * @return the first option of an HTTP function that calling the function does not support yet, or {@code null}
-     */
-    private static String findUnimplementedHttpOption(Map<String, String> resources) {
-        if (HttpFunctionOnError.NULL.name().equals(resources.get(OPTION_ON_ERROR))) {
-            return OPTION_ON_ERROR;
-        }
-        return null;
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataProvider metadataProvider, Function function) {
