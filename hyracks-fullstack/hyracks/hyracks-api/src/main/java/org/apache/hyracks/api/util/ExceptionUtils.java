@@ -134,11 +134,21 @@ public class ExceptionUtils {
         if (e == null) {
             return null;
         }
+        // slow trails cause at half speed so that a cyclic chain terminates instead of spinning
+        Throwable slow = e;
         Throwable current = e;
         Throwable cause = e.getCause();
-        while (cause != null && cause != current) {
+        boolean advanceSlow = false;
+        while (cause != null) {
             current = cause;
-            cause = current.getCause();
+            cause = cause.getCause();
+            if (advanceSlow) {
+                slow = slow.getCause();
+            }
+            advanceSlow = !advanceSlow;
+            if (cause != null && cause == slow) {
+                break;
+            }
         }
         return current;
     }
@@ -185,18 +195,30 @@ public class ExceptionUtils {
     }
 
     /**
-     * Determines whether supplied exception contains a matching cause in its hierarchy, or is itself a match
+     * Determines whether supplied exception contains a matching cause in its hierarchy, or is itself a match.
+     * <p>
+     * The causes are tested nearest-first, then {@code e} itself. The same throwable can be tested twice, as
+     * {@code e} is tested at the end even when the walk already reached it by coming round a cyclic hierarchy,
+     * so the test should be a pure predicate rather than one that records what it matched.
      */
     public static boolean matchingCause(Throwable e, Predicate<Throwable> test) {
-        Throwable current = e;
+        // walk the causes nearest-first, then test e itself last; slow trails cause at half speed so that a
+        // cyclic chain terminates instead of spinning
+        Throwable slow = e;
         Throwable cause = e.getCause();
-        while (cause != null && cause != current) {
+        boolean advanceSlow = false;
+        while (cause != null) {
             if (test.test(cause)) {
                 return true;
             }
-            Throwable nextCause = current.getCause();
-            current = cause;
-            cause = nextCause;
+            cause = cause.getCause();
+            if (advanceSlow) {
+                slow = slow.getCause();
+            }
+            advanceSlow = !advanceSlow;
+            if (cause != null && cause == slow) {
+                break;
+            }
         }
         return test.test(e);
     }
@@ -206,11 +228,21 @@ public class ExceptionUtils {
      * exception
      */
     public static Throwable unwrap(Throwable e) {
+        // slow trails cause at half speed so that a cyclic chain terminates instead of spinning
+        Throwable slow = e;
         Throwable current = e;
         Throwable cause = e.getCause();
-        while (cause != current && cause instanceof IFormattedException) {
+        boolean advanceSlow = false;
+        while (cause instanceof IFormattedException) {
             current = cause;
-            cause = current.getCause();
+            cause = cause.getCause();
+            if (advanceSlow) {
+                slow = slow.getCause();
+            }
+            advanceSlow = !advanceSlow;
+            if (cause != null && cause == slow) {
+                break;
+            }
         }
         return current;
     }
