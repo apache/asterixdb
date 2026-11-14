@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>18</version>
+    <version>40</version>
     <relativePath />
   </parent>
   <licenses>
@@ -70,7 +70,7 @@
     <test.excludes>${global.test.excludes}</test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <hadoop.version>3.5.0</hadoop.version>
-    <jacoco.version>0.8.15</jacoco.version>
+    <jacoco.version>0.8.16</jacoco.version>
     <log4j.version>2.26.1</log4j.version>
     <snappy.version>1.1.10.12</snappy.version>
     <jackson.version>2.23.0</jackson.version>
@@ -605,7 +605,7 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
-        <version>1.7.36</version>
+        <version>2.0.20</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -1024,7 +1024,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.23.0</version>
+          <version>2.24.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1039,7 +1039,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.1</version>
           <configuration>
             <failIfNoTests>false</failIfNoTests>
             <forkCount>1</forkCount>
@@ -1063,7 +1063,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>2.22.2</version>
+          <version>3.6.1</version>
           <configuration>
             <systemPropertyVariables>
               <log4j.configurationFile>${testLog4jConfigFile}</log4j.configurationFile>
@@ -1098,7 +1098,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.6.2</version>
+          <version>3.7.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1116,7 +1116,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.0.0-M3</version>
+          <version>3.7.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -1178,7 +1178,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
+            <version>3.2.8</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
