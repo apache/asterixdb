@@ -25,6 +25,7 @@ import static org.apache.asterix.external.util.ExternalDataUtils.isAuthFlagSet;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateAndGetBooleanProperty;
 import static org.apache.asterix.external.util.aws.AwsConstants.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.CROSS_REGION_FIELD_NAME;
+import static org.apache.asterix.external.util.aws.AwsConstants.ERROR_EXPIRED_TOKEN;
 import static org.apache.asterix.external.util.aws.AwsConstants.EXTERNAL_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.INSTANCE_PROFILE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.AwsConstants.REGION_FIELD_NAME;
@@ -38,13 +39,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.AwsAssumeRoleFailureReason;
 import org.apache.asterix.common.external.IExternalStatsTracker;
 import org.apache.hyracks.api.util.CleanupUtils;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -55,11 +59,15 @@ import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.awscore.AwsClient;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.SdkClient;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.exception.SdkServiceException;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
@@ -73,6 +81,19 @@ import software.amazon.awssdk.services.sts.model.AssumeRoleResponse;
 public class AwsUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    // STS error codes, from its AssumeRole and common error references
+    private static final Set<String> ACCESS_DENIED_CODES =
+            Set.of("AccessDenied", "AccessDeniedException", "NotAuthorized");
+    private static final Set<String> INVALID_CREDENTIALS_CODES =
+            Set.of("InvalidClientTokenId", "UnrecognizedClientException", "SignatureDoesNotMatch",
+                    "IncompleteSignature", "MissingAuthenticationToken");
+    private static final Set<String> EXPIRED_CODES =
+            Set.of(ERROR_EXPIRED_TOKEN, "ExpiredTokenException", "RequestExpired");
+    private static final Set<String> INVALID_REQUEST_CODES = Set.of("ValidationError", "InvalidParameterValue",
+            "InvalidParameterCombination", "InvalidQueryParameter", "MalformedQueryString", "MissingAction",
+            "MissingParameter", "MalformedPolicyDocument", "PackedPolicyTooLarge");
+    private static final Set<String> REGION_DISABLED_CODES = Set.of("RegionDisabled", "RegionDisabledException");
+    private static final Set<String> UNAVAILABLE_CODES = Set.of("InternalFailure", "ServiceUnavailable");
     private static final ExecutionInterceptor ASSUME_ROLE_INTERCEPTOR;
 
     static {
@@ -174,6 +195,52 @@ public class AwsUtils {
     }
 
     /**
+     * Classifies a failed AssumeRole call into a closed set of reasons
+     *
+     * @param failure the exception the call failed with
+     * @return the reason, {@link AwsAssumeRoleFailureReason#OTHER} if it cannot be classified
+     */
+    public static AwsAssumeRoleFailureReason getAssumeRoleFailureReason(Throwable failure) {
+        boolean clientError = false;
+        for (Throwable th = failure; th != null; th = th.getCause()) {
+            if (th instanceof SdkServiceException serviceException) {
+                return getAssumeRoleFailureReason(serviceException);
+            }
+            clientError |= th instanceof SdkClientException;
+        }
+        return clientError ? AwsAssumeRoleFailureReason.CLIENT_ERROR : AwsAssumeRoleFailureReason.OTHER;
+    }
+
+    private static AwsAssumeRoleFailureReason getAssumeRoleFailureReason(SdkServiceException ex) {
+        if (ex.isThrottlingException()) {
+            return AwsAssumeRoleFailureReason.THROTTLED;
+        }
+        AwsErrorDetails details = ex instanceof AwsServiceException awsEx ? awsEx.awsErrorDetails() : null;
+        String code = details == null ? null : details.errorCode();
+        if (code != null) {
+            if (ACCESS_DENIED_CODES.contains(code)) {
+                return AwsAssumeRoleFailureReason.ACCESS_DENIED;
+            }
+            if (INVALID_CREDENTIALS_CODES.contains(code)) {
+                return AwsAssumeRoleFailureReason.INVALID_CREDENTIALS;
+            }
+            if (EXPIRED_CODES.contains(code)) {
+                return AwsAssumeRoleFailureReason.EXPIRED;
+            }
+            if (INVALID_REQUEST_CODES.contains(code)) {
+                return AwsAssumeRoleFailureReason.INVALID_REQUEST;
+            }
+            if (REGION_DISABLED_CODES.contains(code)) {
+                return AwsAssumeRoleFailureReason.REGION_DISABLED;
+            }
+            if (UNAVAILABLE_CODES.contains(code)) {
+                return AwsAssumeRoleFailureReason.UNAVAILABLE;
+            }
+        }
+        return ex.statusCode() >= 500 ? AwsAssumeRoleFailureReason.UNAVAILABLE : AwsAssumeRoleFailureReason.OTHER;
+    }
+
+    /**
      * Returns the cached credentials if valid, otherwise, generates new credentials
      *
      * @param appCtx application context
@@ -196,11 +263,14 @@ public class AwsUtils {
                     if (req instanceof AssumeRoleRequest assumeReq) {
                         String roleArn = assumeReq.roleArn();
                         Throwable th = context.exception();
-                        LOGGER.info("encountered issue assuming role ({}): {}", roleArn, getMessageOrToString(th));
+                        AwsAssumeRoleFailureReason reason = getAssumeRoleFailureReason(th);
+                        LOGGER.info("encountered issue assuming role ({}), reason {}: {}",
+                                LogRedactionUtil.userData(roleArn), reason.label(),
+                                LogRedactionUtil.userData(getMessageOrToString(th)));
 
                         IExternalStatsTracker externalStatsTracker = appCtx.getExternalStatsTracker();
                         String name = externalStatsTracker.resolveName(configuration);
-                        externalStatsTracker.incrementAwsAssumeRoleFailure(name, roleArn);
+                        externalStatsTracker.incrementAwsAssumeRoleFailure(name, reason);
                     }
                     ExecutionInterceptor.super.onExecutionFailure(context, executionAttributes);
                 }
@@ -218,7 +288,7 @@ public class AwsUtils {
         // build refresh role request
         String roleArn = configuration.get(ROLE_ARN_FIELD_NAME);
         String sessionName = UUID.randomUUID().toString();
-        LOGGER.debug("Assuming RoleArn ({}) and SessionName ({})", roleArn, sessionName);
+        LOGGER.debug("Assuming RoleArn ({}) and SessionName ({})", LogRedactionUtil.userData(roleArn), sessionName);
         AssumeRoleRequest.Builder refreshRequestBuilder = AssumeRoleRequest.builder();
         refreshRequestBuilder.roleArn(roleArn);
         refreshRequestBuilder.externalId(configuration.get(EXTERNAL_ID_FIELD_NAME));

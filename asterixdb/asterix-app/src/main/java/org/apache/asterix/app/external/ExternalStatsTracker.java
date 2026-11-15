@@ -22,12 +22,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.asterix.common.external.AwsAssumeRoleFailureReason;
 import org.apache.asterix.common.external.IExternalStatsTracker;
 import org.apache.asterix.external.util.ExternalDataConstants;
 
 public class ExternalStatsTracker implements IExternalStatsTracker {
 
-    private final Map<String, Map<String, AtomicLong>> totalAwsAssumeRoleFailures;
+    private final Map<String, Map<AwsAssumeRoleFailureReason, AtomicLong>> totalAwsAssumeRoleFailures;
 
     public ExternalStatsTracker() {
         totalAwsAssumeRoleFailures = new ConcurrentHashMap<>();
@@ -53,13 +54,13 @@ public class ExternalStatsTracker implements IExternalStatsTracker {
     }
 
     @Override
-    public void incrementAwsAssumeRoleFailure(String name, String roleArn) {
+    public void incrementAwsAssumeRoleFailure(String name, AwsAssumeRoleFailureReason reason) {
         // empty name means we are creating the external collection still
         if (name.isEmpty()) {
             return;
         }
-        Map<String, AtomicLong> map =
+        Map<AwsAssumeRoleFailureReason, AtomicLong> map =
                 totalAwsAssumeRoleFailures.computeIfAbsent(name, key -> new ConcurrentHashMap<>());
-        map.computeIfAbsent(roleArn, key -> new AtomicLong()).incrementAndGet();
+        map.computeIfAbsent(reason, key -> new AtomicLong()).incrementAndGet();
     }
 }

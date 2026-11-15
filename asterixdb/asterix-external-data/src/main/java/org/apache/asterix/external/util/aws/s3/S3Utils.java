@@ -115,6 +115,7 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.cloud.io.S3ChecksumBehavior;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -356,7 +357,8 @@ public class S3Utils {
                 String sessionName = UUID.randomUUID().toString();
                 jobConf.set(HADOOP_ASSUME_ROLE_ARN, roleArn);
                 jobConf.set(HADOOP_ASSUME_ROLE_SESSION_NAME, sessionName);
-                LOGGER.debug("Assuming RoleArn ({}) and SessionName ({})", roleArn, sessionName);
+                LOGGER.debug("Assuming RoleArn ({}) and SessionName ({})", LogRedactionUtil.userData(roleArn),
+                        sessionName);
 
                 // hadoop accepts time 15m to 1h, we will base it on the provided configuration
                 int durationInSeconds = appCtx.getExternalProperties().getAwsAssumeRoleDuration();

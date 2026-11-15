@@ -32,6 +32,9 @@ public interface IExternalStatsTracker {
 
     /**
      * Increments the total AWS Assume Role failure count
+     *
+     * @param name the name resolved by {@link #resolveName(Map)}
+     * @param reason why the AssumeRole call failed
      */
-    void incrementAwsAssumeRoleFailure(String name, String roleArn);
+    void incrementAwsAssumeRoleFailure(String name, AwsAssumeRoleFailureReason reason);
 }
