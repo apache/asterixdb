@@ -175,6 +175,8 @@ public class IcebergTest {
     private static final TableIdentifier MIXED_SHREDDING_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "mixedShreddingVariant");
     private static final TableIdentifier FLOAT_NAN_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "floatNanVariant");
+    private static final TableIdentifier MISSING_FIELD_VARIANT_TABLE_ID =
+            TableIdentifier.of(NAMESPACE, "missingFieldVariant");
     /** Files whose variant is fully shredded; the rest shred only "name", so their "bucket" has no bounds. */
     private static final int MIXED_SHREDDING_SHREDDED_FILES = 3;
     private static final int MIXED_SHREDDING_FILE_COUNT = 6;
@@ -329,6 +331,7 @@ public class IcebergTest {
             writeDottedFieldNameVariantTable(catalog);
             writeMixedShreddingVariantTable(catalog);
             writeFloatNanVariantTable(catalog);
+            writeMissingFieldVariantTable(catalog);
         }
     }
 
@@ -706,6 +709,75 @@ public class IcebergTest {
                 MIXED_SHREDDING_SHREDDED_FILES, MIXED_SHREDDING_SHREDDED_FILES - 1,
                 MIXED_SHREDDING_FILE_COUNT - MIXED_SHREDDING_SHREDDED_FILES, MIXED_SHREDDING_SHREDDED_FILES,
                 MIXED_SHREDDING_FILE_COUNT - 1);
+    }
+
+    private static final VariantMetadata MISSING_FIELD_VARIANT_METADATA = Variants.metadata("a", "b", "c", "d", "tags");
+
+    /**
+     * Files that each shred a different subset of the variant's fields, so a query naming only fields that one file
+     * leaves untyped must still read MISSING for them, not NULL, from that file's rows whose residual is empty:
+     * <ul>
+     * <li>ids 1-4, serialized: the oracle the shredded files must agree with;</li>
+     * <li>ids 11-13, shred {@code a} and {@code b};</li>
+     * <li>ids 21-24, shred {@code c} only;</li>
+     * <li>ids 31-33, shred {@code a}, {@code c} and {@code d}.</li>
+     * </ul>
+     * {@code tags} is never shredded, so it lives in the top-level residual of the rows that have it. JSON nulls appear
+     * for {@code b} in every encoding (serialized, typed member, residual), and a top-level variant null appears in
+     * the serialized file and in a shredded one, since those must stay NULL.
+     */
+    private static void writeMissingFieldVariantTable(NessieCatalog catalog) throws Exception {
+        Table table = createTable(catalog, MISSING_FIELD_VARIANT_TABLE_ID, buildAllTypesVariantSchema(),
+                PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+        DataFile serialized = writeVariantEncodingFile(table, "missing_field_serialized.parquet", 1,
+                List.of(missingFieldVariant("a", 1, "b", "b1"), missingFieldVariant("c", 2),
+                        missingFieldVariant("a", 3, "b", null),
+                        Variant.of(Variants.emptyMetadata(), Variants.ofNull())),
+                null, null);
+        DataFile typedAB = writeVariantEncodingFile(table, "missing_field_ab.parquet", 11,
+                List.of(missingFieldVariant("a", 11, "b", "b11"), missingFieldVariant("a", 12, "b", null),
+                        missingFieldVariant("a", 13)),
+                shreddingFunc(missingFieldVariant("a", 0, "b", ""), null), Set.of("a", "b"));
+        DataFile typedC = writeVariantEncodingFile(table, "missing_field_c.parquet", 21,
+                List.of(missingFieldVariant("c", 21), missingFieldVariant("c", 22, "tags", List.of("t22", "x")),
+                        missingFieldVariant("c", 23, "b", null),
+                        Variant.of(Variants.emptyMetadata(), Variants.ofNull())),
+                shreddingFunc(missingFieldVariant("c", 0), null), Set.of("c"));
+        DataFile typedACD = writeVariantEncodingFile(table, "missing_field_acd.parquet", 31,
+                List.of(missingFieldVariant("a", 31, "c", 31, "d", 31), missingFieldVariant("c", 32, "d", 32),
+                        missingFieldVariant("a", 33, "c", 33, "d", 33, "tags", List.of("t33", "x"))),
+                shreddingFunc(missingFieldVariant("a", 0, "c", 0, "d", 0), null), Set.of("a", "c", "d"));
+        table.newAppend().appendFile(serialized).appendFile(typedAB).appendFile(typedC).appendFile(typedACD).commit();
+        LOGGER.info("[WRITE] missingFieldVariant committed: serialized ids 1-4, and shredded files typing a,b "
+                + "(ids 11-13), c (ids 21-24) and a,c,d (ids 31-33)");
+    }
+
+    /**
+     * An object variant from alternating names and values: an Integer becomes an int, a String a string, a List of
+     * strings an array, and a Java null a variant null.
+     */
+    private static Variant missingFieldVariant(Object... namesAndValues) {
+        ShreddedObject obj = Variants.object(MISSING_FIELD_VARIANT_METADATA);
+        for (int i = 0; i < namesAndValues.length; i += 2) {
+            Object value = namesAndValues[i + 1];
+            org.apache.iceberg.variants.VariantValue variantValue;
+            if (value == null) {
+                variantValue = Variants.ofNull();
+            } else if (value instanceof Integer) {
+                variantValue = Variants.of((Integer) value);
+            } else if (value instanceof String) {
+                variantValue = Variants.of((String) value);
+            } else {
+                org.apache.iceberg.variants.ValueArray array = Variants.array();
+                for (Object element : (List<?>) value) {
+                    array.add(Variants.of((String) element));
+                }
+                variantValue = array;
+            }
+            obj.put((String) namesAndValues[i], variantValue);
+        }
+        return Variant.of(MISSING_FIELD_VARIANT_METADATA, obj);
     }
 
     /**

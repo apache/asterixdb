@@ -312,12 +312,33 @@ public class ReadingShreddedPushdownTest {
     }
 
     @Test
-    public void clip_residualOnlyRequest_dropsTypedValueButKeepsMetadataValue() throws Exception {
+    public void clip_residualOnlyRequest_keepsOneMemberValueToMarkObjects() throws Exception {
         MessageType schema = message(variant(objectTyped(scalar("status"), scalar("other"))));
         GroupType variant = clippedVariant(schema, pathsFor(List.of(List.of(COLUMN, "residualOnly"))));
         Assert.assertTrue(variant.containsField(METADATA));
         Assert.assertTrue(variant.containsField(VALUE));
-        Assert.assertFalse("all requested fields residual -> typed_value dropped", variant.containsField(TYPED_VALUE));
+        // Dropping typed_value outright would read a fully shredded object as a variant null.
+        Assert.assertEquals("one member survives to mark object rows", Set.of("status"), typedValueFieldNames(variant));
+        GroupType status = variant.getType(TYPED_VALUE).asGroupType().getType("status").asGroupType();
+        Assert.assertEquals("reduced to its residual value", List.of(VALUE), fieldNames(status));
+    }
+
+    @Test
+    public void clip_residualOnlyRequest_soleValueOnlyMember_isNoOp() throws Exception {
+        GroupType valueOnly = Types.buildGroup(Repetition.OPTIONAL).addField(bin(VALUE)).named("status");
+        MessageType schema = message(variant(objectTyped(valueOnly)));
+        Assert.assertSame("nothing narrower than the only member exists", schema,
+                clip(schema, pathsFor(List.of(List.of(COLUMN, "residualOnly")))));
+    }
+
+    @Test
+    public void clip_residualOnlyRequest_membersWithoutValue_keepFirstMemberWhole() throws Exception {
+        GroupType first = Types.buildGroup(Repetition.OPTIONAL).addField(bin(TYPED_VALUE)).named("first");
+        GroupType second = Types.buildGroup(Repetition.OPTIONAL).addField(bin(TYPED_VALUE)).named("second");
+        MessageType schema = message(variant(objectTyped(first, second)));
+        GroupType variant = clippedVariant(schema, pathsFor(List.of(List.of(COLUMN, "residualOnly"))));
+        Assert.assertEquals(Set.of("first"), typedValueFieldNames(variant));
+        Assert.assertEquals(first, variant.getType(TYPED_VALUE).asGroupType().getType("first"));
     }
 
     @Test
@@ -926,6 +947,194 @@ public class ReadingShreddedPushdownTest {
                 baseline.asObject().get("obj").asObject().get("innerDropped"));
         Assert.assertNull("pruned nested field must be absent",
                 narrowed.asObject().get("obj").asObject().get("innerDropped"));
+    }
+
+    /**
+     * A request naming only fields the file does not shred leaves no typed member to read, yet a row whose object was
+     * shredded completely has an empty residual. Such a row must still read as an object lacking the field, not as a
+     * variant null, while a real variant null and a null column must stay as they are.
+     */
+    @Test
+    public void endToEnd_untypedFieldOnlyRequest_keepsObjectsWithEmptyResidual() throws Exception {
+        org.apache.iceberg.Schema schema = new org.apache.iceberg.Schema(
+                org.apache.iceberg.types.Types.NestedField.required(1, "id",
+                        org.apache.iceberg.types.Types.IntegerType.get()),
+                org.apache.iceberg.types.Types.NestedField.optional(2, COLUMN,
+                        org.apache.iceberg.types.Types.VariantType.get()));
+        java.io.File dir = java.nio.file.Files.createTempDirectory("shredded-untyped-only").toFile();
+        java.io.File dataFile = new java.io.File(dir, "untyped.parquet");
+
+        org.apache.iceberg.variants.VariantMetadata meta =
+                org.apache.iceberg.variants.Variants.metadata("typed", "other", "untyped");
+        org.apache.iceberg.variants.ShreddedObject typedOnly = org.apache.iceberg.variants.Variants.object(meta);
+        typedOnly.put("typed", org.apache.iceberg.variants.Variants.of(1));
+        typedOnly.put("other", org.apache.iceberg.variants.Variants.of("o"));
+        org.apache.iceberg.variants.ShreddedObject withResidual = org.apache.iceberg.variants.Variants.object(meta);
+        withResidual.put("typed", org.apache.iceberg.variants.Variants.of(2));
+        withResidual.put("untyped", org.apache.iceberg.variants.Variants.of("u"));
+        List<org.apache.iceberg.variants.Variant> rows =
+                java.util.Arrays.asList(org.apache.iceberg.variants.Variant.of(meta, typedOnly),
+                        org.apache.iceberg.variants.Variant.of(meta, withResidual),
+                        org.apache.iceberg.variants.Variant.of(org.apache.iceberg.variants.Variants.emptyMetadata(),
+                                org.apache.iceberg.variants.Variants.ofNull()),
+                        null);
+
+        java.lang.reflect.Method toParquetSchema = Class.forName("org.apache.iceberg.parquet.ParquetVariantUtil")
+                .getDeclaredMethod("toParquetSchema", org.apache.iceberg.variants.VariantValue.class);
+        toParquetSchema.setAccessible(true);
+        Type typedValue = (Type) toParquetSchema.invoke(null, typedOnly);
+        org.apache.iceberg.data.GenericRecord template = org.apache.iceberg.data.GenericRecord.create(schema);
+        try (org.apache.iceberg.io.FileAppender<org.apache.iceberg.data.Record> writer =
+                org.apache.iceberg.parquet.Parquet.write(org.apache.iceberg.Files.localOutput(dataFile)).schema(schema)
+                        .createWriterFunc(org.apache.iceberg.data.parquet.GenericParquetWriter::create)
+                        .variantShreddingFunc((fieldId, name) -> typedValue).build()) {
+            for (int i = 0; i < rows.size(); i++) {
+                org.apache.iceberg.data.Record row = template.copy();
+                row.setField("id", i);
+                row.setField(COLUMN, rows.get(i));
+                writer.add(row);
+            }
+        }
+
+        VariantProjectionPlan plan =
+                VariantProjectionPlan.from(schema, projected(List.of(List.of(COLUMN, "untyped"))), true);
+        Assert.assertFalse("plan must narrow the variant column", plan.isEmpty());
+        List<org.apache.iceberg.variants.Variant> read = new ArrayList<>();
+        try (VariantProjectedParquetReader reader = VariantProjectedParquetReader
+                .open(org.apache.iceberg.Files.localInput(dataFile), schema, null, 0, 0, true, plan)) {
+            Assert.assertTrue("clip must actually prune this file", reader.canPrune());
+            for (org.apache.iceberg.data.Record record : reader) {
+                read.add((org.apache.iceberg.variants.Variant) record.getField(COLUMN));
+            }
+        }
+
+        Assert.assertEquals(rows.size(), read.size());
+        org.apache.iceberg.variants.VariantValue emptyResidual = read.get(0).value();
+        Assert.assertEquals("a fully shredded object must stay an object",
+                org.apache.iceberg.variants.PhysicalType.OBJECT, emptyResidual.type());
+        Assert.assertNull("and must lack the field", emptyResidual.asObject().get("untyped"));
+        Assert.assertEquals("u", read.get(1).value().asObject().get("untyped").asPrimitive().get());
+        Assert.assertEquals("a variant null must stay null", org.apache.iceberg.variants.PhysicalType.NULL,
+                read.get(2).value().type());
+        Assert.assertNull("a null column must stay null", read.get(3));
+    }
+
+    /**
+     * The nested form of the request above: {@code o} is a shredded object and the request names only {@code o.z},
+     * which no file types, so {@code o}'s own typed_value is dropped and no column is kept to mark {@code o} as an
+     * object. A fully shredded {@code o} then reads as absent, which is safe only because every requested path lies
+     * below it and reads MISSING either way. Each row's {@code o.z} is compared with the standard read of the same
+     * file, so the case cannot pass on a wrong expectation.
+     */
+    @Test
+    public void endToEnd_untypedNestedFieldOnlyRequest_matchesUnprunedRead() throws Exception {
+        org.apache.iceberg.Schema schema = new org.apache.iceberg.Schema(
+                org.apache.iceberg.types.Types.NestedField.required(1, "id",
+                        org.apache.iceberg.types.Types.IntegerType.get()),
+                org.apache.iceberg.types.Types.NestedField.optional(2, COLUMN,
+                        org.apache.iceberg.types.Types.VariantType.get()));
+        java.io.File dir = java.nio.file.Files.createTempDirectory("shredded-untyped-nested").toFile();
+        java.io.File dataFile = new java.io.File(dir, "untyped-nested.parquet");
+
+        org.apache.iceberg.variants.VariantMetadata meta =
+                org.apache.iceberg.variants.Variants.metadata("o", "p", "q", "x", "z");
+        List<org.apache.iceberg.variants.Variant> rows = new ArrayList<>();
+        rows.add(nestedRow(meta, nestedObject(meta, "p", 1, "q", "a"))); // o fully shredded, no z
+        rows.add(nestedRow(meta, nestedObject(meta, "p", 2, "z", "zz"))); // z in o's residual
+        rows.add(nestedRow(meta, nestedObject(meta, "z", "only"))); // o holds nothing typed
+        rows.add(nestedRow(meta, org.apache.iceberg.variants.Variants.ofNull())); // o is a variant null
+        rows.add(nestedRow(meta, org.apache.iceberg.variants.Variants.of("scalar"))); // o is not an object
+        org.apache.iceberg.variants.ShreddedObject withoutO = org.apache.iceberg.variants.Variants.object(meta);
+        withoutO.put("x", org.apache.iceberg.variants.Variants.of(7));
+        rows.add(org.apache.iceberg.variants.Variant.of(meta, withoutO)); // no o at all
+        rows.add(org.apache.iceberg.variants.Variant.of(org.apache.iceberg.variants.Variants.emptyMetadata(),
+                org.apache.iceberg.variants.Variants.ofNull())); // the variant itself is null
+        rows.add(null); // null column
+
+        java.lang.reflect.Method toParquetSchema = Class.forName("org.apache.iceberg.parquet.ParquetVariantUtil")
+                .getDeclaredMethod("toParquetSchema", org.apache.iceberg.variants.VariantValue.class);
+        toParquetSchema.setAccessible(true);
+        Type typedValue = (Type) toParquetSchema.invoke(null, rows.get(0).value());
+        org.apache.iceberg.data.GenericRecord template = org.apache.iceberg.data.GenericRecord.create(schema);
+        try (org.apache.iceberg.io.FileAppender<org.apache.iceberg.data.Record> writer =
+                org.apache.iceberg.parquet.Parquet.write(org.apache.iceberg.Files.localOutput(dataFile)).schema(schema)
+                        .createWriterFunc(org.apache.iceberg.data.parquet.GenericParquetWriter::create)
+                        .variantShreddingFunc((fieldId, name) -> typedValue).build()) {
+            for (int i = 0; i < rows.size(); i++) {
+                org.apache.iceberg.data.Record row = template.copy();
+                row.setField("id", i);
+                row.setField(COLUMN, rows.get(i));
+                writer.add(row);
+            }
+        }
+
+        List<String> expected = new ArrayList<>();
+        try (org.apache.iceberg.io.CloseableIterable<org.apache.iceberg.data.Record> full =
+                org.apache.iceberg.parquet.Parquet.read(org.apache.iceberg.Files.localInput(dataFile)).project(schema)
+                        .createReaderFunc(fileSchema -> org.apache.iceberg.data.parquet.GenericParquetReaders
+                                .buildReader(schema, fileSchema))
+                        .build()) {
+            for (org.apache.iceberg.data.Record record : full) {
+                expected.add(navigateOz((org.apache.iceberg.variants.Variant) record.getField(COLUMN)));
+            }
+        }
+
+        VariantProjectionPlan plan =
+                VariantProjectionPlan.from(schema, projected(List.of(List.of(COLUMN, "o", "z"))), true);
+        Assert.assertFalse("plan must narrow the variant column", plan.isEmpty());
+        List<String> actual = new ArrayList<>();
+        try (VariantProjectedParquetReader reader = VariantProjectedParquetReader
+                .open(org.apache.iceberg.Files.localInput(dataFile), schema, null, 0, 0, true, plan)) {
+            Assert.assertTrue("clip must actually prune this file", reader.canPrune());
+            for (org.apache.iceberg.data.Record record : reader) {
+                actual.add(navigateOz((org.apache.iceberg.variants.Variant) record.getField(COLUMN)));
+            }
+        }
+
+        Assert.assertEquals("the unpruned read is the oracle; check it saw every kind of row",
+                List.of("MISSING", "zz", "only", "NULL", "MISSING", "MISSING", "NULL", "NULL"), expected);
+        Assert.assertEquals(expected, actual);
+    }
+
+    private static org.apache.iceberg.variants.Variant nestedRow(org.apache.iceberg.variants.VariantMetadata meta,
+            org.apache.iceberg.variants.VariantValue o) {
+        org.apache.iceberg.variants.ShreddedObject object = org.apache.iceberg.variants.Variants.object(meta);
+        object.put("o", o);
+        return org.apache.iceberg.variants.Variant.of(meta, object);
+    }
+
+    private static org.apache.iceberg.variants.ShreddedObject nestedObject(
+            org.apache.iceberg.variants.VariantMetadata meta, Object... namesAndValues) {
+        org.apache.iceberg.variants.ShreddedObject object = org.apache.iceberg.variants.Variants.object(meta);
+        for (int i = 0; i < namesAndValues.length; i += 2) {
+            Object value = namesAndValues[i + 1];
+            object.put((String) namesAndValues[i],
+                    value instanceof Integer ? org.apache.iceberg.variants.Variants.of((Integer) value)
+                            : org.apache.iceberg.variants.Variants.of((String) value));
+        }
+        return object;
+    }
+
+    /** {@code v.o.z} in SQL++ terms: NULL through a null, MISSING through anything absent or not an object. */
+    private static String navigateOz(org.apache.iceberg.variants.Variant variant) {
+        if (variant == null) {
+            return "NULL";
+        }
+        org.apache.iceberg.variants.VariantValue value = variant.value();
+        for (String name : List.of("o", "z")) {
+            if (value.type() == org.apache.iceberg.variants.PhysicalType.NULL) {
+                return "NULL";
+            }
+            if (value.type() != org.apache.iceberg.variants.PhysicalType.OBJECT) {
+                return "MISSING";
+            }
+            value = value.asObject().get(name);
+            if (value == null) {
+                return "MISSING";
+            }
+        }
+        return value.type() == org.apache.iceberg.variants.PhysicalType.NULL ? "NULL"
+                : String.valueOf(value.asPrimitive().get());
     }
 
     /**

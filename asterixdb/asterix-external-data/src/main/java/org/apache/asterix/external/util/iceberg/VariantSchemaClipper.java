@@ -49,7 +49,8 @@ import org.apache.parquet.schema.Types;
  *
  * The clipper keeps {@code metadata} and {@code value} unconditionally (the residual is required to reconstruct
  * anything not shredded, and any requested-but-residual field), and rebuilds {@code typed_value} to retain only the
- * requested member fields, recursing into nested object members.
+ * requested member fields, recursing into nested object members. At the variant root {@code typed_value} is never
+ * dropped outright, even when no requested field is shredded; see {@link #objectSentinel}.
  * <p>
  * Correctness is preserved even when a variant is only partially clipped: keeping {@code value} means unrequested
  * residual fields may still reconstruct (harmlessly — downstream projection drops them), while dropped
@@ -112,7 +113,7 @@ public final class VariantSchemaClipper {
         }
         Type clippedChild;
         if (index == path.size() - 1) {
-            GroupType clipped = clipValueGroup(child.asGroupType(), paths);
+            GroupType clipped = clipValueGroup(child.asGroupType(), paths, true);
             clippedChild = clipped == child ? null : clipped;
         } else {
             clippedChild = clipAt(child.asGroupType(), path, index + 1, paths);
@@ -134,8 +135,10 @@ public final class VariantSchemaClipper {
      * Clips a "value group" — a variant group ({@code metadata}, {@code value}, {@code typed_value}) or a nested
      * shredded-field group ({@code value}, {@code typed_value}) — to {@code paths}. Non-{@code typed_value} fields
      * (i.e. {@code metadata}/{@code value}) are always retained. Returns the same instance when nothing changed.
+     *
+     * @param variantRoot whether {@code group} is the variant column itself rather than a shredded field within it
      */
-    private static GroupType clipValueGroup(GroupType group, RequestedVariantPaths paths) {
+    private static GroupType clipValueGroup(GroupType group, RequestedVariantPaths paths, boolean variantRoot) {
         if (paths.isAll() || !group.containsField(TYPED_VALUE)) {
             return group;
         }
@@ -162,7 +165,7 @@ public final class VariantSchemaClipper {
                 keptMembers.add(member); // keep the whole member
                 continue;
             }
-            GroupType clippedMember = clipValueGroup(member.asGroupType(), childPaths);
+            GroupType clippedMember = clipValueGroup(member.asGroupType(), childPaths, false);
             changed |= clippedMember != member;
             keptMembers.add(clippedMember);
         }
@@ -170,11 +173,23 @@ public final class VariantSchemaClipper {
         if (!changed) {
             return group;
         }
+        if (keptMembers.isEmpty() && variantRoot) {
+            // Without typed_value, a row whose object was shredded completely has an empty residual, and the reader
+            // turns an empty top-level residual into a variant null, so its absent fields would read NULL instead of
+            // MISSING. One member's column keeps the object detectable; the cheapest one is its residual value, which
+            // is null wherever the member conformed to its type. A nested field needs none of this: read as missing,
+            // it makes every requested path below it missing too, which is the right answer.
+            Type sentinel = objectSentinel(typedValueGroup);
+            if (sentinel == null) {
+                return group;
+            }
+            keptMembers.add(sentinel);
+        }
 
         List<Type> newFields = new ArrayList<>(group.getFieldCount());
         if (keptMembers.isEmpty()) {
-            // Every requested field is residual-only here: drop typed_value entirely, keep metadata + value. Only safe
-            // if that leaves a non-empty group (Parquet forbids empty groups); otherwise keep the group whole.
+            // Every requested field of this nested object is residual-only here: drop typed_value entirely, keep value.
+            // Only safe if that leaves a non-empty group (Parquet forbids empty groups); otherwise keep the group whole.
             for (Type field : group.getFields()) {
                 if (!field.getName().equals(TYPED_VALUE)) {
                     newFields.add(field);
@@ -194,6 +209,29 @@ public final class VariantSchemaClipper {
         }
         GroupType rebuilt = rebuild(group, newFields);
         return rebuilt == null ? group : rebuilt;
+    }
+
+    /**
+     * Returns a member of an object {@code typed_value} that keeps telling object rows apart once every other member is
+     * dropped: the first member that has a residual {@code value}, reduced to it, or else the first member whole.
+     * Returns {@code null} when that would keep the whole {@code typed_value}, since nothing is then narrowed.
+     */
+    private static Type objectSentinel(GroupType typedValueGroup) {
+        for (Type member : typedValueGroup.getFields()) {
+            if (member.isPrimitive() || !member.asGroupType().containsField(VALUE)) {
+                continue;
+            }
+            GroupType memberGroup = member.asGroupType();
+            if (memberGroup.getFieldCount() > 1) {
+                GroupType valueOnly = rebuild(memberGroup, List.of(memberGroup.getType(VALUE)));
+                if (valueOnly != null) {
+                    return valueOnly;
+                }
+            } else if (typedValueGroup.getFieldCount() > 1) {
+                return member;
+            }
+        }
+        return typedValueGroup.getFieldCount() > 1 ? typedValueGroup.getType(0) : null;
     }
 
     /**
