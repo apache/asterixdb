@@ -107,7 +107,7 @@
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
     <awsjavasdk.version>2.59.1</awsjavasdk.version>
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
-    <awsjavasdk.crt.version>0.48.5</awsjavasdk.crt.version>
+    <awsjavasdk.crt.version>0.50.0</awsjavasdk.crt.version>
 
     <!-- azure-storage-blob vendors relocated Apache Arrow (arrow-format) and FlatBuffers
          (flatbuffers-java) sources, listed in its shade-apache-arrow-format profile; review the
