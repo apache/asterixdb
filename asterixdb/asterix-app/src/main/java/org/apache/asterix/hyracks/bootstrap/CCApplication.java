@@ -341,10 +341,10 @@ public class CCApplication extends BaseCCApplication {
         addWrappedServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
         addWrappedServlet(jsonAPIServer, Servlets.ACTIVE_STATS);
         addWrappedServlet(jsonAPIServer, Servlets.PLAN_CACHE);
-        // health check and version endpoints are left open
-        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE);
-        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_NODE_DETAIL); // must not precede add of CLUSTER_STATE
-        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
+        addWrappedServlet(jsonAPIServer, Servlets.CLUSTER_STATE);
+        addWrappedServlet(jsonAPIServer, Servlets.CLUSTER_STATE_NODE_DETAIL); // must not precede add of CLUSTER_STATE
+        addWrappedServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
+        // left open for health checks
         addServlet(jsonAPIServer, Servlets.VERSION);
         addServlet(jsonAPIServer, Servlets.PING);
         return jsonAPIServer;
@@ -365,10 +365,19 @@ public class CCApplication extends BaseCCApplication {
      *         authenticate its APIs
      */
     protected IServlet wrapWithAuth(IServlet servlet, boolean challenge) {
-        if (!appCtx.getExternalProperties().isApiAuthenticationEnabled() || ccExtensionManager.hasExtensions()) {
+        if (!authenticatesApis()) {
             return servlet;
         }
         return new BasicAuthServletFactory(getCredentialMap(), Collections.emptyMap(), challenge).wrap(servlet);
+    }
+
+    private boolean authenticatesApis() {
+        return appCtx.getExternalProperties().isApiAuthenticationEnabled() && !ccExtensionManager.hasExtensions();
+    }
+
+    @Override
+    public Map<String, String> getConsoleCredentials() {
+        return authenticatesApis() ? getCredentialMap() : null;
     }
 
     // loaded on first use, as the servers that need it may be set up in any order

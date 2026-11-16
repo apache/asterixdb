@@ -26,7 +26,9 @@ import java.net.URL;
 import java.util.Collection;
 
 import org.apache.asterix.test.common.TestExecutor;
+import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.http.HttpHeaders;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -69,6 +71,7 @@ public class ClusterStateDefaultParameterTest {
         URL url = new URL("http://localhost:19002/admin/cluster/node/asterix_nc1/config");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
+        conn.setRequestProperty(HttpHeaders.AUTHORIZATION, TestHelper.ADMIN_AUTH_HEADER);
         BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String line;
         while ((line = rd.readLine()) != null) {

@@ -1260,11 +1260,13 @@ public class CCNCFunctions {
 
         private final List<URL> binaryURLs;
         private final DeploymentId deploymentId;
+        private final String authHeader;
 
-        public DeployBinaryFunction(DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId) {
+        public DeployBinaryFunction(DeploymentId deploymentId, List<URL> binaryURLs, String authHeader, CcId ccId) {
             super(ccId);
             this.binaryURLs = binaryURLs;
             this.deploymentId = deploymentId;
+            this.authHeader = authHeader;
         }
 
         @Override
@@ -1278,6 +1280,10 @@ public class CCNCFunctions {
 
         public DeploymentId getDeploymentId() {
             return deploymentId;
+        }
+
+        public String getAuthHeader() {
+            return authHeader;
         }
     }
 

@@ -42,6 +42,13 @@ public class ApiAuthenticationTest {
     private static final String LEGACY_WEB_UI = "http://localhost:19001/";
     private static final String CC_QUERY_SERVICE = "http://localhost:19002/query/service";
     private static final String NC_QUERY_SERVICE = "http://localhost:19004/query/service";
+    private static final String CLUSTER_STATE = "http://localhost:19002/admin/cluster";
+    private static final String NODE_CONFIG = "http://localhost:19002/admin/cluster/node/asterix_nc1/config";
+    private static final String CC_CONFIG = "http://localhost:19002/admin/cluster/cc/config";
+    private static final String PING = "http://localhost:19002/admin/ping";
+    private static final String VERSION = "http://localhost:19002/admin/version";
+    private static final String CONSOLE_NODES = "http://localhost:16001/rest/nodes";
+    private static final String CONSOLE_START_NODE = "http://localhost:16001/rest/startnode?node=asterix_nc1";
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -90,6 +97,37 @@ public class ApiAuthenticationTest {
     @Test
     public void ncApiDoesNotChallengeUnauthenticatedRequests() throws Exception {
         assertRejectedWithoutChallenge(NC_QUERY_SERVICE);
+    }
+
+    @Test
+    public void clusterStateRequiresAuthentication() throws Exception {
+        for (String uri : new String[] { CLUSTER_STATE, NODE_CONFIG, CC_CONFIG }) {
+            Assert.assertEquals(uri, 401, getStatus(HttpClients.createDefault(), uri));
+            Assert.assertEquals(uri, 200, getStatus(TestHelper.createAuthenticatedHttpClient(), uri));
+        }
+    }
+
+    @Test
+    public void healthChecksStayOpen() throws Exception {
+        Assert.assertEquals(200, getStatus(HttpClients.createDefault(), PING));
+        Assert.assertEquals(200, getStatus(HttpClients.createDefault(), VERSION));
+    }
+
+    @Test
+    public void hyracksConsoleRequiresAuthentication() throws Exception {
+        Assert.assertEquals(401, getStatus(HttpClients.createDefault(), CONSOLE_NODES));
+        Assert.assertEquals(200, getStatus(TestHelper.createAuthenticatedHttpClient(), CONSOLE_NODES));
+        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+                CloseableHttpResponse response = httpClient.execute(new HttpPost(CONSOLE_START_NODE))) {
+            Assert.assertEquals(401, response.getStatusLine().getStatusCode());
+        }
+    }
+
+    private static int getStatus(CloseableHttpClient client, String uri) throws Exception {
+        try (CloseableHttpClient httpClient = client;
+                CloseableHttpResponse response = httpClient.execute(new HttpGet(uri))) {
+            return response.getStatusLine().getStatusCode();
+        }
     }
 
     private static void assertRejectedWithoutChallenge(String uri) throws Exception {

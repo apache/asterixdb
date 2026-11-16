@@ -36,6 +36,9 @@ public class DeploymentRun implements IDeploymentStatusConditionVariable {
 
     public DeploymentRun(Collection<String> nodeIds) {
         deploymentNodeIds.addAll(nodeIds);
+        if (deploymentNodeIds.isEmpty()) {
+            deploymentStatus = DeploymentStatus.SUCCEED;
+        }
     }
 
     /**
@@ -60,7 +63,9 @@ public class DeploymentRun implements IDeploymentStatusConditionVariable {
 
     @Override
     public synchronized DeploymentStatus waitForCompletion() throws Exception {
-        wait();
+        while (!deploymentNodeIds.isEmpty()) {
+            wait();
+        }
         return deploymentStatus;
     }
 

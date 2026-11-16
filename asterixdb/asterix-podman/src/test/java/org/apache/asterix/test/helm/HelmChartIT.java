@@ -225,13 +225,14 @@ public class HelmChartIT {
             kubectl("rollout", "status", "statefulset/" + RELEASE + "-" + statefulSet,
                     "--timeout=" + ROLLOUT_TIMEOUT.toSeconds() + "s");
         }
+        String credentials = "admin:" + decodedSecret("password");
         Instant deadline = Instant.now().plus(CLUSTER_TIMEOUT);
         String cluster = "";
         while (Instant.now().isBefore(deadline)) {
             Container.ExecResult ping =
                     exec("kubectl", "exec", CLIENT_POD, "--", "curl", "-sS", "-m", "5", API + "/admin/ping");
-            Container.ExecResult state =
-                    exec("kubectl", "exec", CLIENT_POD, "--", "curl", "-sS", "-m", "5", API + "/admin/cluster");
+            Container.ExecResult state = exec("kubectl", "exec", CLIENT_POD, "--", "curl", "-sS", "-m", "5", "-u",
+                    credentials, API + "/admin/cluster");
             cluster = state.getStdout();
             if (ping.getStdout().contains("\"state\":\"ACTIVE\"") && countNodes(cluster) == nodes) {
                 return;

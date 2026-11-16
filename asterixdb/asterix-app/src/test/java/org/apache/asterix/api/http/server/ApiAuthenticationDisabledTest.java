@@ -46,6 +46,8 @@ public class ApiAuthenticationDisabledTest {
     private static final String NC_QUERY_SERVICE = "http://localhost:19004/query/service";
     private static final String LEGACY_WEB_UI = "http://localhost:19001/";
     private static final String NC_UDF = "http://localhost:19004/admin/udf/Default/lib";
+    private static final String CLUSTER_STATE = "http://localhost:19002/admin/cluster";
+    private static final String CONSOLE_NODES = "http://localhost:16001/rest/nodes";
     private static final String MISSING_CREDENTIAL_FILE = "target/no-such-dir/passwd";
 
     @BeforeClass
@@ -76,6 +78,16 @@ public class ApiAuthenticationDisabledTest {
     @Test
     public void legacyWebUiAcceptsUnauthenticatedRequests() throws Exception {
         Assert.assertEquals(200, execute(new HttpGet(LEGACY_WEB_UI)));
+    }
+
+    @Test
+    public void clusterStateAcceptsUnauthenticatedRequests() throws Exception {
+        Assert.assertEquals(200, execute(new HttpGet(CLUSTER_STATE)));
+    }
+
+    @Test
+    public void hyracksConsoleAcceptsUnauthenticatedRequests() throws Exception {
+        Assert.assertEquals(200, execute(new HttpGet(CONSOLE_NODES)));
     }
 
     @Test

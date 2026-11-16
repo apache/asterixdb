@@ -30,10 +30,13 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -92,17 +95,19 @@ public class DeploymentUtils {
      *            the ServerContext
      * @param isNC
      *            true is NC/false is CC
+     * @param authHeader
+     *            the {@code Authorization} header an NC fetches the URLs with, or {@code null} to fetch them without one
      * @throws HyracksException
      */
     public static void deploy(DeploymentId deploymentId, List<URL> urls,
-            ConcurrentMap<DeploymentId, IJobSerializerDeserializer> container, ServerContext ctx, boolean isNC)
-            throws HyracksException {
+            ConcurrentMap<DeploymentId, IJobSerializerDeserializer> container, ServerContext ctx, boolean isNC,
+            String authHeader) throws HyracksException {
         IJobSerializerDeserializer jobSerDe =
                 container.computeIfAbsent(deploymentId, d -> new ClassLoaderJobSerializerDeserializer());
         String rootDir = ctx.getBaseDir().toString();
         String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + DEPLOYMENT + File.separator + deploymentId
                 : rootDir + File.separator + DEPLOYMENT + File.separator + deploymentId;
-        jobSerDe.addClassPathURLs(downloadURLs(urls, deploymentDir, isNC));
+        jobSerDe.addClassPathURLs(downloadURLs(urls, deploymentDir, isNC, authHeader));
     }
 
     /**
@@ -171,10 +176,13 @@ public class DeploymentUtils {
      *            the deployment jar storage directory
      * @param isNC
      *            true is NC/false is CC
+     * @param authHeader
+     *            the {@code Authorization} header to fetch the URLs with, or {@code null} to fetch them without one
      * @return a list of local file URLs
      * @throws HyracksException
      */
-    private static List<URL> downloadURLs(List<URL> urls, String deploymentDir, boolean isNC) throws HyracksException {
+    private static List<URL> downloadURLs(List<URL> urls, String deploymentDir, boolean isNC, String authHeader)
+            throws HyracksException {
         //retry 10 times at maximum for downloading binaries
         int retryCount = 10;
         int tried = 0;
@@ -196,8 +204,15 @@ public class DeploymentUtils {
                     if (isNC) {
                         HttpClient hc = HttpClientBuilder.create().build();
                         HttpGet get = new HttpGet(url.toString());
+                        if (authHeader != null) {
+                            get.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+                        }
                         HttpResponse response = hc.execute(get);
                         HttpEntity e = response.getEntity();
+                        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                            EntityUtils.consumeQuietly(e);
+                            throw new HyracksException(url + ": " + response.getStatusLine());
+                        }
                         OutputStream os = new FileOutputStream(targetFile);
                         try {
                             e.writeTo(os);

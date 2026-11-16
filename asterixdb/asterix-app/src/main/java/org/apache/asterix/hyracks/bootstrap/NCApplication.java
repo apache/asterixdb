@@ -42,7 +42,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExtension;
-import org.apache.asterix.api.http.server.BasicAuthServlet;
 import org.apache.asterix.api.http.server.BasicAuthServletFactory;
 import org.apache.asterix.api.http.server.CredentialFileUtil;
 import org.apache.asterix.api.http.server.IDelegatingServletFactory;
@@ -114,6 +113,7 @@ import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.server.BasicAuthServlet;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.HttpServerConfig;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
@@ -293,13 +293,16 @@ public class NCApplication extends BaseNCApplication {
         apiServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getNcApiPort(),
                 config);
         boolean authEnabled = externalProperties.isApiAuthenticationEnabled();
-        apiServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
+        Map<String, String> storedCredentials =
                 CredentialFileUtil.load(((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration()
-                        .getCredentialFilePath(), authEnabled));
+                        .getCredentialFilePath(), authEnabled);
+        apiServer.setAttribute(ServletConstants.CREDENTIAL_MAP, storedCredentials);
         // the system credentials are needed even with authentication off: the UDF endpoints, which other nodes
         // call with them, stay authenticated regardless
-        Pair<Map<String, String>, Map<String, String>> auth = BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
-        IDelegatingServletFactory udfAuthFactory = new BasicAuthServletFactory(auth.getLeft(), auth.getRight());
+        Pair<String, Map<String, String>> sysCredential = BasicAuthServlet.generateSystemCredential(storedCredentials);
+        apiServer.setAttribute(SYS_AUTH_HEADER, sysCredential.getLeft());
+        IDelegatingServletFactory udfAuthFactory =
+                new BasicAuthServletFactory(storedCredentials, sysCredential.getRight());
         IDelegatingServletFactory authFactory = authEnabled ? udfAuthFactory : null;
         apiServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ncServiceCtx);
         apiServer.setAttribute(HYRACKS_CONNECTION_ATTR, getApplicationContext().getHcc());

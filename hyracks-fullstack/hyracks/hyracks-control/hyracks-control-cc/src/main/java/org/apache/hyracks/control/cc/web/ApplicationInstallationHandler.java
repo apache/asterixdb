@@ -61,7 +61,7 @@ public class ApplicationInstallationHandler extends AbstractServlet {
             localPath = localPath.substring(1);
         }
         final String[] params = localPath.split("&");
-        if (params.length != 2 || params[0].isEmpty() || params[1].isEmpty()) {
+        if (params.length != 2 || !isFileName(params[0]) || !isFileName(params[1])) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
@@ -87,6 +87,11 @@ public class ApplicationInstallationHandler extends AbstractServlet {
             LOGGER.log(Level.WARN, "Unhandled exception ", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private static boolean isFileName(String name) {
+        return !name.isEmpty() && !".".equals(name) && !"..".equals(name) && name.indexOf('/') < 0
+                && name.indexOf('\\') < 0 && name.indexOf('\0') < 0;
     }
 
     protected void readFromFile(final String fileName, final String deploymentDir, IServletResponse response)

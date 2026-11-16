@@ -21,6 +21,7 @@ package org.apache.asterix.api.http.server;
 import java.util.Map;
 
 import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.server.BasicAuthServlet;
 
 public class BasicAuthServletFactory implements IDelegatingServletFactory {
     Map<String, String> storedCredentials;

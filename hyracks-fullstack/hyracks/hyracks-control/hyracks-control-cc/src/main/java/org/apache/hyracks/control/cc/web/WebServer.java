@@ -18,12 +18,16 @@
  */
 package org.apache.hyracks.control.cc.web;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
 import org.apache.hyracks.control.cc.web.util.JSONOutputRequestHandler;
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.server.BasicAuthServlet;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.StaticResourceServlet;
@@ -35,10 +39,27 @@ public class WebServer {
     private final ConcurrentMap<String, Object> ctx;
     private final WebManager webMgr;
     private final HttpServer server;
+    private final Map<String, String> credentials;
+    private final Map<String, String> systemCredentials;
+    private final String systemAuthHeader;
 
-    public WebServer(ClusterControllerService ccs, int port) throws Exception {
+    /**
+     * @param credentials
+     *            the credentials the endpoints require, keyed by user name, each a bcrypt hash of the user's password;
+     *            or {@code null} to leave them unauthenticated
+     */
+    public WebServer(ClusterControllerService ccs, int port, Map<String, String> credentials) throws Exception {
         this.ccs = ccs;
         listeningPort = port;
+        this.credentials = credentials;
+        if (credentials != null) {
+            Pair<String, Map<String, String>> systemCredential = BasicAuthServlet.generateSystemCredential(credentials);
+            systemAuthHeader = systemCredential.getLeft();
+            systemCredentials = systemCredential.getRight();
+        } else {
+            systemAuthHeader = null;
+            systemCredentials = null;
+        }
         ctx = new ConcurrentHashMap<>();
         webMgr = new WebManager();
         server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), listeningPort,
@@ -51,13 +72,26 @@ public class WebServer {
         addJSONHandler("/rest/jobs/*", new JobsRESTAPIFunction(ccs));
         addJSONHandler("/rest/nodes/*", new NodesRESTAPIFunction(ccs));
         addJSONHandler("/rest/statedump", new StateDumpRESTAPIFunction(ccs));
-        server.addServlet(new StartNodeApiServlet(ctx, new String[] { "/rest/startnode" }, ccs));
+        addAuthenticatedServlet(new StartNodeApiServlet(ctx, new String[] { "/rest/startnode" }, ccs));
         server.addServlet(new StaticResourceServlet(ctx, new String[] { "/static/*" }));
-        server.addServlet(new ApplicationInstallationHandler(ctx, new String[] { "/applications/*" }, ccs));
+        addAuthenticatedServlet(new ApplicationInstallationHandler(ctx, new String[] { "/applications/*" }, ccs));
     }
 
     private void addJSONHandler(String path, IJSONOutputFunction fn) {
-        server.addServlet(new JSONOutputRequestHandler(ctx, new String[] { path }, fn));
+        addAuthenticatedServlet(new JSONOutputRequestHandler(ctx, new String[] { path }, fn));
+    }
+
+    private void addAuthenticatedServlet(IServlet servlet) {
+        server.addServlet(
+                credentials == null ? servlet : new BasicAuthServlet(servlet, credentials, systemCredentials));
+    }
+
+    /**
+     * @return the {@code Authorization} header with which the node controllers fetch deployed binaries from this
+     *         server, or {@code null} if it is unauthenticated
+     */
+    public String getSystemAuthHeader() {
+        return systemAuthHeader;
     }
 
     public int getListeningPort() {

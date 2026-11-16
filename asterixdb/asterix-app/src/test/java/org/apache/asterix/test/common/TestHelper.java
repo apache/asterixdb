@@ -39,7 +39,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.asterix.api.http.server.BasicAuthServlet;
 import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.om.base.IAObject;
@@ -52,6 +51,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
+import org.apache.hyracks.http.server.BasicAuthServlet;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

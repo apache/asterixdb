@@ -41,12 +41,15 @@ public class DeployBinaryWork extends AbstractWork {
     private final DeploymentId deploymentId;
     private final NodeControllerService ncs;
     private final List<URL> binaryURLs;
+    private final String authHeader;
     private final CcId ccId;
 
-    public DeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId) {
+    public DeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, List<URL> binaryURLs,
+            String authHeader, CcId ccId) {
         this.deploymentId = deploymentId;
         this.ncs = ncs;
         this.binaryURLs = binaryURLs;
+        this.authHeader = authHeader;
         this.ccId = ccId;
     }
 
@@ -55,7 +58,7 @@ public class DeployBinaryWork extends AbstractWork {
         DeploymentStatus status;
         try {
             DeploymentUtils.deploy(deploymentId, binaryURLs, ncs.getContext().getJobSerializerDeserializerContainer(),
-                    ncs.getServerContext(), true);
+                    ncs.getServerContext(), true, authHeader);
             status = DeploymentStatus.SUCCEED;
         } catch (Exception e) {
             status = DeploymentStatus.FAIL;

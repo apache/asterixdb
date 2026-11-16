@@ -25,10 +25,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.deployment.DeploymentRun;
+import org.apache.hyracks.control.common.deployment.DeploymentStatus;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
@@ -66,7 +68,7 @@ public class CliDeployBinaryWork extends SynchronizableWork {
              * Deploy for the cluster controller
              */
             DeploymentUtils.deploy(deploymentId, binaryURLs, ccs.getContext().getJobSerializerDeserializerContainer(),
-                    ccs.getServerContext(), false);
+                    ccs.getServerContext(), false, null);
 
             /**
              * Deploy for the node controllers
@@ -81,8 +83,9 @@ public class CliDeployBinaryWork extends SynchronizableWork {
             /***
              * deploy binaries to each node controller
              */
+            String authHeader = ccs.getWebServer().getSystemAuthHeader();
             for (NodeControllerState ncs : nodeManager.getAllNodeControllerStates()) {
-                ncs.getNodeController().deployBinary(deploymentId, binaryURLs);
+                ncs.getNodeController().deployBinary(deploymentId, binaryURLs, authHeader);
             }
 
             ccs.getExecutor().execute(new Runnable() {
@@ -92,9 +95,14 @@ public class CliDeployBinaryWork extends SynchronizableWork {
                         /**
                          * wait for completion
                          */
-                        dRun.waitForCompletion();
+                        DeploymentStatus status = dRun.waitForCompletion();
                         ccs.removeDeploymentRun(deploymentId);
-                        callback.setValue(deploymentId);
+                        if (status == DeploymentStatus.SUCCEED) {
+                            callback.setValue(deploymentId);
+                        } else {
+                            callback.setException(
+                                    new HyracksException("Failed to deploy " + deploymentId + " on a node controller"));
+                        }
                     } catch (Exception e) {
                         callback.setException(e);
                     }

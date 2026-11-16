@@ -52,7 +52,11 @@ public interface INodeController {
 
     void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception;
 
-    void deployBinary(DeploymentId deploymentId, List<URL> url) throws Exception;
+    /**
+     * @param authHeader
+     *            the {@code Authorization} header to fetch the URLs with, or {@code null} to fetch them without one
+     */
+    void deployBinary(DeploymentId deploymentId, List<URL> url, String authHeader) throws Exception;
 
     void undeployBinary(DeploymentId deploymentId) throws Exception;
 

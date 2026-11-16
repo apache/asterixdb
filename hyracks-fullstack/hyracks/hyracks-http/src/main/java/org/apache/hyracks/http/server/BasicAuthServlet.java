@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.http.server;
-
-import static org.apache.asterix.api.http.server.ServletConstants.*;
+package org.apache.hyracks.http.server;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -71,19 +69,22 @@ public class BasicAuthServlet implements IServlet {
         this.ephemeralCredentials = ephemeralCredentials;
     }
 
-    public static Pair<Map<String, String>, Map<String, String>> generateSysAuthHeader(
-            ConcurrentMap<String, Object> ctx) {
-        Map<String, String> storedCredentials = (Map<String, String>) ctx.get(CREDENTIAL_MAP);
-        // generate internal user
+    /**
+     * Generates a random system credential, distinct from every stored user, for servers to call each other with.
+     *
+     * @param storedCredentials
+     *            the stored credentials, keyed by user name
+     * @return the {@code Authorization} header that carries the system credential, and the ephemeral credentials,
+     *         keyed by user name, that accept it; these only authorize GET requests
+     */
+    public static Pair<String, Map<String, String>> generateSystemCredential(Map<String, String> storedCredentials) {
         String sysUser;
         do {
             sysUser = generateRandomString(32);
         } while (storedCredentials.containsKey(sysUser));
         String sysPassword = generateRandomString(128);
-        Map<String, String> ephemeralCredentials = Collections.singletonMap(sysUser, hashPassword(sysPassword));
-        String sysAuthHeader = createAuthHeader(sysUser, sysPassword);
-        ctx.put(SYS_AUTH_HEADER, sysAuthHeader);
-        return Pair.of(storedCredentials, ephemeralCredentials);
+        return Pair.of(createAuthHeader(sysUser, sysPassword),
+                Collections.singletonMap(sysUser, hashPassword(sysPassword)));
     }
 
     @Override
@@ -186,7 +187,7 @@ public class BasicAuthServlet implements IServlet {
     }
 
     private static String generateRandomString(int size) {
-        return RandomStringUtils.randomAlphanumeric(size);
+        return RandomStringUtils.secure().nextAlphanumeric(size);
     }
 
     @Override
