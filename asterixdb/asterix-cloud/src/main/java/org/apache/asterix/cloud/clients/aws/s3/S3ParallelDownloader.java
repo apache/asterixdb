@@ -40,6 +40,7 @@ import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import io.netty.handler.ssl.SslProvider;
 import software.amazon.awssdk.http.SdkHttpConfigurationOption;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
@@ -250,7 +251,12 @@ class S3ParallelDownloader extends AbstractParallelDownloader {
             nettyBuilder.connectionTimeToLive(Duration.ofSeconds(config.getMaxLifetimeSeconds()));
         }
 
-        if (!config.isDisableSslVerify() && !config.getCertificates().isEmpty()) {
+        if (config.isDisableSslVerify()) {
+            // with netty-tcnative present Netty defaults to BoringSSL, which enforces the server certificate's
+            // keyUsage inside the handshake, past the trust manager; it would refuse an endpoint the synchronous
+            // client (JDK TLS, same trust-all setting) accepts, so match that client's TLS stack
+            nettyBuilder.sslProvider(SslProvider.JDK);
+        } else if (!config.getCertificates().isEmpty()) {
             nettyBuilder.tlsTrustManagersProvider(S3TrustManagerProvider.create(config.getCertificates()));
         }
 
