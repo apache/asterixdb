@@ -57,4 +57,9 @@ public class OptimizedScalarQuantizer implements IVTreeQuantizer {
         // Leaf storage uses byte[] when params.bits <= 8 (SQ4/SQ8); params come from index metadata.
         return OptimizedScalarQuantizationCodec.dequantizeToDoubleArray(quantizedBytes, params);
     }
+
+    @Override
+    public void dequantize(byte[] data, int offset, int length, double[] dst) throws HyracksDataException {
+        OptimizedScalarQuantizationCodec.dequantizeInto(data, offset, length, params, dst);
+    }
 }

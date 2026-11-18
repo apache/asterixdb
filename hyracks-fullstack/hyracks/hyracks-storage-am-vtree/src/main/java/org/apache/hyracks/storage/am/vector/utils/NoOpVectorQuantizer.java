@@ -18,10 +18,9 @@
  */
 package org.apache.hyracks.storage.am.vector.utils;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.storage.am.vector.api.IVTreeQuantizer;
 
 /**
@@ -40,20 +39,35 @@ public class NoOpVectorQuantizer implements IVTreeQuantizer {
 
     @Override
     public double[] dequantize(byte[] quantizedBytes) throws HyracksDataException {
+        double[] vector = new double[checkedCount(quantizedBytes.length)];
+        decode(quantizedBytes, 0, vector.length, vector);
+        return vector;
+    }
+
+    @Override
+    public void dequantize(byte[] data, int offset, int length, double[] dst) throws HyracksDataException {
+        int count = checkedCount(length);
+        if (count > dst.length) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "The dequantized vector has " + count + " dimensions but the destination holds only " + dst.length);
+        }
+        decode(data, offset, count, dst);
+    }
+
+    private static int checkedCount(int length) throws HyracksDataException {
         // Identity dequantize reads whole big-endian doubles; a non-multiple-of-8 length means the
         // caller failed to strip a length prefix (or passed a truncated buffer). Fail loudly here
         // (test-only helper) rather than silently dropping trailing bytes.
-        if (quantizedBytes.length % Double.BYTES != 0) {
-            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "The quantized vector is "
-                    + quantizedBytes.length + " bytes, which is not a multiple of " + Double.BYTES);
+        if (length % Double.BYTES != 0) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "The quantized vector is " + length + " bytes, which is not a multiple of " + Double.BYTES);
         }
-        int count = quantizedBytes.length / Double.BYTES;
+        return length / Double.BYTES;
+    }
 
-        ByteBuffer buf = ByteBuffer.wrap(quantizedBytes);
-        double[] vector = new double[count];
+    private static void decode(byte[] data, int offset, int count, double[] dst) {
         for (int i = 0; i < count; i++) {
-            vector[i] = buf.getDouble();
+            dst[i] = DoublePointable.getDouble(data, offset + i * Double.BYTES);
         }
-        return vector;
     }
 }
