@@ -20,6 +20,7 @@ package org.apache.asterix.external.library;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -28,10 +29,12 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -186,11 +189,84 @@ public class HttpFunctionConnectionManagerTest {
         }
     }
 
+    @Test
+    public void sendsThroughTheProxyOfThePolicy() throws Exception {
+        try (ServerSocket proxy = new ServerSocket(0, 50, InetAddress.getLoopbackAddress())) {
+            CompletableFuture<String> requestLine = new CompletableFuture<>();
+            Thread acceptor = new Thread(() -> answerOnce(proxy, requestLine));
+            acceptor.setDaemon(true);
+            acceptor.start();
+            ProxyPolicy policy = new ProxyPolicy(URI.create("http://127.0.0.1:" + proxy.getLocalPort()), null);
+            // never resolved here: the proxy resolves it, and the policy refuses every address it is asked about
+            String target = "http://target.invalid:8080/x";
+            try (CloseableHttpClient proxied = HttpFunctionConnectionManager.createClient(policy)) {
+                assertEquals(HttpStatus.SC_OK, (int) execute(proxied, new HttpGet(target), LONG_TIMEOUT_MILLIS,
+                        response -> response.getStatusLine().getStatusCode()));
+            }
+            assertEquals("GET " + target + " HTTP/1.1", requestLine.get(MAX_CANCEL_MILLIS, TimeUnit.MILLISECONDS));
+            assertEquals(List.of("target.invalid via " + policy.proxy), policy.checked);
+        }
+    }
+
+    @Test
+    public void tunnelsHttpsThroughTheProxyOfThePolicy() throws Exception {
+        try (ServerSocket proxy = new ServerSocket(0, 50, InetAddress.getLoopbackAddress())) {
+            CompletableFuture<String> requestLine = new CompletableFuture<>();
+            Thread acceptor = new Thread(() -> answerOnce(proxy, requestLine));
+            acceptor.setDaemon(true);
+            acceptor.start();
+            ProxyPolicy policy = new ProxyPolicy(URI.create("http://127.0.0.1:" + proxy.getLocalPort()), null);
+            try (CloseableHttpClient proxied = HttpFunctionConnectionManager.createClient(policy)) {
+                // the stand-in proxy opens the tunnel, then closes it before TLS can start
+                execute(proxied, new HttpGet("https://target.invalid/x"), LONG_TIMEOUT_MILLIS, response -> null);
+                fail("expected the TLS handshake to fail");
+            } catch (HyracksDataException e) {
+                assertEquals(ErrorCode.EXTERNAL_HTTP_FUNCTION_REQUEST_FAILED.intValue(), e.getErrorCode());
+            }
+            assertEquals("CONNECT target.invalid:443 HTTP/1.1",
+                    requestLine.get(MAX_CANCEL_MILLIS, TimeUnit.MILLISECONDS));
+            assertEquals(List.of("target.invalid via " + policy.proxy), policy.checked);
+        }
+    }
+
+    @Test
+    public void refusedRequestIsNotSent() throws Exception {
+        HyracksDataException refusal = new HyracksDataException("refused");
+        ProxyPolicy policy = new ProxyPolicy(null, refusal);
+        try (CloseableHttpClient refusing = HttpFunctionConnectionManager.createClient(policy)) {
+            execute(refusing, new HttpGet(url), LONG_TIMEOUT_MILLIS, response -> null);
+            fail("expected the policy to refuse the request");
+        } catch (HyracksDataException e) {
+            assertSame(refusal, e);
+        }
+        assertEquals(List.of("127.0.0.1 via null"), policy.checked);
+        assertEquals(0, connections.get());
+    }
+
+    @Test
+    public void refusedProxiedRequestIsNotSent() throws Exception {
+        HyracksDataException refusal = new HyracksDataException("refused");
+        // the hanging server stands in for the proxy
+        ProxyPolicy policy = new ProxyPolicy(URI.create("http://127.0.0.1:" + server.getLocalPort()), refusal);
+        try (CloseableHttpClient refusing = HttpFunctionConnectionManager.createClient(policy)) {
+            execute(refusing, new HttpGet("http://target.invalid/x"), LONG_TIMEOUT_MILLIS, response -> null);
+            fail("expected the policy to refuse the request");
+        } catch (HyracksDataException e) {
+            assertSame(refusal, e);
+        }
+        assertEquals(0, connections.get());
+    }
+
     private int get(String url) throws HyracksDataException {
         return execute(new HttpGet(url), LONG_TIMEOUT_MILLIS, response -> response.getStatusLine().getStatusCode());
     }
 
     private <T> T execute(HttpGet request, long timeoutMillis, ResponseHandler<T> handler) throws HyracksDataException {
+        return execute(client, request, timeoutMillis, handler);
+    }
+
+    private static <T> T execute(CloseableHttpClient client, HttpGet request, long timeoutMillis,
+            ResponseHandler<T> handler) throws HyracksDataException {
         return HttpFunctionConnectionManager.execute(client, request, HttpClientContext.create(),
                 System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis), handler, null,
                 request.getURI().toString(), (int) TimeUnit.MILLISECONDS.toSeconds(timeoutMillis));
@@ -215,6 +291,57 @@ public class HttpFunctionConnectionManagerTest {
                 socket.getOutputStream().flush();
             } catch (IOException e) {
                 return;
+            }
+        }
+    }
+
+    // answers the first request of the first connection, handing over its request line
+    private static void answerOnce(ServerSocket server, CompletableFuture<String> requestLine) {
+        try (Socket socket = server.accept()) {
+            InputStream in = socket.getInputStream();
+            StringBuilder head = new StringBuilder();
+            while (head.indexOf("\r\n\r\n") < 0) {
+                int b = in.read();
+                if (b < 0) {
+                    break;
+                }
+                head.append((char) b);
+            }
+            requestLine.complete(head.substring(0, Math.max(0, head.indexOf("\r\n"))));
+            socket.getOutputStream().write(KEEP_ALIVE_RESPONSE);
+            socket.getOutputStream().flush();
+        } catch (IOException e) {
+            requestLine.completeExceptionally(e);
+        }
+    }
+
+    // sends through a proxy, records each request it is asked about, and refuses every address it is asked about
+    private static final class ProxyPolicy implements IHttpEgressPolicy {
+
+        private final URI proxy;
+        private final HyracksDataException refusal;
+        private final List<String> checked = new CopyOnWriteArrayList<>();
+
+        private ProxyPolicy(URI proxy, HyracksDataException refusal) {
+            this.proxy = proxy;
+            this.refusal = refusal;
+        }
+
+        @Override
+        public void checkAddresses(String host, InetAddress[] addresses) throws HyracksDataException {
+            throw new HyracksDataException("no direct connection to " + host);
+        }
+
+        @Override
+        public URI getProxy() {
+            return proxy;
+        }
+
+        @Override
+        public void checkRequest(String host, URI proxy) throws HyracksDataException {
+            checked.add(host + " via " + proxy);
+            if (refusal != null) {
+                throw refusal;
             }
         }
     }

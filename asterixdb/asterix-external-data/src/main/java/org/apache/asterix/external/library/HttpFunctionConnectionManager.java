@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.concurrent.ScheduledFuture;
@@ -37,14 +38,19 @@ import org.apache.asterix.common.functions.HttpFunctionConstants;
 import org.apache.asterix.common.functions.IHttpEgressPolicy;
 import org.apache.asterix.external.util.TlsUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.DnsResolver;
+import org.apache.http.conn.routing.RouteInfo;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
@@ -52,6 +58,8 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.DefaultRoutePlanner;
+import org.apache.http.impl.conn.DefaultSchemePortResolver;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.http.protocol.HttpContext;
@@ -83,13 +91,14 @@ public final class HttpFunctionConnectionManager {
     }
 
     /**
-     * Creates a pooled client that connects only to addresses {@code policy} allows, follows no redirect, keeps no
-     * cookie and ignores the JVM's proxy settings. It resends a request once when its pooled connection turns out to
-     * be closed, unless the request has a body that may have been sent, and never after a timeout, an abort, or a
-     * failure to resolve the host, connect to it or set up TLS.
+     * Creates a pooled client that sends only the requests {@code policy} allows, directly or through the proxy it
+     * names, connects directly only to addresses it allows, follows no redirect, keeps no cookie and ignores the
+     * JVM's proxy settings. It resends a request once when its pooled connection turns out to be closed, unless the
+     * request has a body that may have been sent, and never after a timeout, an abort, or a failure to resolve the
+     * host, connect to it or set up TLS.
      *
-     * @param policy the policy every address a host name resolves to is checked against, before a connection is
-     *        opened to it
+     * @param policy the policy each request is checked against before it is sent, and every address a host name
+     *        resolves to before a connection is opened directly to it
      */
     public static CloseableHttpClient createClient(IHttpEgressPolicy policy) {
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(
@@ -99,8 +108,8 @@ public final class HttpFunctionConnectionManager {
                 null, null, new PolicyDnsResolver(policy), CONNECTION_TIME_TO_LIVE_SECONDS, TimeUnit.SECONDS);
         connectionManager.setMaxTotal(MAX_CONNECTIONS);
         connectionManager.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
-        return HttpClients.custom().setConnectionManager(connectionManager).disableRedirectHandling()
-                .disableCookieManagement()
+        return HttpClients.custom().setConnectionManager(connectionManager)
+                .setRoutePlanner(new PolicyRoutePlanner(policy)).disableRedirectHandling().disableCookieManagement()
                 .setRetryHandler(new DefaultHttpRequestRetryHandler(STALE_CONNECTION_RETRIES, false))
                 .evictIdleConnections(MAX_IDLE_SECONDS, TimeUnit.SECONDS).build();
     }
@@ -140,6 +149,9 @@ public final class HttpFunctionConnectionManager {
             // an error the response raised, already in its final form
             throw e;
         } catch (IOException e) {
+            if (e instanceof ClientProtocolException && e.getCause() instanceof RequestRefusedException refused) {
+                throw refused.getRefusal();
+            }
             if (caller.isInterrupted()) {
                 // the interrupt stays set, so that the job is reported as cancelled rather than as failed
                 InterruptedException interrupted = new InterruptedException();
@@ -245,8 +257,50 @@ public final class HttpFunctionConnectionManager {
     }
 
     /**
+     * Sends each request through the proxy of the egress policy, if it names one, once the policy has allowed the
+     * request.
+     */
+    private static final class PolicyRoutePlanner extends DefaultRoutePlanner {
+
+        private final IHttpEgressPolicy policy;
+
+        private PolicyRoutePlanner(IHttpEgressPolicy policy) {
+            super(DefaultSchemePortResolver.INSTANCE);
+            this.policy = policy;
+        }
+
+        @Override
+        protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context)
+                throws HttpException {
+            URI proxy;
+            try {
+                proxy = policy.getProxy();
+                policy.checkRequest(target.getHostName(), proxy);
+            } catch (HyracksDataException e) {
+                throw new RequestRefusedException(e);
+            }
+            return proxy == null ? null : resolveProxy(proxy);
+        }
+
+        // resolved here rather than by the client, whose resolver judges the addresses of the hosts requests go to
+        private static HttpHost resolveProxy(URI proxy) throws HttpException {
+            HttpHost host = URIUtils.extractHost(proxy);
+            if (host == null) {
+                throw new HttpException("Invalid proxy " + proxy);
+            }
+            try {
+                InetAddress address = SystemDefaultDnsResolver.INSTANCE.resolve(host.getHostName())[0];
+                return new HttpHost(address, host.getHostName(), host.getPort(), host.getSchemeName());
+            } catch (UnknownHostException e) {
+                throw new HttpException("Cannot resolve proxy " + host.getHostName(), e);
+            }
+        }
+    }
+
+    /**
      * Opens HTTPS connections with the socket factory of the request's context, which trusts the authorities of the
-     * request's endpoint, or with the JVM's if it has none. Either verifies the host name.
+     * request's endpoint, or with the JVM's if it has none. Either verifies the host name. A connection to an HTTPS
+     * proxy trusts the authorities the JVM does: those of the endpoint are not the proxy's.
      */
     private static final class ContextTrustSocketFactory implements LayeredConnectionSocketFactory {
 
@@ -260,7 +314,10 @@ public final class HttpFunctionConnectionManager {
         @Override
         public Socket connectSocket(int connectTimeout, Socket socket, HttpHost host, InetSocketAddress remoteAddress,
                 InetSocketAddress localAddress, HttpContext context) throws IOException {
-            return select(context).connectSocket(connectTimeout, socket, host, remoteAddress, localAddress, context);
+            RouteInfo route = HttpClientContext.adapt(context).getHttpRoute();
+            SSLConnectionSocketFactory factory =
+                    route != null && host.equals(route.getProxyHost()) ? DEFAULT : select(context);
+            return factory.connectSocket(connectTimeout, socket, host, remoteAddress, localAddress, context);
         }
 
         @Override
@@ -286,6 +343,23 @@ public final class HttpFunctionConnectionManager {
         private EgressRefusedException(String host, HyracksDataException refusal) {
             super(host);
             initCause(refusal);
+        }
+
+        private HyracksDataException getRefusal() {
+            return (HyracksDataException) getCause();
+        }
+    }
+
+    /**
+     * Carries a refusal of the egress policy out of the client's route planner, which may throw only
+     * {@link HttpException}.
+     */
+    private static final class RequestRefusedException extends HttpException {
+
+        private static final long serialVersionUID = 1L;
+
+        private RequestRefusedException(HyracksDataException refusal) {
+            super(refusal.getMessage(), refusal);
         }
 
         private HyracksDataException getRefusal() {
