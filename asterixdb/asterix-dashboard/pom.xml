@@ -73,7 +73,7 @@
             <version>2.0.2</version>
             <configuration>
               <nodeVersion>v24.14.1</nodeVersion>
-              <bunVersion>v1.3.11</bunVersion>
+              <bunVersion>v1.4.2</bunVersion>
               <workingDirectory>target/dashboard</workingDirectory>
               <installDirectory>target/dashboard</installDirectory>
             </configuration>
