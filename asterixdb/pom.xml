@@ -1755,6 +1755,11 @@
       </dependency>
       <!-- Azure Data Lake end -->
       <dependency>
+        <groupId>org.mindrot</groupId>
+        <artifactId>jbcrypt</artifactId>
+        <version>0.4</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
         <version>1.14.1</version>
