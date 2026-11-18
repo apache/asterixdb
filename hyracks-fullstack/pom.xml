@@ -80,10 +80,10 @@
     <netty.tcnative.version>2.0.85.Final</netty.tcnative.version>
     <asm.version>9.11.1</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
-    <awsjavasdk.version>2.59.2</awsjavasdk.version>
+    <awsjavasdk.version>2.59.3</awsjavasdk.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
-    <google-cloud-storage.version>2.78.0</google-cloud-storage.version>
+    <google-cloud-storage.version>2.79.0</google-cloud-storage.version>
     <!-- @derived-from: com.google.cloud:google-cloud-storage:${google-cloud-storage.version}#dep:google-cloud-core -->
     <google-cloud-core.version>2.80.0</google-cloud-core.version>
 
