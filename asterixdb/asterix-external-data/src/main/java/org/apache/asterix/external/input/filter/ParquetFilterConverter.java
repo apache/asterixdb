@@ -412,10 +412,9 @@ public class ParquetFilterConverter {
      * engine applies: a row stored at {@code .123456} reads back as {@code .123} and matches {@code = .123}, while
      * the rescaled predicate {@code = 123000} excludes the row group holding it. Rows go missing.
      * <p>
-     * Each operator below is the exact set of stored values whose narrowing satisfies it, mirroring
-     * {@code IcebergTableFilterBuilder#buildTruncatedTemporalComparison}; the same three branches are needed here
-     * for the same reason, that {@code TimeUnit} truncates toward zero rather than flooring, which makes the epoch
-     * millisecond double width and puts the window below it above its literal.
+     * The narrowing is a floor, so the stored values reading back as the literal are {@code [L, L + width)} on
+     * either side of the epoch, and each operator below is the exact set of stored values whose narrowing satisfies
+     * it, mirroring {@code IcebergTableFilterBuilder#buildTruncatedTemporalComparison}.
      *
      * @param literal the literal already rescaled into the column's unit
      * @param width   the chronon's width in that unit; 1 when the column is already milliseconds
@@ -428,31 +427,15 @@ public class ParquetFilterConverter {
             return compare(column, literal, operator);
         }
         if (literal > Long.MAX_VALUE - width || literal < Long.MIN_VALUE + width) {
-            // the window's far bound would wrap and invert the comparison; decline rather than push a bound that
-            // means the opposite. Reachable because TimeUnit saturates at the long bounds instead of overflowing.
+            // near the top the window's end would wrap and invert the comparison; near the bottom the literal may be
+            // a saturated stand-in for an earlier millisecond whose real window starts below Long.MIN_VALUE. Either
+            // way decline rather than push a bound that means something else.
             return drop(comparison, "temporal literal too close to the long bounds to widen");
         }
-        FilterPredicate atOrAfterStart, beforeEnd, beforeStart, atOrAfterEnd;
-        if (literal > 0) {
-            // truncation toward zero is a plain floor above the epoch, so the window runs upward: [L, L + width)
-            atOrAfterStart = FilterApi.gtEq(column, literal);
-            beforeEnd = FilterApi.lt(column, literal + width);
-            beforeStart = FilterApi.lt(column, literal);
-            atOrAfterEnd = FilterApi.gtEq(column, literal + width);
-        } else if (literal == 0) {
-            // the epoch millisecond is double width: both -999us and +999us narrow to 0, so the window is open at
-            // both ends, (-width, +width). Using the branch above here drops every row in the negative half.
-            atOrAfterStart = FilterApi.gt(column, -width);
-            beforeEnd = FilterApi.lt(column, width);
-            beforeStart = FilterApi.ltEq(column, -width);
-            atOrAfterEnd = FilterApi.gtEq(column, width);
-        } else {
-            // below the epoch, truncating toward zero rounds up, so the window runs downward: (L - width, L]
-            atOrAfterStart = FilterApi.gt(column, literal - width);
-            beforeEnd = FilterApi.ltEq(column, literal);
-            beforeStart = FilterApi.ltEq(column, literal - width);
-            atOrAfterEnd = FilterApi.gt(column, literal);
-        }
+        FilterPredicate atOrAfterStart = FilterApi.gtEq(column, literal);
+        FilterPredicate beforeEnd = FilterApi.lt(column, literal + width);
+        FilterPredicate beforeStart = FilterApi.lt(column, literal);
+        FilterPredicate atOrAfterEnd = FilterApi.gtEq(column, literal + width);
         switch (operator) {
             case EQ:
                 return FilterApi.and(atOrAfterStart, beforeEnd);

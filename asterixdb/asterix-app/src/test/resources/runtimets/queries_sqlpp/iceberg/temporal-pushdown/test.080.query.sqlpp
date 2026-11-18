@@ -17,5 +17,7 @@
  * under the License.
  */
 
--- One bucket below the epoch: -1500us truncates toward zero to -1ms.
+-- The millisecond just before the epoch holds -1000us .. -1us: id 9 sits exactly on it and id 6 (-500us)
+-- inside it. Id 7 (-1500us) belongs to the millisecond before. If the read path or the pushed window ran
+-- toward zero instead, id 6 would read back as the epoch and id 7 would match instead.
 SELECT e.id FROM temporalPrecision e WHERE e.ts = datetime("1969-12-31T23:59:59.999Z") ORDER BY e.id;

@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.AbstractComplexConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
+import org.apache.asterix.external.util.MillisecondChronon;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 
@@ -47,14 +48,18 @@ public class TimeConverter extends GenericPrimitiveConverter {
         parent.addValue(this);
     }
 
+    /**
+     * Narrows a time or timestamp to milliseconds through {@link MillisecondChronon}, which
+     * {@code ParquetFilterConverter} widens pushed predicates against.
+     */
     public static long getConvertedTime(LogicalTypeAnnotation.TimeUnit timeUnit, long value) {
         final long convertedTime;
         switch (timeUnit) {
             case MICROS:
-                convertedTime = TimeUnit.MICROSECONDS.toMillis(value);
+                convertedTime = MillisecondChronon.narrow(value, TimeUnit.MICROSECONDS);
                 break;
             case NANOS:
-                convertedTime = TimeUnit.NANOSECONDS.toMillis(value);
+                convertedTime = MillisecondChronon.narrow(value, TimeUnit.NANOSECONDS);
                 break;
             default:
                 //Millis

@@ -1407,6 +1407,12 @@
         <output-dir compare="Text">common/parquet-temporal-as-number</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet-pre-epoch-temporal">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet-pre-epoch-temporal</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="s3-include-exclude">
     <test-case FilePath="external-dataset">

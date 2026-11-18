@@ -1474,19 +1474,39 @@ public class IcebergTest {
         LOGGER.info("[WRITE] temporalZone committed with {} single-row files", instants.length);
     }
 
+    /**
+     * The same instant at both precisions, with and without a zone, and again inside a variant, so a query can aim
+     * at each read path separately. The nanosecond columns hold {@code micros * 1000 + 1}: the extra nanosecond never
+     * moves a value into another millisecond, but it does give an exact pre-1970 millisecond such as
+     * {@code -1000us} a sub-millisecond part at nanosecond scale ({@code -999999ns}).
+     */
     private static Schema temporalSchema() {
         return new Schema(Types.NestedField.optional(1, "id", Types.IntegerType.get()),
                 Types.NestedField.optional(2, "ts", Types.TimestampType.withZone()),
-                Types.NestedField.optional(3, "tsn", Types.TimestampType.withoutZone()));
+                Types.NestedField.optional(3, "tsn", Types.TimestampType.withoutZone()),
+                Types.NestedField.optional(4, "tsnz", Types.TimestampNanoType.withZone()),
+                Types.NestedField.optional(5, "tsnn", Types.TimestampNanoType.withoutZone()),
+                Types.NestedField.optional(6, "v", Types.VariantType.get()));
     }
 
     /** Appends one single-row data file, so the row is simultaneously its file's minimum and maximum. */
     private static void appendOneRowFile(Table table, AppendFiles append, String prefix, int id, long micros)
             throws Exception {
+        long nanos = Math.addExact(Math.multiplyExact(micros, 1000L), 1L);
+        OffsetDateTime atNanos = Instant.EPOCH.plus(nanos, ChronoUnit.NANOS).atOffset(ZoneOffset.UTC);
         GenericRecord rec = GenericRecord.create(table.schema());
         rec.setField("id", id);
         rec.setField("ts", utcMicros(micros));
         rec.setField("tsn", utcMicros(micros).toLocalDateTime());
+        rec.setField("tsnz", atNanos);
+        rec.setField("tsnn", atNanos.toLocalDateTime());
+        VariantMetadata metadata = Variants.metadata("ts", "ntz", "tsn", "ntzn");
+        ShreddedObject v = Variants.object(metadata);
+        v.put("ts", Variants.ofTimestamptz(micros));
+        v.put("ntz", Variants.ofTimestampntz(micros));
+        v.put("tsn", Variants.ofTimestamptzNanos(nanos));
+        v.put("ntzn", Variants.ofTimestampntzNanos(nanos));
+        rec.setField("v", Variant.of(metadata, v));
         String path = table.location() + "/data/" + prefix + id + ".parquet";
         OutputFile out = table.io().newOutputFile(path);
         try (FileAppender<Record> writer =
@@ -1503,9 +1523,10 @@ public class IcebergTest {
      * where an un-widened pushed predicate drops it.
      * <p>
      * Analytics reads these through {@code ADateTime}, which holds milliseconds, so ids 1-3 all read back as
-     * {@code 09:00:00.123} and a query for that millisecond must return all three. Ids 5 and 6 straddle the epoch,
-     * where {@code MICROSECONDS.toMillis} truncates <em>toward zero</em> and the {@code 0ms} bucket is therefore
-     * double width: both {@code +456us} and {@code -500us} read back as the epoch. Id 7 sits one bucket below it.
+     * {@code 09:00:00.123} and a query for that millisecond must return all three. Ids 5 to 10 sit around the epoch,
+     * where narrowing has to floor: {@code -500us} is {@code 1969-12-31T23:59:59.999}, not the epoch, and
+     * {@code -1876544us} is {@code 23:59:58.123}, not {@code .124}. Truncating toward zero would move each of them
+     * one millisecond later.
      * <p>
      * A wrong answer here is a short result, never an error: if {@code = .123} returns only id 2, the pushed
      * predicate is comparing the literal against untruncated microseconds again.
@@ -1519,9 +1540,12 @@ public class IcebergTest {
                 { 2, 1773565200123000L }, // .123  (exactly on the millisecond)
                 { 3, 1773565200123999L }, // .123  (last microsecond of it)
                 { 4, 1773565200124000L }, // .124  (the next millisecond)
-                { 5, 456L }, //              epoch
-                { 6, -500L }, //             epoch, from below - truncation toward zero
-                { 7, -1500L } }; //         -1ms
+                { 5, 456L }, //              1970-01-01T00:00:00.000
+                { 6, -500L }, //             1969-12-31T23:59:59.999
+                { 7, -1500L }, //            1969-12-31T23:59:59.998
+                { 8, -1876544L }, //         1969-12-31T23:59:58.123
+                { 9, -1000L }, //            1969-12-31T23:59:59.999  (exactly on the millisecond)
+                { 10, 0L } }; //            1970-01-01T00:00:00.000  (the epoch itself)
         AppendFiles append = table.newAppend();
         for (long[] row : rows) {
             appendOneRowFile(table, append, "tp-", (int) row[0], row[1]);

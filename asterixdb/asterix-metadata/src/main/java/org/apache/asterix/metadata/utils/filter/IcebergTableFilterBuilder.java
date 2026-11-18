@@ -355,7 +355,7 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
                         literalTag, value == null ? "null" : value.getClass());
                 return null;
             }
-            return buildTruncatedTemporalComparison(fid, columnName, (Long) value, literalTag == ATypeTag.TIME);
+            return buildTruncatedTemporalComparison(fid, columnName, (Long) value);
         }
         if (value instanceof String && isRange(fid) && StringOrder.rangeOrdersDifferently((String) value)) {
             // Iceberg prunes files and row groups by code point; the engine compares by UTF-16 code unit
@@ -419,60 +419,35 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
      * <p>
      * <b>Not measured</b>: {@code timestamp_ns} <em>without</em> time zone, and whether the {@code !=} disjunction
      * projects correctly onto the <em>ordered</em> transforms — it is covered for {@code bucket}.
+     * <p>
+     * <b>One window serves every literal.</b> The read path narrows with a floor ({@link MillisecondChronon#narrow}),
+     * so the stored values reading back as {@code L} are {@code [L, L + 1000)} before the epoch as well as after it,
+     * and for {@code TIME} as well as {@code DATETIME}: for {@code L = -1000} ({@code 1969-12-31T23:59:59.999Z})
+     * that is {@code -1000 .. -1}, so {@code -500} is admitted and {@code -1001} is not.
      *
-     * @param nonNegativeDomain {@code true} for {@code TIME}, whose values cannot be negative, so truncation is
-     *                          always a floor and the window is uniform.
      * @implNote package-private and static so {@code IcebergTemporalPredicateWideningTest} can evaluate the
      *           produced expression directly against stored values; it uses no instance state.
      */
-    static Expression buildTruncatedTemporalComparison(FunctionIdentifier fid, String columnName, long literal,
-            boolean nonNegativeDomain) {
+    static Expression buildTruncatedTemporalComparison(FunctionIdentifier fid, String columnName, long literal) {
         if (literal > Long.MAX_VALUE - MICROS_PER_MILLI || literal < Long.MIN_VALUE + MICROS_PER_MILLI) {
             // Handles literals within one millisecond of the long bounds, e.g. L = Long.MAX_VALUE: the upper bound
             // would be L + 1000, which wraps to Long.MIN_VALUE + 999 and inverts the comparison, so "before the end
             // of the millisecond" would suddenly mean "before the beginning of time". Reachable because
             // TimeUnit.toMicros SATURATES at the long bounds rather than overflowing, so an absurd datetime arrives
-            // here already clamped rather than as an out-of-range value. Push nothing rather than something
-            // meaningless -- declining loses pruning, pushing a wrapped bound loses rows.
+            // here already clamped rather than as an out-of-range value -- at the lower bound that clamped literal
+            // stands for an earlier millisecond whose real window starts below Long.MIN_VALUE. Push nothing rather
+            // than something meaningless -- declining loses pruning, pushing a wrong bound loses rows.
             LOGGER.debug("Temporal literal {} too close to the long bounds to widen, skipping pushdown", literal);
             return null;
         }
-        Expression atOrAfterStart, beforeEnd, beforeStart, atOrAfterEnd;
-        if (nonNegativeDomain || literal > 0) {
-            // Handles every TIME, and every DATETIME at or after 1970-01-01T00:00:00.001Z. Truncation toward zero is
-            // a plain floor for non-negative values, so the window runs UPWARD from the literal:
-            //   [L, L + 1000)  ->  for L = 1773565200123000, values 1773565200123000 .. 1773565200123999
-            // ...123456 and ...123999 are admitted (both read back as .123); ...124000 is not (it reads back as
-            // .124), and neither is ...122999. TIME joins this branch even at L = 0 because its domain is
-            // non-negative -- midnight's window is [0, 1000), never the double-width one below.
-            atOrAfterStart = Expressions.greaterThanOrEqual(columnName, literal);
-            beforeEnd = Expressions.lessThan(columnName, literal + MICROS_PER_MILLI);
-            beforeStart = Expressions.lessThan(columnName, literal);
-            atOrAfterEnd = Expressions.greaterThanOrEqual(columnName, literal + MICROS_PER_MILLI);
-        } else if (literal == 0) {
-            // Handles the epoch millisecond alone, which is DOUBLE WIDTH because truncation runs toward zero rather
-            // than flooring: toMillis(-999) == 0 and toMillis(999) == 0, so both sides of the epoch read back as
-            // 1970-01-01T00:00:00.000. The window is therefore open at both ends:
-            //   (-1000, +1000)  ->  values -999 .. 999
-            // -999 and +999 are admitted; -1000 is not (it reads back as -1ms) and 1000 is not (it reads back as
-            // +1ms). Using the branch above here would silently drop every row in the negative half.
-            atOrAfterStart = Expressions.greaterThan(columnName, -MICROS_PER_MILLI);
-            beforeEnd = Expressions.lessThan(columnName, MICROS_PER_MILLI);
-            beforeStart = Expressions.lessThanOrEqual(columnName, -MICROS_PER_MILLI);
-            atOrAfterEnd = Expressions.greaterThanOrEqual(columnName, MICROS_PER_MILLI);
-        } else {
-            // Handles every DATETIME before 1970-01-01T00:00:00.000Z, where truncating toward zero rounds UP (toward
-            // less negative), so the window runs DOWNWARD from the literal -- the mirror of the first branch:
-            //   (L - 1000, L]  ->  for L = -1000 (1969-12-31T23:59:59.999Z), values -1999 .. -1000
-            // -1999 and -1500 are admitted (both read back as -1ms); -2000 is not (it reads back as -2ms) and -999
-            // is not (it reads back as 0ms). This asymmetry is why the operators that are unsafe FLIP below the
-            // epoch: above it <= and = lose rows, at and below it >= and = do.
-            atOrAfterStart = Expressions.greaterThan(columnName, literal - MICROS_PER_MILLI);
-            beforeEnd = Expressions.lessThanOrEqual(columnName, literal);
-            beforeStart = Expressions.lessThanOrEqual(columnName, literal - MICROS_PER_MILLI);
-            atOrAfterEnd = Expressions.greaterThan(columnName, literal);
-        }
-        // Each operator below is the EXACT set of stored values whose truncation satisfies it, not an
+        // The window [L, L + 1000): for L = 1773565200123000, values 1773565200123000 .. 1773565200123999.
+        // ...123456 and ...123999 are admitted (both read back as .123); ...124000 is not (it reads back as .124),
+        // and neither is ...122999.
+        Expression atOrAfterStart = Expressions.greaterThanOrEqual(columnName, literal);
+        Expression beforeEnd = Expressions.lessThan(columnName, literal + MICROS_PER_MILLI);
+        Expression beforeStart = Expressions.lessThan(columnName, literal);
+        Expression atOrAfterEnd = Expressions.greaterThanOrEqual(columnName, literal + MICROS_PER_MILLI);
+        // Each operator below is the EXACT set of stored values whose narrowing satisfies it, not an
         // over-approximation -- see this method's javadoc for why exactness is what makes NOT compose. Values quoted
         // are for the worked example L = 1773565200123000 (window [...123000, ...124000)).
         if (fid.equals(AlgebricksBuiltinFunctions.EQ)) {
@@ -485,7 +460,7 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
             return Expressions.or(beforeStart, atOrAfterEnd);
         } else if (fid.equals(AlgebricksBuiltinFunctions.LT)) {
             // Handles "< L": strictly below the window's start, because anything inside it reads back AS L and so
-            // is not less than it -- < 1773565200123000. Unchanged from the un-widened form above the epoch.
+            // is not less than it -- < 1773565200123000. The same bound as the un-widened form.
             return beforeStart;
         } else if (fid.equals(AlgebricksBuiltinFunctions.LE)) {
             // Handles "<= L": everything up to the window's end, so ...123999 is included even though it is
@@ -496,8 +471,8 @@ public class IcebergTableFilterBuilder extends AbstractFilterBuilder {
             // greater -- >= 1773565200124000. The un-widened form over-read here rather than losing rows.
             return atOrAfterEnd;
         } else if (fid.equals(AlgebricksBuiltinFunctions.GE)) {
-            // Handles ">= L": from the window's start upward -- >= 1773565200123000. Correct above the epoch even
-            // un-widened, which is why this defect looked narrower than it was until the negative cases were run.
+            // Handles ">= L": from the window's start upward -- >= 1773565200123000. The same bound as the
+            // un-widened form.
             return atOrAfterStart;
         }
         // Any other function identifier (a logical connective, startsWith, an unmodelled comparison): decline, so

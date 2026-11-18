@@ -25,9 +25,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -35,7 +37,7 @@ import java.util.stream.Stream;
 import org.apache.asterix.external.input.filter.ParquetFilterConverter.ReadOptions;
 import org.apache.asterix.external.input.filter.ParquetFilterExpression.Comparison;
 import org.apache.asterix.external.input.filter.ParquetFilterExpression.Operator;
-import org.apache.asterix.external.util.MillisecondChronon;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.TimeConverter;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -187,16 +189,22 @@ public class ParquetFilterConverterTest {
     }
 
     /**
-     * Truncation runs toward zero rather than flooring, so the epoch millisecond is double width and the window
-     * below the epoch sits above its literal. Getting either branch wrong drops rows on one side of 1970 only.
+     * The reader floors, so the window runs upward from the literal on both sides of 1970: the epoch millisecond is
+     * {@code [0, 1000)} and {@code 1969-12-31T23:59:59.999} is {@code [-1000, 0)}.
      */
     @Test
-    public void epochAndPreEpochWindowsFollowTruncationTowardZero() {
+    public void epochAndPreEpochWindowsRunUpwardFromTheLiteral() {
         MessageType micros = timestampSchema(LogicalTypeAnnotation.TimeUnit.MICROS);
-        assertEquals("and(gt(ts, -1000), lt(ts, 1000))",
+        assertEquals("and(gteq(ts, 0), lt(ts, 1000))",
                 toParquetFilter(micros, equals("ts", ATypeTag.DATETIME, 0L)).toString());
-        assertEquals("and(gt(ts, -2000), lteq(ts, -1000))",
+        assertEquals("and(gteq(ts, -1000), lt(ts, 0))",
                 toParquetFilter(micros, equals("ts", ATypeTag.DATETIME, -1L)).toString());
+        assertEquals("lt(ts, -1000)",
+                toParquetFilter(micros, comparison(new String[] { "ts" }, Operator.LT, ATypeTag.DATETIME, -1L))
+                        .toString());
+        assertEquals("gteq(ts, 0)",
+                toParquetFilter(micros, comparison(new String[] { "ts" }, Operator.GT, ATypeTag.DATETIME, -1L))
+                        .toString());
     }
 
     @Test
@@ -206,11 +214,12 @@ public class ParquetFilterConverterTest {
                 toParquetFilter(nanos, equals("ts", ATypeTag.DATETIME, 1L)).toString());
     }
 
-    /** Within one millisecond of the long bounds the far bound would wrap and invert the comparison. */
+    /** Within one millisecond of the long bounds the window's bounds stop meaning what they say. */
     @Test
     public void temporalLiteralAtTheLongBoundsIsDropped() {
         MessageType micros = timestampSchema(LogicalTypeAnnotation.TimeUnit.MICROS);
         assertNull(toParquetFilter(micros, equals("ts", ATypeTag.DATETIME, Long.MAX_VALUE / 1000)));
+        assertNull(toParquetFilter(micros, equals("ts", ATypeTag.DATETIME, Long.MIN_VALUE / 1000)));
     }
 
     /**
@@ -338,33 +347,49 @@ public class ParquetFilterConverterTest {
     }
 
     /**
-     * Reads a real file whose one row carries a sub-millisecond remainder, which is the case the un-widened form
-     * lost: the row reads back as the literal, so it must survive every comparison the engine would match.
+     * Reads real files whose one row carries a sub-millisecond remainder, which is the case the un-widened form
+     * lost: the row reads back as the literal, so it must survive every comparison the engine would match. The
+     * millisecond the engine sees comes from the reader's own conversion, so this fails if the reader and the
+     * window disagree about which millisecond a stored value belongs to -- the pre-1970 values are where a reader
+     * that truncates toward zero and a window that floors part company.
      */
     @Test
     public void subMillisecondRowSurvivesItsOwnMillisecond() throws Exception {
+        // epoch microseconds; -500 and -1876544 are 1969-12-31T23:59:59.9995 and 23:59:58.123456
+        long[] storedMicros = { 1_000_456L, 456L, 0L, -1L, -500L, -1000L, -1_876_544L };
         File directory = Files.createTempDirectory("parquet-temporal-window").toFile();
         try {
-            Path file = new Path(new File(directory, "ts.parquet").getAbsolutePath());
-            MessageType schema = timestampSchema(LogicalTypeAnnotation.TimeUnit.MICROS);
-            Configuration configuration = new Configuration();
-            long storedMicros = 1_000_456L;
-            long asEngineSeesIt = MillisecondChronon.narrow(storedMicros, java.util.concurrent.TimeUnit.MICROSECONDS);
-            try (org.apache.parquet.hadoop.ParquetWriter<Group> writer = ExampleParquetWriter.builder(file)
-                    .withType(schema).withConf(configuration).withCompressionCodec(CompressionCodecName.UNCOMPRESSED)
-                    .withDictionaryEncoding(false).build()) {
-                writer.write(new SimpleGroupFactory(schema).newGroup().append("ts", storedMicros));
+            int files = 0;
+            for (LogicalTypeAnnotation.TimeUnit unit : new LogicalTypeAnnotation.TimeUnit[] {
+                    LogicalTypeAnnotation.TimeUnit.MICROS, LogicalTypeAnnotation.TimeUnit.NANOS }) {
+                for (long micros : storedMicros) {
+                    // at nanosecond scale add a sub-microsecond remainder too, so -1us becomes -999ns
+                    long stored = unit == LogicalTypeAnnotation.TimeUnit.NANOS ? micros * 1000L + 1L : micros;
+                    Path file = new Path(new File(directory, "ts-" + files++ + ".parquet").getAbsolutePath());
+                    MessageType schema = timestampSchema(unit);
+                    Configuration configuration = new Configuration();
+                    try (org.apache.parquet.hadoop.ParquetWriter<Group> writer =
+                            ExampleParquetWriter.builder(file).withType(schema).withConf(configuration)
+                                    .withCompressionCodec(CompressionCodecName.UNCOMPRESSED)
+                                    .withDictionaryEncoding(false).build()) {
+                        writer.write(new SimpleGroupFactory(schema).newGroup().append("ts", stored));
+                    }
+                    long asEngineSeesIt = TimeConverter.getConvertedTime(unit, stored);
+                    long nanosOfStored = unit == LogicalTypeAnnotation.TimeUnit.NANOS ? stored : stored * 1000L;
+                    assertEquals("the reader must floor " + stored + " " + unit,
+                            Instant.EPOCH.plus(nanosOfStored, ChronoUnit.NANOS).toEpochMilli(), asEngineSeesIt);
+                    for (Operator operator : new Operator[] { Operator.EQ, Operator.LT_EQ, Operator.GT_EQ }) {
+                        Comparison c = comparison(new String[] { "ts" }, operator, ATypeTag.DATETIME, asEngineSeesIt);
+                        assertEquals("row " + stored + " " + unit + " the engine matches was pruned by " + operator, 1,
+                                read(file, configuration, schema, c));
+                    }
+                    // outside the window on either side, so the row group is genuinely not worth reading
+                    assertEquals(0, read(file, configuration, schema,
+                            comparison(new String[] { "ts" }, Operator.LT, ATypeTag.DATETIME, asEngineSeesIt)));
+                    assertEquals(0, read(file, configuration, schema,
+                            comparison(new String[] { "ts" }, Operator.GT, ATypeTag.DATETIME, asEngineSeesIt)));
+                }
             }
-            for (Operator operator : new Operator[] { Operator.EQ, Operator.LT_EQ, Operator.GT_EQ }) {
-                Comparison c = comparison(new String[] { "ts" }, operator, ATypeTag.DATETIME, asEngineSeesIt);
-                assertEquals("row the engine matches was pruned by " + operator, 1,
-                        read(file, configuration, schema, c));
-            }
-            // outside the window on either side, so the row group is genuinely not worth reading
-            assertEquals(0, read(file, configuration, schema,
-                    comparison(new String[] { "ts" }, Operator.LT, ATypeTag.DATETIME, asEngineSeesIt)));
-            assertEquals(0, read(file, configuration, schema,
-                    comparison(new String[] { "ts" }, Operator.GT, ATypeTag.DATETIME, asEngineSeesIt)));
         } finally {
             try (Stream<java.nio.file.Path> paths = Files.walk(directory.toPath())) {
                 paths.sorted(Comparator.reverseOrder()).map(java.nio.file.Path::toFile).forEach(File::delete);

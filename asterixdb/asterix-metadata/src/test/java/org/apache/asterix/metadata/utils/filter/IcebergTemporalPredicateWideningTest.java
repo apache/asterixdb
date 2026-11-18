@@ -23,6 +23,8 @@ import static org.apache.asterix.metadata.utils.filter.IcebergTableFilterBuilder
 import static org.apache.asterix.metadata.utils.filter.IcebergTableFilterBuilder.isMillisecondTruncated;
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -79,8 +81,12 @@ public class IcebergTemporalPredicateWideningTest {
             { AlgebricksBuiltinFunctions.EQ, AlgebricksBuiltinFunctions.NEQ, AlgebricksBuiltinFunctions.LT,
                     AlgebricksBuiltinFunctions.LE, AlgebricksBuiltinFunctions.GT, AlgebricksBuiltinFunctions.GE };
 
-    /** Whole-millisecond literals, in micros, spanning both sides of the epoch and a modern timestamp. */
-    private static final long[] LITERALS = { 1773565200123000L, 2000L, 1000L, 0L, -1000L, -2000L, -1773565200123000L };
+    /**
+     * Whole-millisecond literals, in micros, spanning both sides of the epoch and a modern timestamp. {@code -1877000}
+     * is {@code 1969-12-31T23:59:58.123Z}, the millisecond holding {@code -1876544us}.
+     */
+    private static final long[] LITERALS =
+            { 1773565200123000L, 2000L, 1000L, 0L, -1000L, -2000L, -1877000L, -1773565200123000L };
 
     // ---------------------------------------------------------------- the property
 
@@ -89,44 +95,49 @@ public class IcebergTemporalPredicateWideningTest {
         int checked = 0;
         for (long literal : LITERALS) {
             for (FunctionIdentifier op : OPERATORS) {
-                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal, false);
+                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal);
                 Assert.assertNotNull("no expression built for " + op.getName() + " @ " + literal, pushed);
                 for (long stored : candidatesAround(literal)) {
-                    boolean engineMatches = holds(op, truncateTowardZero(stored), truncateTowardZero(literal));
+                    boolean engineMatches = holds(op, floorMillis(stored), floorMillis(literal));
                     Assert.assertEquals("op=" + op.getName() + " literal=" + literal + " stored=" + stored
-                            + " (engine sees " + truncateTowardZero(stored) + "ms)", engineMatches,
-                            admits(pushed, stored));
+                            + " (engine sees " + floorMillis(stored) + "ms)", engineMatches, admits(pushed, stored));
                     checked++;
                 }
             }
         }
-        // Guards against the candidate set silently collapsing; 7 literals x 6 operators x 20 values.
-        Assert.assertEquals(840, checked);
+        // Guards against the candidate set silently collapsing; 8 literals x 6 operators x 20 values.
+        Assert.assertEquals(960, checked);
     }
 
     /**
-     * The epoch millisecond is <b>double width</b>. {@code MICROSECONDS.toMillis} truncates toward zero, so both
-     * {@code -999us} and {@code +999us} read back as {@code 0ms} and a query for the epoch must return both.
+     * The read path floors, so the epoch millisecond holds only {@code 0 .. 999us}; {@code -500us} is
+     * {@code 1969-12-31T23:59:59.999} and belongs to the millisecond below.
      */
     @Test
-    public void epochBucketSpansBothSidesOfZero() {
-        Expression eq = buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, 0L, false);
-        Assert.assertTrue("-999us truncates to 0ms", admits(eq, -999L));
+    public void epochMillisecondStartsAtTheEpoch() {
+        Expression eq = buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, 0L);
         Assert.assertTrue(admits(eq, 0L));
-        Assert.assertTrue("+999us truncates to 0ms", admits(eq, 999L));
-        Assert.assertFalse("-1000us truncates to -1ms", admits(eq, -1000L));
-        Assert.assertFalse("+1000us truncates to 1ms", admits(eq, 1000L));
+        Assert.assertTrue(admits(eq, 999L));
+        Assert.assertFalse("-1us floors to -1ms", admits(eq, -1L));
+        Assert.assertFalse("-500us floors to -1ms", admits(eq, -500L));
+        Assert.assertFalse("+1000us floors to 1ms", admits(eq, 1000L));
     }
 
-    /** Below the epoch the window sits on the other side of the literal, which flips which operators are at risk. */
+    /** Below the epoch the window still runs upward from the literal, exactly as it does above it. */
     @Test
-    public void preEpochWindowRunsUpwardToTheLiteral() {
-        Expression eq = buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, -1000L, false);
-        Assert.assertTrue(admits(eq, -1999L));
-        Assert.assertTrue(admits(eq, -1500L));
+    public void preEpochWindowRunsUpwardFromTheLiteral() {
+        Expression eq = buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, -1000L);
         Assert.assertTrue(admits(eq, -1000L));
-        Assert.assertFalse("-2000us truncates to -2ms", admits(eq, -2000L));
-        Assert.assertFalse("-999us truncates to 0ms", admits(eq, -999L));
+        Assert.assertTrue(admits(eq, -500L));
+        Assert.assertTrue(admits(eq, -1L));
+        Assert.assertFalse("-1001us floors to -2ms", admits(eq, -1001L));
+        Assert.assertFalse("0us is the epoch", admits(eq, 0L));
+        // 1969-12-31T23:59:58.123456Z reads back as .123, so a query for .123 must keep it
+        Expression preEpochSubMilli =
+                buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, -1877000L);
+        Assert.assertTrue(admits(preEpochSubMilli, -1876544L));
+        Assert.assertFalse(admits(preEpochSubMilli, -1877001L));
+        Assert.assertFalse(admits(preEpochSubMilli, -1876000L));
     }
 
     /**
@@ -149,10 +160,10 @@ public class IcebergTemporalPredicateWideningTest {
                 { 456, 456 }, { -5000, 5000 }, { 999, 1000 }, { -1, 1 } };
         for (long literal : new long[] { 1773565200123000L, 0L, -1773565200123000L }) {
             for (FunctionIdentifier op : OPERATORS) {
-                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal, false);
+                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal);
                 for (long[] r : ranges) {
                     long lo = literal + r[0], hi = literal + r[1];
-                    boolean couldMatch = rangeCouldMatch(op, lo, hi, truncateTowardZero(literal));
+                    boolean couldMatch = rangeCouldMatch(op, lo, hi, floorMillis(literal));
                     Assert.assertEquals("op=" + op.getName() + " literal=" + literal + " file=[" + lo + "," + hi + "]",
                             couldMatch, readsFile(pushed, lo, hi));
                 }
@@ -165,7 +176,7 @@ public class IcebergTemporalPredicateWideningTest {
         // Sampling the endpoints is not enough — the satisfying set can sit strictly between them — so walk the
         // millisecond boundaries the range spans, which is where the truncated value can change.
         for (long v : boundaryValues(lo, hi)) {
-            if (holds(op, truncateTowardZero(v), literalMillis)) {
+            if (holds(op, floorMillis(v), literalMillis)) {
                 return true;
             }
         }
@@ -208,13 +219,10 @@ public class IcebergTemporalPredicateWideningTest {
 
     // ---------------------------------------------------------------- TIME
 
-    /**
-     * {@code ATime} cannot be negative, so truncation is always a floor and midnight takes the ordinary
-     * {@code [L, L+1ms)} window — not the epoch's double-width one.
-     */
+    /** Midnight takes the same {@code [L, L+1ms)} window as every other {@code TIME}, and never reaches below it. */
     @Test
     public void timeAtMidnightUsesTheNonNegativeWindow() {
-        Expression eq = buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, 0L, true);
+        Expression eq = buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, 0L);
         Assert.assertTrue(admits(eq, 0L));
         Assert.assertTrue(admits(eq, 999L));
         Assert.assertFalse(admits(eq, 1000L));
@@ -226,7 +234,7 @@ public class IcebergTemporalPredicateWideningTest {
         long[] timeLiterals = { 0L, 1000L, 43200123000L, 86399999000L };
         for (long literal : timeLiterals) {
             for (FunctionIdentifier op : OPERATORS) {
-                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal, true);
+                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal);
                 Assert.assertNotNull(pushed);
                 for (long stored : candidatesAround(literal)) {
                     if (stored < 0) {
@@ -246,8 +254,7 @@ public class IcebergTemporalPredicateWideningTest {
     @Test
     public void timeEndOfDayUpperBoundIsUsable() {
         long lastMillisecondOfDay = 86399999000L;
-        Expression eq =
-                buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, lastMillisecondOfDay, true);
+        Expression eq = buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.EQ, COLUMN, lastMillisecondOfDay);
         Assert.assertNotNull(eq);
         Assert.assertTrue(admits(eq, lastMillisecondOfDay));
         Assert.assertTrue("23:59:59.999999 still truncates into the last millisecond",
@@ -273,7 +280,7 @@ public class IcebergTemporalPredicateWideningTest {
     public void bucketPartitionedTimestampIsNeverWronglyPruned() {
         PartitionSpec bucketSpec = PartitionSpec.builderFor(SCHEMA).bucket(COLUMN, 16).build();
         for (FunctionIdentifier op : OPERATORS) {
-            Expression widened = buildTruncatedTemporalComparison(op, COLUMN, 1773565200123000L, false);
+            Expression widened = buildTruncatedTemporalComparison(op, COLUMN, 1773565200123000L);
             Expression projected = Projections.inclusive(bucketSpec).project(widened);
             Assert.assertEquals("widened " + op.getName() + " must keep every bucket (no partition pruning on a range)",
                     Expression.Operation.TRUE, projected.op());
@@ -282,6 +289,43 @@ public class IcebergTemporalPredicateWideningTest {
         // and losing same-millisecond rows that hash elsewhere. Pinned so the distinction cannot silently regress.
         Expression exactInstant = org.apache.iceberg.expressions.Expressions.equal(COLUMN, 1773565200123000L);
         Assert.assertNotEquals(Expression.Operation.TRUE, Projections.inclusive(bucketSpec).project(exactInstant).op());
+    }
+
+    /**
+     * The ordered transforms prune whole partitions, so the widened predicate's projection must keep the partition
+     * holding every stored value the engine would match. A pre-epoch window that ran in the wrong direction would
+     * project onto the wrong side of a day or hour boundary at the epoch: {@code -500us} lives in day {@code -1}
+     * ({@code 1969-12-31}) and must be found there by {@code = 1969-12-31T23:59:59.999}.
+     */
+    @Test
+    public void orderedPartitionTransformsKeepThePartitionOfEveryMatch() {
+        long microsPerHour = TimeUnit.HOURS.toMicros(1);
+        long microsPerDay = TimeUnit.DAYS.toMicros(1);
+        PartitionSpec daySpec = PartitionSpec.builderFor(SCHEMA).day(COLUMN).build();
+        PartitionSpec hourSpec = PartitionSpec.builderFor(SCHEMA).hour(COLUMN).build();
+        int checked = 0;
+        for (long literal : LITERALS) {
+            for (FunctionIdentifier op : OPERATORS) {
+                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal);
+                Expression byDay = Projections.inclusive(daySpec).project(pushed);
+                Expression byHour = Projections.inclusive(hourSpec).project(pushed);
+                for (long stored : candidatesAround(literal)) {
+                    if (!holds(op, floorMillis(stored), floorMillis(literal))) {
+                        continue;
+                    }
+                    Assert.assertTrue("day partition of " + stored + " pruned for " + op.getName() + " @ " + literal,
+                            partitionKept(daySpec, byDay, (int) Math.floorDiv(stored, microsPerDay)));
+                    Assert.assertTrue("hour partition of " + stored + " pruned for " + op.getName() + " @ " + literal,
+                            partitionKept(hourSpec, byHour, (int) Math.floorDiv(stored, microsPerHour)));
+                    checked++;
+                }
+            }
+        }
+        Assert.assertTrue("too few matching values to say anything: " + checked, checked > 400);
+    }
+
+    private static boolean partitionKept(PartitionSpec spec, Expression projected, int partitionValue) {
+        return new Evaluator(spec.partitionType(), projected).eval(new OneValueRow(partitionValue));
     }
 
     // ---------------------------------------------------------------- nulls
@@ -312,7 +356,7 @@ public class IcebergTemporalPredicateWideningTest {
                 .withMetrics(new Metrics(4L, null, valueCounts, nullCounts, null, noBounds, noBounds)).build();
         for (long literal : LITERALS) {
             for (FunctionIdentifier op : valueOps) {
-                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal, false);
+                Expression pushed = buildTruncatedTemporalComparison(op, COLUMN, literal);
                 Assert.assertFalse("all-null file cannot match " + op.getName() + " @ " + literal,
                         new InclusiveMetricsEvaluator(SCHEMA, pushed, true).eval(allNull));
             }
@@ -325,16 +369,16 @@ public class IcebergTemporalPredicateWideningTest {
     public void literalsNearTheLongBoundsDecline() {
         for (FunctionIdentifier op : OPERATORS) {
             Assert.assertNull("adding a millisecond to a saturated bound wraps and inverts the predicate",
-                    buildTruncatedTemporalComparison(op, COLUMN, Long.MAX_VALUE, false));
-            Assert.assertNull(buildTruncatedTemporalComparison(op, COLUMN, Long.MIN_VALUE, false));
-            Assert.assertNull(buildTruncatedTemporalComparison(op, COLUMN, Long.MAX_VALUE - 1, false));
-            Assert.assertNull(buildTruncatedTemporalComparison(op, COLUMN, Long.MIN_VALUE + 1, false));
+                    buildTruncatedTemporalComparison(op, COLUMN, Long.MAX_VALUE));
+            Assert.assertNull(buildTruncatedTemporalComparison(op, COLUMN, Long.MIN_VALUE));
+            Assert.assertNull(buildTruncatedTemporalComparison(op, COLUMN, Long.MAX_VALUE - 1));
+            Assert.assertNull(buildTruncatedTemporalComparison(op, COLUMN, Long.MIN_VALUE + 1));
         }
     }
 
     @Test
     public void unmodelledOperatorDeclinesRatherThanFallingBack() {
-        Assert.assertNull(buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.AND, COLUMN, 1000L, false));
+        Assert.assertNull(buildTruncatedTemporalComparison(AlgebricksBuiltinFunctions.AND, COLUMN, 1000L));
     }
 
     /**
@@ -382,10 +426,9 @@ public class IcebergTemporalPredicateWideningTest {
      * another module ({@link MillisecondChronon#narrow}, called by the Iceberg parser), and the type system does not
      * tie the two together — so assert it here rather than describe it in a comment.
      * <p>
-     * The oracle is this test's own {@code truncateTowardZero}, written independently of the production helper, so
-     * agreement is evidence rather than tautology. Switching the helper to {@code Math.floorDiv} — the change most
-     * likely to be made in good faith, since the uniform mapping is arguably the better behaviour — fails here
-     * immediately, at unit speed, instead of silently mis-pruning pre-1970 sub-millisecond rows in production.
+     * The oracle is {@code java.time}'s own millisecond of an instant, written independently of the production
+     * helper, so agreement is evidence rather than tautology. Reverting the helper to {@code TimeUnit.toMillis},
+     * which truncates toward zero, fails here at unit speed.
      */
     @Test
     public void readPathNarrowingMatchesTheWindowsAssumption() {
@@ -394,22 +437,28 @@ public class IcebergTemporalPredicateWideningTest {
         int checked = 0;
         for (long literal : LITERALS) {
             for (long stored : candidatesAround(literal)) {
-                Assert.assertEquals("stored=" + stored, truncateTowardZero(stored),
+                Assert.assertEquals("stored=" + stored, floorMillis(stored),
                         MillisecondChronon.narrow(stored, TimeUnit.MICROSECONDS));
                 // The same value at nanosecond scale must land on the same millisecond, which is what lets one
                 // whole-millisecond bound serve timestamp, timestamp_ns and every future precision.
-                Assert.assertEquals("stored=" + stored + " at nanos", truncateTowardZero(stored),
+                Assert.assertEquals("stored=" + stored + " at nanos", floorMillis(stored),
                         MillisecondChronon.narrow(stored * 1000L, TimeUnit.NANOSECONDS));
                 checked++;
             }
         }
-        Assert.assertEquals(140, checked);
-        // The two properties the negative branch is built on, stated directly rather than inferred from the sweep.
-        Assert.assertEquals("truncation must be toward zero, not a floor", 0L,
-                MillisecondChronon.narrow(-999L, TimeUnit.MICROSECONDS));
-        Assert.assertEquals("the epoch chronon is double width", 0L,
-                MillisecondChronon.narrow(999L, TimeUnit.MICROSECONDS));
-        Assert.assertEquals(-1L, MillisecondChronon.narrow(-1000L, TimeUnit.MICROSECONDS));
+        Assert.assertEquals(160, checked);
+        Assert.assertEquals("-500us is 1969-12-31T23:59:59.999", -1L,
+                MillisecondChronon.narrow(-500L, TimeUnit.MICROSECONDS));
+        Assert.assertEquals(-1877L, MillisecondChronon.narrow(-1876544L, TimeUnit.MICROSECONDS));
+        Assert.assertEquals("an exact millisecond is unchanged", -1L,
+                MillisecondChronon.narrow(-1000L, TimeUnit.MICROSECONDS));
+        Assert.assertEquals("the epoch is unchanged", 0L, MillisecondChronon.narrow(0L, TimeUnit.MICROSECONDS));
+        Assert.assertEquals("-1ns is 1969-12-31T23:59:59.999", -1L,
+                MillisecondChronon.narrow(-1L, TimeUnit.NANOSECONDS));
+        Assert.assertEquals(-1L, MillisecondChronon.narrow(-1_000_000L, TimeUnit.NANOSECONDS));
+        Assert.assertEquals(-2L, MillisecondChronon.narrow(-1_000_001L, TimeUnit.NANOSECONDS));
+        Assert.assertEquals("a millisecond value passes through", -7L,
+                MillisecondChronon.narrow(-7L, TimeUnit.MILLISECONDS));
     }
 
     // ---------------------------------------------------------------- helpers
@@ -425,9 +474,9 @@ public class IcebergTemporalPredicateWideningTest {
         return values.stream().mapToLong(Long::longValue).toArray();
     }
 
-    /** What {@code MICROSECONDS.toMillis} does: integer division, truncating toward zero. */
-    private static long truncateTowardZero(long micros) {
-        return micros / MICROS_PER_MILLI;
+    /** The millisecond containing an epoch-microsecond instant, as {@code java.time} computes it. */
+    private static long floorMillis(long micros) {
+        return Instant.EPOCH.plus(micros, ChronoUnit.MICROS).toEpochMilli();
     }
 
     private static boolean holds(FunctionIdentifier op, long storedMillis, long literalMillis) {
@@ -453,9 +502,9 @@ public class IcebergTemporalPredicateWideningTest {
 
     /** Minimal {@link StructLike} holding the single timestamp column under test. */
     private static final class OneValueRow implements StructLike {
-        private final long value;
+        private final Object value;
 
-        private OneValueRow(long value) {
+        private OneValueRow(Object value) {
             this.value = value;
         }
 
@@ -476,7 +525,7 @@ public class IcebergTemporalPredicateWideningTest {
 
         @Override
         public String toString() {
-            return Arrays.toString(new long[] { value });
+            return Arrays.toString(new Object[] { value });
         }
     }
 }

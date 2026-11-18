@@ -90,6 +90,12 @@ public class ExternalDatasetTestUtils {
     public static final String PARQUET_NULL_TEST_DIRECTORY = "parquet-data/null-test/";
     public static final String PARQUET_ROW_GROUPS_DIRECTORY = "parquet-data/row-groups/";
     public static final String PARQUET_TEMPORAL_TYPES_DIRECTORY = "parquet-data/temporal-types/";
+    public static final String PARQUET_PRE_EPOCH_DIRECTORY = "parquet-data/pre-epoch/";
+    /**
+     * Epoch microseconds around 1970 for the pre-epoch fixture, one row (and so one file) each, indexed by id - 1:
+     * a modern sub-millisecond control, then +456us, -500us, -1500us, -1876544us, exactly -1000us and the epoch.
+     */
+    private static final long[] PRE_EPOCH_MICROS = { 1773565200123456L, 456L, -500L, -1500L, -1876544L, -1000L, 0L };
     /** Rows in the many-row-group fixture; the suite's expected counts are written against it. */
     public static final int ROW_GROUPS_ROW_COUNT = 5000;
     /** Small enough that the rows above land in many row groups rather than one. */
@@ -536,6 +542,7 @@ public class ExternalDatasetTestUtils {
 
         loadRowGroupsFile();
         loadTemporalTypesFile();
+        loadPreEpochFiles();
 
         Collection<File> files =
                 IoUtil.getMatchingFiles(Paths.get(generatedDataBasePath + "/external-filter"), PARQUET_FILTER);
@@ -658,6 +665,49 @@ public class ExternalDatasetTestUtils {
                     false);
         } catch (IOException e) {
             throw new IllegalStateException("failed to prepare the parquet temporal-types fixture", e);
+        }
+    }
+
+    /**
+     * Writes and uploads one single-row Parquet file per {@link #PRE_EPOCH_MICROS} value, so every row is its own row
+     * group's minimum and maximum and a pushed window on the wrong side of it prunes the row outright. Each file holds
+     * the instant as UTC-adjusted and local timestamps at microsecond and nanosecond precision; the nanosecond
+     * columns hold {@code micros * 1000 + 1}, which never changes the millisecond but gives the exact {@code -1000us}
+     * a sub-millisecond part ({@code -999999ns}).
+     */
+    private static void loadPreEpochFiles() {
+        try {
+            MessageType schema = Types.buildMessage().required(PrimitiveType.PrimitiveTypeName.INT64).named("id")
+                    .required(PrimitiveType.PrimitiveTypeName.INT64)
+                    .as(LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MICROS)).named("ts")
+                    .required(PrimitiveType.PrimitiveTypeName.INT64)
+                    .as(LogicalTypeAnnotation.timestampType(false, LogicalTypeAnnotation.TimeUnit.MICROS)).named("tsn")
+                    .required(PrimitiveType.PrimitiveTypeName.INT64)
+                    .as(LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.NANOS)).named("tsnz")
+                    .required(PrimitiveType.PrimitiveTypeName.INT64)
+                    .as(LogicalTypeAnnotation.timestampType(false, LogicalTypeAnnotation.TimeUnit.NANOS)).named("tsnn")
+                    .named("row");
+            File directory = new File(BINARY_GEN_BASEDIR, "pre-epoch");
+            java.nio.file.Files.createDirectories(directory.toPath());
+            Configuration configuration = new Configuration();
+            GroupWriteSupport.setSchema(schema, configuration);
+            SimpleGroupFactory groups = new SimpleGroupFactory(schema);
+            for (int i = 0; i < PRE_EPOCH_MICROS.length; i++) {
+                long micros = PRE_EPOCH_MICROS[i];
+                long nanos = Math.addExact(Math.multiplyExact(micros, 1000L), 1L);
+                String fileName = "pre_epoch_" + (i + 1) + ".parquet";
+                File file = new File(directory, fileName);
+                java.nio.file.Files.deleteIfExists(file.toPath());
+                org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(file.getAbsolutePath());
+                try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path).withType(schema)
+                        .withConf(configuration).withCompressionCodec(CompressionCodecName.UNCOMPRESSED).build()) {
+                    writer.write(groups.newGroup().append("id", (long) (i + 1)).append("ts", micros)
+                            .append("tsn", micros).append("tsnz", nanos).append("tsnn", nanos));
+                }
+                loadData(directory.getPath(), "", fileName, PARQUET_PRE_EPOCH_DIRECTORY, "", false, false);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to prepare the parquet pre-epoch fixture", e);
         }
     }
 

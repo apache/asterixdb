@@ -17,6 +17,6 @@
  * under the License.
  */
 
--- The epoch millisecond is DOUBLE WIDTH: truncation runs toward zero, so +456us (id 5) and -500us (id 6)
--- both read back as 1970-01-01T00:00:00.000.
+-- The epoch millisecond holds 0us (id 10) and +456us (id 5) only. -500us (id 6) is before the epoch, so it
+-- reads back as 1969-12-31T23:59:59.999 and does not match.
 SELECT e.id FROM temporalPrecision e WHERE e.ts = datetime("1970-01-01T00:00:00.000Z") ORDER BY e.id;

@@ -17,6 +17,6 @@
  * under the License.
  */
 
--- >= is the operator that breaks AT and BELOW the epoch, the mirror of <= above it. Id 6 is negative in
--- microseconds yet equal to the epoch in milliseconds, so it must be included.
+-- >= the epoch: id 6 (-500us) reads back as 1969-12-31T23:59:59.999, so it is excluded while ids 5 and 10
+-- are kept.
 SELECT e.id FROM temporalPrecision e WHERE e.ts >= datetime("1970-01-01T00:00:00.000Z") ORDER BY e.id;

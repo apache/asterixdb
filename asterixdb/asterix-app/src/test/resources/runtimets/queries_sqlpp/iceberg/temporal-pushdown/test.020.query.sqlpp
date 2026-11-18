@@ -17,6 +17,6 @@
  * under the License.
  */
 
--- Control: every row is visible with no predicate at all. If this is not 7, the fixture is wrong and every
+-- Control: every row is visible with no predicate at all. If this is not 10, the fixture is wrong and every
 -- assertion below is meaningless.
 SELECT VALUE COUNT(*) FROM temporalPrecision;

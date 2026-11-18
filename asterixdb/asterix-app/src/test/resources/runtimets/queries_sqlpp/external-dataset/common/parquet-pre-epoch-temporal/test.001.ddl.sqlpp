@@ -1,0 +1,45 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description  : Timestamps around 1970 at micro- and nanosecond precision, one row per file
+ * Expected Res : Success
+ */
+
+// Each value is narrowed to the millisecond that CONTAINS it, so -500us is 1969-12-31T23:59:59.999 and
+// -1876544us is 23:59:58.123. Every row sits alone in its own file, so it is its row group's only statistic and a
+// pushed window on the wrong side of it prunes the row rather than merely reading too much.
+// id: 1 = 2026-03-15T09:00:00.123456, 2 = +456us, 3 = -500us, 4 = -1500us, 5 = -1876544us, 6 = -1000us, 7 = 0.
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+
+USE test;
+
+CREATE TYPE PreEpochType AS {
+};
+
+CREATE EXTERNAL DATASET PreEpoch(PreEpochType) USING %adapter%
+(
+  %template%,
+  %additional_Properties%
+  ("container"="playground"),
+  ("definition"="parquet-data/pre-epoch"),
+  ("format" = "parquet")
+);

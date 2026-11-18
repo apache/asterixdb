@@ -29,20 +29,14 @@ import java.util.concurrent.TimeUnit;
  * the source prunes a file, row group or delete file holding a row the engine would have matched. Nothing in the
  * type system ties those two together, so the contract is stated once, here, rather than repeated at each call site.
  * <p>
- * <b>The truncation is toward zero, not a floor</b>, because that is what {@link TimeUnit} does. Two consequences
- * the widening side depends on:
- * <ul>
- * <li>the epoch millisecond is <b>double width</b> — both {@code -999us} and {@code +999us} narrow to {@code 0};</li>
- * <li>below the epoch the set of values narrowing to a literal sits <b>above</b> it, the mirror of the positive
- * case, which flips which comparison operators are unsafe.</li>
- * </ul>
- * Changing this to {@link Math#floorDiv} would make the mapping uniform and is arguably the better behaviour, but it
- * is a change to query <em>results</em> for pre-1970 sub-millisecond data, and the widening's negative branch must
- * change with it. {@code IcebergTemporalPredicateWideningTest} pins the agreement and fails if only one side moves.
+ * <b>The narrowing is a floor</b>, so every value maps to the millisecond that contains it, before the epoch as well
+ * as after it: {@code -500us} is {@code 1969-12-31T23:59:59.999}, not the epoch. {@link TimeUnit#toMillis} truncates
+ * toward zero instead, which moves every pre-1970 value with a sub-millisecond part one millisecond later. Because
+ * the mapping is uniform, the set of stored values narrowing to a literal {@code L} is always
+ * {@code [L, L + MICROS_PER_MILLI)} in microseconds, which is the window the widening side pushes.
+ * {@code IcebergTemporalPredicateWideningTest} and {@code ParquetFilterConverterTest} pin that agreement.
  * <p>
- * Values that cannot be negative — a time of day — are unaffected by the direction, since toward-zero and floor
- * agree there. What those still rely on is that this <em>truncates rather than rounds</em>: rounding would shift
- * every window by half a millisecond.
+ * It must truncate rather than round: rounding would shift every window by half a millisecond.
  */
 public final class MillisecondChronon {
 
@@ -53,13 +47,14 @@ public final class MillisecondChronon {
     }
 
     /**
-     * Narrows a finer-grained temporal value to whole milliseconds, truncating toward zero.
+     * Narrows a finer-grained temporal value to whole milliseconds, rounding toward negative infinity.
      *
      * @param value a temporal value — an epoch offset or a time of day
-     * @param unit  the unit {@code value} is expressed in; finer than milliseconds, or this is a no-op
-     * @return {@code value} in whole milliseconds
+     * @param unit  the unit {@code value} is expressed in; finer than milliseconds, or this is a plain conversion
+     * @return the millisecond containing {@code value}
      */
     public static long narrow(long value, TimeUnit unit) {
-        return unit.toMillis(value);
+        long perMilli = unit.convert(1, TimeUnit.MILLISECONDS);
+        return perMilli > 1 ? Math.floorDiv(value, perMilli) : unit.toMillis(value);
     }
 }
