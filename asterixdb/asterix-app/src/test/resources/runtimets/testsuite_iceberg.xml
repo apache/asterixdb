@@ -211,6 +211,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg/negative">
+      <compilation-unit name="with-clause-value-type">
+        <output-dir compare="Text">with-clause-value-type</output-dir>
+        <expected-error>ASX1111: Property 'extraNull' expects value(s) of type string, number, boolean or array of strings</expected-error>
+        <expected-error>ASX1111: Property 'extraObject' expects value(s) of type string, number, boolean or array of strings</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
       <compilation-unit name="catalog-already-exists">
         <output-dir compare="Text">catalog-already-exists</output-dir>
         <expected-error>ASX1226: A catalog with this name myGlueCatalog already exists</expected-error>

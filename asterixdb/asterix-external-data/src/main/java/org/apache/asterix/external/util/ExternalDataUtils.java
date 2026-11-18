@@ -20,7 +20,6 @@ package org.apache.asterix.external.util;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
-import static org.apache.asterix.common.exceptions.ErrorCode.PARSE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.PROPERTY_INVALID_VALUE_TYPE;
 import static org.apache.asterix.common.metadata.MetadataConstants.DEFAULT_DATABASE;
 import static org.apache.asterix.common.utils.CSVConstants.KEY_DELIMITER;
@@ -105,7 +104,6 @@ import org.apache.asterix.external.util.azure.datalake.DatalakeUtils;
 import org.apache.asterix.external.util.google.GCSConstants;
 import org.apache.asterix.external.util.google.GCSUtils;
 import org.apache.asterix.object.base.AdmArrayNode;
-import org.apache.asterix.object.base.AdmBooleanNode;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
@@ -1396,7 +1394,12 @@ public class ExternalDataUtils {
                     fieldValueStr = ((AdmStringNode) fieldValue).get();
                     break;
                 case BOOLEAN:
-                    fieldValueStr = Boolean.toString(((AdmBooleanNode) fieldValue).get());
+                case BIGINT:
+                case DOUBLE:
+                    // Must render exactly as LangRecordParseUtil.recordToMap does: callers validate the WITH
+                    // clause through that method and then store what this one returns, so any difference
+                    // means storing a value that was never validated, or rejecting one that was.
+                    fieldValueStr = fieldValue.toString();
                     break;
                 case ARRAY:
                     AdmArrayNode arrayNode = (AdmArrayNode) fieldValue;
@@ -1412,7 +1415,8 @@ public class ExternalDataUtils {
                     }
                     continue;
                 default:
-                    throw new CompilationException(PARSE_ERROR, sourceLocation, fieldName);
+                    throw new CompilationException(PROPERTY_INVALID_VALUE_TYPE, sourceLocation, fieldName,
+                            "string, number, boolean or array of strings");
             }
             properties.put(fieldName, fieldValueStr);
         }
