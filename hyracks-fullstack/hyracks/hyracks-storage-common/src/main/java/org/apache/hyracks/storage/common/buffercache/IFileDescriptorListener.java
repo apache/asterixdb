@@ -52,7 +52,7 @@ public interface IFileDescriptorListener {
      * @param durationNanos
      *            how long the sync took
      */
-    default void releaseSynced(long durationNanos) {
+    default void descriptorSynced(long durationNanos) {
     }
 
     /**

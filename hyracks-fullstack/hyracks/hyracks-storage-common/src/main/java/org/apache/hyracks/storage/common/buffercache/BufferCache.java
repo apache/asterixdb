@@ -1664,7 +1664,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     void descriptorReleaseSynced(long durationNanos) {
         descriptorReleaseSyncs.incrementAndGet();
         try {
-            descriptorListener.releaseSynced(durationNanos);
+            descriptorListener.descriptorSynced(durationNanos);
         } catch (Exception e) {
             LOGGER.debug("descriptor listener failed", e);
         }
