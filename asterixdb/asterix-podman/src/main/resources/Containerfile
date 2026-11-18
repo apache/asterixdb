@@ -24,7 +24,7 @@ RUN apt update; \
     apt -y install lbzip2
 
 
-COPY target/asterix-server-*-binary-assembly.tar.bz2 asterix.tar.bz2
+COPY target/asterix-server-1.0.0-binary-assembly.tar.bz2 asterix.tar.bz2
 RUN mkdir -p $ASTERIX_DIR && \
     tar -xf asterix.tar.bz2 --strip-components=1 -C $ASTERIX_DIR
 

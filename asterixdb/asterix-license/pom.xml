@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.asterix</groupId>
     <artifactId>apache-asterixdb</artifactId>
-    <version>0.9.10-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
 
   <licenses>
