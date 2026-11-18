@@ -85,7 +85,7 @@
     <!-- keep in sync with asterixdb/pom.xml -->
     <google-cloud-storage.version>2.79.0</google-cloud-storage.version>
     <!-- @derived-from: com.google.cloud:google-cloud-storage:${google-cloud-storage.version}#dep:google-cloud-core -->
-    <google-cloud-core.version>2.80.0</google-cloud-core.version>
+    <google-cloud-core.version>2.81.0</google-cloud-core.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
     <azurecore.version>1.61.0</azurecore.version>
