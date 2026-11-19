@@ -766,7 +766,7 @@ public class BufferCacheTest {
         final AtomicInteger listenedSyncs = new AtomicInteger();
         bufferCache.setDescriptorListener(new IFileDescriptorListener() {
             @Override
-            public void releaseSynced(long durationNanos) {
+            public void descriptorSynced(long durationNanos) {
                 Assert.assertTrue(durationNanos >= 0);
                 listenedSyncs.incrementAndGet();
             }
