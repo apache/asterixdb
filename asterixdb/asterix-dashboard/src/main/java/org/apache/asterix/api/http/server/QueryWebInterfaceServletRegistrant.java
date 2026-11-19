@@ -26,6 +26,9 @@ public class QueryWebInterfaceServletRegistrant implements IQueryWebServerRegist
 
     @Override
     public void register(ICcApplicationContext appCtx, HttpServer webServer) {
+        // Same-origin MCP gateway proxy (off unless asterix.mcp.enabled is set).
+        // Registered before the static "/*" servlet so /mcp is matched first.
+        webServer.addServlet(new MCPProxyServlet(webServer.ctx(), "/mcp", "/mcp/*"));
         webServer.addServlet(new QueryWebInterfaceServlet(appCtx, webServer.ctx(), "/*"));
     }
 }
