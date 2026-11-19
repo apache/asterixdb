@@ -33,7 +33,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * Three triggers, each for a different shape of growth, each with its own check:
  * <ul>
  * <li><b>Rate</b> ({@link #checkForRateGrowth}): new names in several consecutive windows of documents -- fast, or a
- * trickle that never stops. State in {@link RateTrigger}.</li>
+ * trickle that never stops; or, in one window, as many as a whole fast streak ({@link #checkForWideWindow}). State in
+ * {@link RateTrigger}.</li>
  * <li><b>Sparsity</b> ({@link #checkForSparseGrowth}): most children absent from a batch, most of the present ones new
  * -- growth spread over flushes too small for a window. State in {@link SparsityTrigger}.</li>
  * <li><b>Growing children</b> ({@link #checkForGrowingChildren}): children minted after another started growing,
@@ -138,6 +139,10 @@ final class CollapseDetector {
      * document mints its names regardless -- an unavoidable cost of needing evidence -- and the bound applies from the
      * second, where it stops that document minting every one of its keys before the node can collapse. If the node
      * collapses here, the rest of the current document's new names route to the map.
+     * <p>
+     * That evidence has a price ceiling, though: a single window minting as many names as a whole fast streak could
+     * collapses the node at once (see {@link #checkForWideWindow}), so one document of a hundred thousand keys does not
+     * leave a hundred thousand columns behind.
      */
     void onNewName(FlushColumnMetadata columnMetadata) throws HyracksDataException {
         sparsity.newNamesInBatch++;
@@ -146,6 +151,8 @@ final class CollapseDetector {
         }
         if (rate.onNewName()) {
             checkForRateGrowth(columnMetadata);
+        } else {
+            checkForWideWindow(columnMetadata);
         }
     }
 
@@ -199,6 +206,24 @@ final class CollapseDetector {
         int children = node.getChildren().size();
         if (rate.closeWindow(children) && (children >= settings.minChildren || knownColumns >= settings.minColumns)) {
             node.markCollapsed(columnMetadata, "rate");
+        }
+    }
+
+    /**
+     * Wide window: collapses when one window, with no streak behind it, has minted as many names as a full fast streak
+     * may ({@link CollapseDetectorSettings#growingWindowsLimit} windows of
+     * {@link CollapseDetectorSettings#windowMaxNewNames}).
+     * <p>
+     * The rate trigger lets the first growing document mint all its names, since alone it cannot be told from a wide
+     * but stable schema. Left unbounded, that lets one document of a hundred thousand keys create a hundred thousand
+     * columns, which no merge removes. Past this ceiling the node collapses mid-document; a stable record this wide in
+     * one object keeps the columns minted so far, and its later fields read from the map. Names only: a wide value
+     * under one new name is an object of its own, bounded by its own detector.
+     */
+    private void checkForWideWindow(FlushColumnMetadata columnMetadata) {
+        // long: both are user settings, and an int product that wraps negative would collapse on the first new name
+        if (rate.windowNewNames >= (long) settings.windowMaxNewNames * settings.growingWindowsLimit) {
+            node.markCollapsed(columnMetadata, "wide window");
         }
     }
 

@@ -36,13 +36,15 @@ import org.junit.Test;
  * <p>
  * The name bound on a window used to be checked only when the next document began, so with two windows required the
  * node collapsed only after a second such document -- having minted every key of both as columns. The first growing
- * document is unavoidable: on its own it is indistinguishable from a wide but stable schema, which also arrives all at
- * once (SchemaExplosionMeasureTest guards that case). The second is not, and the bound now holds inside it.
+ * document is on its own indistinguishable from a wide but stable schema, which also arrives all at once, so it may mint
+ * up to a whole fast streak's names ({@code GROWING_WINDOWS x WINDOW_MAX_NEW_NAMES}) before collapsing; the second is
+ * held to one window's bound.
  */
 public class WideDocumentCollapseTest {
     private static final int WINDOW_MAX_NEW_NAMES = 32;
     private static final int GROWING_WINDOWS = 2;
-    private static final int KEYS_PER_DOCUMENT = 100;
+    // Under a streak's names (GROWING_WINDOWS x WINDOW_MAX_NEW_NAMES), so the first document alone does not collapse.
+    private static final int KEYS_PER_DOCUMENT = 60;
     private static final int DOCUMENTS = 6;
 
     @Before
@@ -80,8 +82,8 @@ public class WideDocumentCollapseTest {
     @Test
     public void collapsingOnTheLastKeyOfTheLastDocument() throws Exception {
         List<String> lines = new ArrayList<>();
-        lines.add(document(0, KEYS_PER_DOCUMENT));
-        // Exactly one window's worth: the WINDOW_MAX_NEW_NAMES-th new key closes the second window and collapses.
+        // One window's worth each: the first fills window one, the second's last new key closes window two and collapses.
+        lines.add(document(0, WINDOW_MAX_NEW_NAMES));
         lines.add(document(1, WINDOW_MAX_NEW_NAMES));
         ColumnFlushHarness harness = new ColumnFlushHarness();
         ColumnFlushHarness.Component component = harness.writeComponent(lines);
@@ -101,6 +103,43 @@ public class WideDocumentCollapseTest {
                     .append(d * 1000 + k);
         }
         return sb.append("}}").toString();
+    }
+
+    /**
+     * One document far wider than a fast streak: it collapses once it has minted a streak's worth of names, instead of
+     * minting all of them -- which no merge would ever remove -- and still reads back whole.
+     */
+    @Test
+    public void aSingleVeryWideDocumentCollapsesAtTheStreakBound() throws Exception {
+        int keys = 5000;
+        ColumnFlushHarness harness = new ColumnFlushHarness();
+        ColumnFlushHarness.Component component = harness.writeComponent(List.of(document(0, keys)));
+
+        // A streak's names, plus id, the node and the map's columns.
+        int bound = GROWING_WINDOWS * WINDOW_MAX_NEW_NAMES + 8;
+        assertTrue(component.getColumnCount() + " columns for one document of " + keys + " keys",
+                component.getColumnCount() <= bound);
+        String json = ColumnFlushHarness.json(harness.assembleRecords(component).get(0));
+        for (int k = 0; k < keys; k++) {
+            assertTrue("lost key u0_" + k, json.contains("\"u0_" + k + "\""));
+        }
+    }
+
+    /** A record of just under a streak's worth of fields, in every document, stays columnar. */
+    @Test
+    public void aStableRecordUnderTheStreakBoundStaysColumnar() throws Exception {
+        int fields = GROWING_WINDOWS * WINDOW_MAX_NEW_NAMES - 1;
+        List<String> lines = new ArrayList<>();
+        for (int d = 0; d < 20; d++) {
+            StringBuilder sb = new StringBuilder("{\"id\": ").append(d).append(", \"linked_users\": {");
+            for (int k = 0; k < fields; k++) {
+                sb.append(k == 0 ? "" : ", ").append("\"f").append(k).append("\": ").append(d + k);
+            }
+            lines.add(sb.append("}}").toString());
+        }
+        ColumnFlushHarness.Component component = new ColumnFlushHarness().writeComponent(lines);
+        // id and one column per field: no map.
+        assertEquals(fields + 1, component.getColumnCount());
     }
 
     @Test
