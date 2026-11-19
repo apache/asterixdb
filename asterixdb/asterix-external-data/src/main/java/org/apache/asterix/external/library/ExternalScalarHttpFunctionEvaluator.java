@@ -153,6 +153,7 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
 
     private final INcApplicationContext appCtx;
     private final SourceLocation sourceLoc;
+    private final Map<String, String> requestHeaders;
     private final boolean nullCall;
     private final boolean nullOnError;
     private final IWarningCollector warningCollector;
@@ -207,9 +208,11 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
     private long headersSize;
 
     ExternalScalarHttpFunctionEvaluator(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args, IAType[] argTypes,
-            IEvaluatorContext ctx, SourceLocation sourceLoc) throws HyracksDataException {
+            IEvaluatorContext ctx, SourceLocation sourceLoc, Map<String, String> requestHeaders)
+            throws HyracksDataException {
         super(finfo, args, argTypes, ctx);
         this.sourceLoc = sourceLoc;
+        this.requestHeaders = requestHeaders;
         appCtx = (INcApplicationContext) ctx.getServiceContext().getApplicationContext();
         ExternalProperties externalProperties = appCtx.getExternalProperties();
         Map<String, String> resources = finfo.getResources();
@@ -301,7 +304,8 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
         String template =
                 path == null ? endpoint.getUrl() : StringUtils.stripEnd(endpoint.getUrl(), PATH_SEPARATOR) + path;
         urlTemplate = new HttpFunctionUrlTemplate(template, finfo.getParameterNames(), sourceLoc);
-        headers = mergeHeaders(endpoint.getHeaders(), resources.get(HttpFunctionConstants.OPTION_HEADERS), sourceLoc);
+        headers = mergeHeaders(endpoint.getHeaders(), requestHeaders,
+                resources.get(HttpFunctionConstants.OPTION_HEADERS), sourceLoc);
         headersSize = getHeadersSize(headers);
         context = HttpFunctionConnectionManager.createContext(endpoint.getCertificate(), sourceLoc);
         client = appCtx.getHttpFunctionClient();
@@ -309,11 +313,12 @@ class ExternalScalarHttpFunctionEvaluator extends ExternalScalarFunctionEvaluato
                 : new HttpFunctionNodeTokenSource(endpoint, appCtx.getServiceContext(), sourceLoc, timeoutSeconds);
     }
 
-    static Header[] mergeHeaders(Map<String, String> endpointHeaders, String functionHeaders, SourceLocation sourceLoc)
-            throws HyracksDataException {
-        // a function's header never replaces one of its endpoint's, whatever the case of its name
+    static Header[] mergeHeaders(Map<String, String> endpointHeaders, Map<String, String> requestHeaders,
+            String functionHeaders, SourceLocation sourceLoc) throws HyracksDataException {
+        // a function's header never replaces one of its endpoint's or its query's, whatever the case of its name
         Map<String, String> merged = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         merged.putAll(endpointHeaders);
+        merged.putAll(requestHeaders);
         if (functionHeaders != null) {
             try {
                 OBJECT_MAPPER.readValue(functionHeaders, HEADERS_TYPE).forEach(merged::putIfAbsent);

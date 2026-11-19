@@ -37,16 +37,25 @@ public class ExternalScalarHttpFunctionEvaluatorTest {
     @Test
     public void endpointHeaderWinsWhateverTheCase() throws HyracksDataException {
         Header[] headers = ExternalScalarHttpFunctionEvaluator.mergeHeaders(Map.of("Authorization", "Bearer a"),
-                "{\"authorization\": \"Bearer b\", \"X-Trace\": \"1\"}", null);
+                Map.of(), "{\"authorization\": \"Bearer b\", \"X-Trace\": \"1\"}", null);
         assertEquals(2, headers.length);
         assertEquals("Bearer a", headers[0].getValue());
         assertEquals("1", headers[1].getValue());
     }
 
     @Test
+    public void requestHeaderWinsOverFunctionHeader() throws HyracksDataException {
+        Header[] headers = ExternalScalarHttpFunctionEvaluator.mergeHeaders(Map.of(), Map.of("X-Trace", "query"),
+                "{\"x-trace\": \"function\"}", null);
+        assertEquals(1, headers.length);
+        assertEquals("query", headers[0].getValue());
+    }
+
+    @Test
     public void unreadableHeadersAreAnInvalidOptionThatShowsNoValue() {
         try {
-            ExternalScalarHttpFunctionEvaluator.mergeHeaders(Map.of(), "{\"x-api-key\": [\"" + SECRET + "\"]}", null);
+            ExternalScalarHttpFunctionEvaluator.mergeHeaders(Map.of(), Map.of(),
+                    "{\"x-api-key\": [\"" + SECRET + "\"]}", null);
             fail("expected the headers to be refused");
         } catch (HyracksDataException e) {
             assertEquals(ErrorCode.EXTERNAL_HTTP_FUNCTION_INVALID_OPTION.intValue(), e.getErrorCode());

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.library;
 
+import java.util.Map;
+
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
@@ -35,13 +37,15 @@ public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorF
     private final IScalarEvaluatorFactory[] args;
     private final IAType[] argTypes;
     private final SourceLocation sourceLoc;
+    private final Map<String, String> requestHeaders;
 
     public ExternalScalarFunctionEvaluatorFactory(IExternalFunctionInfo finfo, IScalarEvaluatorFactory[] args,
-            IAType[] argTypes, SourceLocation sourceLoc) {
+            IAType[] argTypes, SourceLocation sourceLoc, Map<String, String> requestHeaders) {
         this.finfo = finfo;
         this.args = args;
         this.argTypes = argTypes;
         this.sourceLoc = sourceLoc;
+        this.requestHeaders = requestHeaders;
     }
 
     @Override
@@ -52,7 +56,7 @@ public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorF
             case PYTHON:
                 return new ExternalScalarPythonFunctionEvaluator(finfo, args, argTypes, ctx, sourceLoc);
             case HTTP:
-                return new ExternalScalarHttpFunctionEvaluator(finfo, args, argTypes, ctx, sourceLoc);
+                return new ExternalScalarHttpFunctionEvaluator(finfo, args, argTypes, ctx, sourceLoc, requestHeaders);
             default:
                 throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
                         finfo.getLanguage());

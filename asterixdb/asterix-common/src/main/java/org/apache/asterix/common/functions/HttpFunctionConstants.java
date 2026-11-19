@@ -53,6 +53,12 @@ public final class HttpFunctionConstants {
     public static final String OPTION_OAUTH_ALLOWED_SCOPES = "oauthAllowedScopes";
     public static final String OPTION_CERTIFICATES = "certificates";
 
+    /**
+     * Key of a query's compiler config, not of function metadata: the headers, a {@code Map<String, String>}, that
+     * every request of the query's HTTP functions carries. A function's own headers cannot replace them.
+     */
+    public static final String REQUEST_HEADERS = "_internal_http_function_request_headers";
+
     private HttpFunctionConstants() {
     }
 }

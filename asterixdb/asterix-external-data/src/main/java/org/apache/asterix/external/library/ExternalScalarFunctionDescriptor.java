@@ -19,6 +19,8 @@
 
 package org.apache.asterix.external.library;
 
+import java.util.Map;
+
 import org.apache.asterix.om.functions.IExternalFunctionDescriptor;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.IAType;
@@ -31,10 +33,12 @@ public class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDyna
 
     private static final long serialVersionUID = 2L;
     private final IExternalFunctionInfo finfo;
+    private final Map<String, String> requestHeaders;
     private IAType[] argTypes;
 
-    public ExternalScalarFunctionDescriptor(IExternalFunctionInfo finfo) {
+    public ExternalScalarFunctionDescriptor(IExternalFunctionInfo finfo, Map<String, String> requestHeaders) {
         this.finfo = finfo;
+        this.requestHeaders = Map.copyOf(requestHeaders);
     }
 
     @Override
@@ -47,7 +51,7 @@ public class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDyna
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
-        return new ExternalScalarFunctionEvaluatorFactory(finfo, args, argTypes, sourceLoc);
+        return new ExternalScalarFunctionEvaluatorFactory(finfo, args, argTypes, sourceLoc, requestHeaders);
     }
 
     @Override

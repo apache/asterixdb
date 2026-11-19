@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.external.library;
 
+import java.util.Map;
+
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.HttpFunctionConstants;
 import org.apache.asterix.om.functions.IExternalFunctionDescriptor;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
@@ -34,18 +37,22 @@ public class ExternalFunctionDescriptorProvider {
 
     public static IExternalFunctionDescriptor resolveExternalFunction(AbstractFunctionCallExpression expr,
             IVariableTypeEnvironment inputTypeEnv, JobGenContext context) throws AlgebricksException {
-        IExternalFunctionDescriptor fd = getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
+        @SuppressWarnings("unchecked")
+        Map<String, String> requestHeaders = (Map<String, String>) context.getMetadataProvider().getConfig()
+                .getOrDefault(HttpFunctionConstants.REQUEST_HEADERS, Map.of());
+        IExternalFunctionDescriptor fd =
+                getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo(), requestHeaders);
         CompilerProperties props = ((IApplicationContext) context.getAppContext()).getCompilerProperties();
         FunctionTypeInferers.SET_ARGUMENTS_TYPE.infer(expr, fd, inputTypeEnv, props, context.getMetadataProvider());
         fd.setSourceLocation(expr.getSourceLocation());
         return fd;
     }
 
-    private static IExternalFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo)
-            throws AlgebricksException {
+    private static IExternalFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo,
+            Map<String, String> requestHeaders) throws AlgebricksException {
         switch (finfo.getKind()) {
             case SCALAR:
-                return new ExternalScalarFunctionDescriptor(finfo);
+                return new ExternalScalarFunctionDescriptor(finfo, requestHeaders);
             case AGGREGATE:
             case UNNEST:
                 throw new AsterixException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND, finfo.getKind());
