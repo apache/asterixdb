@@ -20,6 +20,7 @@ package org.apache.asterix.external.input.record.reader.iceberg;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -39,13 +40,16 @@ import org.apache.iceberg.parquet.ParquetDictionaryRowGroupFilter;
 import org.apache.iceberg.parquet.ParquetMetricsRowGroupFilter;
 import org.apache.iceberg.parquet.ParquetSchemaUtil;
 import org.apache.iceberg.parquet.ParquetValueReader;
+import org.apache.iceberg.types.Types;
 import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
 import org.apache.parquet.io.DelegatingSeekableInputStream;
 import org.apache.parquet.io.SeekableInputStream;
+import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.Type;
 
 /**
  * Reads an Iceberg Parquet data file with the shredded {@code VARIANT} sub-columns a query does not reference pruned
@@ -216,8 +220,12 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
         // be shredded here and residual-only elsewhere, and the clipper no-ops whenever it cannot narrow safely.
         MessageType clipped = projection;
         for (List<String> column : plan.columns()) {
+            List<String> filePath = filePath(expectedSchema, projection, column);
+            if (filePath == null) {
+                continue; // the column is not in this file, so there is nothing of it to narrow
+            }
             RequestedVariantPaths paths = plan.get(column);
-            clipped = VariantSchemaClipper.clip(clipped, column, paths);
+            clipped = VariantSchemaClipper.clip(clipped, filePath, paths);
         }
         pruned = clipped != projection;
         clippedProjection = clipped;
@@ -268,6 +276,47 @@ public final class VariantProjectedParquetReader implements CloseableIterable<Re
 
         // The narrowed physical schema: only these column chunks are fetched.
         reader.setRequestedSchema(clippedProjection);
+    }
+
+    /**
+     * Translates a plan column, named as in the table's current schema, into the names this file uses for it.
+     * <p>
+     * The plan uses current names, but a file keeps the names it was written with, and only field ids tie the two
+     * together. After a rename the old name can belong to a different column: rename {@code a} to {@code b}, add a new
+     * {@code a}, and in older files {@code a} is the column that is now {@code b}. Looking the plan's names up in the
+     * file would then clip one column to another's sub-paths.
+     *
+     * @return the file's names for the column, or {@code null} when some level of it is absent from the file
+     */
+    private static List<String> filePath(Schema expectedSchema, GroupType fileGroup, List<String> column) {
+        Types.StructType struct = expectedSchema.asStruct();
+        GroupType group = fileGroup;
+        List<String> names = new ArrayList<>(column.size());
+        for (int i = 0; i < column.size(); i++) {
+            Types.NestedField field = struct.field(column.get(i));
+            Type match = field == null ? null : childWithId(group, field.fieldId());
+            if (match == null) {
+                return null;
+            }
+            names.add(match.getName());
+            if (i < column.size() - 1) {
+                if (match.isPrimitive() || !field.type().isStructType()) {
+                    return null;
+                }
+                group = match.asGroupType();
+                struct = field.type().asStructType();
+            }
+        }
+        return names;
+    }
+
+    private static Type childWithId(GroupType group, int fieldId) {
+        for (Type child : group.getFields()) {
+            if (child.getId() != null && child.getId().intValue() == fieldId) {
+                return child;
+            }
+        }
+        return null;
     }
 
     @Override

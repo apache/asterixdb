@@ -47,6 +47,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -231,6 +232,7 @@ public class IcebergTest {
     private static final int PARTITIONED_VARIANT_GROUP_SIZE = 3;
     private static final TableIdentifier TWO_VARIANTS_TABLE_ID = TableIdentifier.of(NAMESPACE, "twoVariants");
     private static final int TWO_VARIANTS_FILE_COUNT = 6;
+    private static final TableIdentifier RENAMED_VARIANT_TABLE_ID = TableIdentifier.of(NAMESPACE, "renamedVariant");
     private static final TableIdentifier PARTIALLY_SHREDDED_VARIANT_TABLE_ID =
             TableIdentifier.of(NAMESPACE, "partiallyShreddedVariant");
 
@@ -332,6 +334,7 @@ public class IcebergTest {
             writeMixedShreddingVariantTable(catalog);
             writeFloatNanVariantTable(catalog);
             writeMissingFieldVariantTable(catalog);
+            writeRenamedVariantTable(catalog);
         }
     }
 
@@ -1232,6 +1235,161 @@ public class IcebergTest {
         }
         append.commit();
         LOGGER.info("[WRITE] twoVariants committed with {} single-row files", TWO_VARIANTS_FILE_COUNT);
+    }
+
+    /**
+     * Variant columns renamed and then shadowed by a new column of the old name, at the top level, inside a struct, and
+     * under a renamed struct. Top level: {@code a} is renamed to {@code b} and a new {@code a} is added. In struct
+     * {@code st}: {@code v} is renamed to {@code w} and a new {@code v} is added. Struct {@code p} is renamed to
+     * {@code q} and a new struct {@code p} with its own {@code v} is added, so the variant keeps its name and only its
+     * parent's name is reused. Files written before the renames still use the old names for field ids 2, 4 and 5, so
+     * a reader that matches columns by name instead of by id finds the wrong column there.
+     * <p>
+     * Three commits come before the renames: {@code old_1} (ids 1, 2, 5), an equality delete on id 2, and
+     * {@code old_2} (ids 3, 4). The delete covers only {@code old_1}, so the old files are read both with and without
+     * deletes. {@code new_1} (ids 11, 12) is written after the renames and carries every column. In the old files
+     * {@code x} and {@code w} are shredded in both variants, and ids 4 and 5 also carry {@code z} in {@code a}'s
+     * residual. The snapshot just before the renames is kept for reading the table as it was then.
+     */
+    private static void writeRenamedVariantTable(NessieCatalog catalog) throws Exception {
+        Schema schema = new Schema(required(1, "id", Types.IntegerType.get()),
+                Types.NestedField.optional(2, "a", Types.VariantType.get()),
+                Types.NestedField.optional(3, "st",
+                        Types.StructType.of(Types.NestedField.optional(4, "v", Types.VariantType.get()))),
+                Types.NestedField.optional(5, "p",
+                        Types.StructType.of(Types.NestedField.optional(6, "v", Types.VariantType.get()))));
+        Table table = createTable(catalog, RENAMED_VARIANT_TABLE_ID, schema, PartitionSpec.unpartitioned());
+        LOGGER.info("[TABLE] name={} location={}", table.name(), table.location());
+
+        VariantMetadata oldMeta = Variants.metadata("w", "x", "z");
+        Type xwTyped = toParquetTypedValue(renamedVariant(oldMeta, "x", "x0", "w", 0));
+        VariantShreddingFunction oldShredder = (fieldId, name) -> xwTyped;
+
+        AppendFiles first = table.newAppend();
+        first.appendFile(writeRenamedVariantFile(table, "old_1.parquet", oldShredder,
+                renamedRow(1, "a", renamedVariant(oldMeta, "x", "x1", "w", 1), "st.v", oldStructVariant(oldMeta, 1),
+                        "p.v", oldParentVariant(oldMeta, 1)),
+                renamedRow(2, "a", renamedVariant(oldMeta, "x", "x2", "w", 2), "st.v", oldStructVariant(oldMeta, 2),
+                        "p.v", oldParentVariant(oldMeta, 2)),
+                renamedRow(5, "a", renamedVariant(oldMeta, "x", "x5", "w", 5, "z", "z5"), "st.v",
+                        oldStructVariant(oldMeta, 5), "p.v", oldParentVariant(oldMeta, 5))));
+        first.commit();
+        table.newRowDelta().addDeletes(writeUnpartitionedEqualityDelete(table, 2)).commit();
+        AppendFiles second = table.newAppend();
+        second.appendFile(writeRenamedVariantFile(table, "old_2.parquet", oldShredder,
+                renamedRow(3, "a", renamedVariant(oldMeta, "x", "x3", "w", 3), "st.v", oldStructVariant(oldMeta, 3),
+                        "p.v", oldParentVariant(oldMeta, 3)),
+                renamedRow(4, "a", renamedVariant(oldMeta, "x", "x4", "w", 4, "z", "z4"), "st.v",
+                        oldStructVariant(oldMeta, 4), "p.v", oldParentVariant(oldMeta, 4))));
+        second.commit();
+        TestConstants.Iceberg.renamedVariantPreRenameSnapshotIdValue = table.currentSnapshot().snapshotId();
+
+        table.updateSchema().renameColumn("a", "b").renameColumn("st.v", "w").renameColumn("p", "q").commit();
+        table.updateSchema().addColumn("a", Types.VariantType.get()).addColumn("st", "v", Types.VariantType.get())
+                .addColumn("p", Types.StructType.of(Types.NestedField.optional(100, "v", Types.VariantType.get())))
+                .commit();
+        table.refresh();
+
+        VariantMetadata newMeta = Variants.metadata("w", "x", "y");
+        Type yTyped = toParquetTypedValue(renamedVariant(newMeta, "y", "y0"));
+        // By field id, not name: the renamed q.v and the new p.v are both called v.
+        VariantShreddingFunction newShredder =
+                (fieldId, name) -> fieldId == 2 || fieldId == 4 || fieldId == 6 ? xwTyped : yTyped;
+        AppendFiles third = table.newAppend();
+        third.appendFile(writeRenamedVariantFile(table, "new_1.parquet", newShredder,
+                renamedRow(11, "b", renamedVariant(newMeta, "x", "x11", "w", 11), "a",
+                        renamedVariant(newMeta, "y", "y11"), "st.w", oldStructVariant(newMeta, 11), "st.v",
+                        renamedVariant(newMeta, "y", "t11"), "q.v", oldParentVariant(newMeta, 11), "p.v",
+                        renamedVariant(newMeta, "y", "p11")),
+                renamedRow(12, "b", renamedVariant(newMeta, "x", "x12", "w", 12), "a",
+                        renamedVariant(newMeta, "y", "y12"), "st.w", oldStructVariant(newMeta, 12), "st.v",
+                        renamedVariant(newMeta, "y", "t12"), "q.v", oldParentVariant(newMeta, 12), "p.v",
+                        renamedVariant(newMeta, "y", "p12"))));
+        third.commit();
+        LOGGER.info("[WRITE] renamedVariant committed; schema now {}", table.schema());
+    }
+
+    /** The struct variant's value for row {@code id}: x = "s" + id, w = 100 + id. */
+    private static Variant oldStructVariant(VariantMetadata meta, int id) {
+        return renamedVariant(meta, "x", "s" + id, "w", 100 + id);
+    }
+
+    /** The renamed struct's variant for row {@code id}: x = "q" + id, w = 200 + id. */
+    private static Variant oldParentVariant(VariantMetadata meta, int id) {
+        return renamedVariant(meta, "x", "q" + id, "w", 200 + id);
+    }
+
+    /** Builds an object variant from alternating field names and values (String or Integer). */
+    private static Variant renamedVariant(VariantMetadata meta, Object... namesAndValues) {
+        ShreddedObject object = Variants.object(meta);
+        for (int i = 0; i < namesAndValues.length; i += 2) {
+            Object value = namesAndValues[i + 1];
+            object.put((String) namesAndValues[i],
+                    value instanceof Integer ? Variants.of((Integer) value) : Variants.of((String) value));
+        }
+        return Variant.of(meta, object);
+    }
+
+    /** A row of id plus alternating column paths ("a", or "st.v" for v inside struct st) and variant values. */
+    private static Map<String, Object> renamedRow(int id, Object... pathsAndValues) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", id);
+        for (int i = 0; i < pathsAndValues.length; i += 2) {
+            row.put((String) pathsAndValues[i], pathsAndValues[i + 1]);
+        }
+        return row;
+    }
+
+    /** Writes one file in the table's current schema, and checks that every variant column is shredded in it. */
+    @SafeVarargs
+    private static DataFile writeRenamedVariantFile(Table table, String fileName, VariantShreddingFunction shredder,
+            Map<String, Object>... rows) throws Exception {
+        String path = table.location() + "/data/" + fileName;
+        OutputFile out = table.io().newOutputFile(path);
+        GenericRecord template = GenericRecord.create(table.schema());
+        try (FileAppender<Record> writer = Parquet.write(out).schema(table.schema())
+                .createWriterFunc(GenericParquetWriter::create).variantShreddingFunc(shredder).build()) {
+            for (Map<String, Object> row : rows) {
+                Record record = template.copy();
+                row.forEach((column, value) -> {
+                    int dot = column.indexOf('.');
+                    if (dot < 0) {
+                        record.setField(column, value);
+                        return;
+                    }
+                    String structName = column.substring(0, dot);
+                    Record struct = (Record) record.getField(structName);
+                    if (struct == null) {
+                        struct = GenericRecord.create(table.schema().findField(structName).type().asStructType());
+                        record.setField(structName, struct);
+                    }
+                    struct.setField(column.substring(dot + 1), value);
+                });
+                writer.add(record);
+            }
+        }
+        long bytes = out.toInputFile().getLength();
+        // The bug only shows when the old column is shredded on disk, so refuse to test a serialized layout.
+        try (ParquetFileReader reader = ParquetFileReader.open(parquetInput(table.io().newInputFile(path)))) {
+            MessageType fileSchema = reader.getFooter().getFileMetaData().getSchema();
+            for (Types.NestedField field : table.schema().columns()) {
+                assertRenamedVariantShredded(fileName, field, fileSchema.getType(field.name()));
+            }
+        }
+        Metrics metrics = ParquetUtil.fileMetrics(table.io().newInputFile(path), MetricsConfig.forTable(table));
+        return DataFiles.builder(table.spec()).withPath(path).withFormat(FileFormat.PARQUET).withFileSizeInBytes(bytes)
+                .withMetrics(metrics).build();
+    }
+
+    private static void assertRenamedVariantShredded(String fileName, Types.NestedField field, Type parquetType) {
+        if (field.type().typeId() == org.apache.iceberg.types.Type.TypeID.VARIANT) {
+            Assert.assertTrue(fileName + ": " + field.name() + " must be shredded",
+                    parquetType.asGroupType().containsField("typed_value"));
+        } else if (field.type().isStructType()) {
+            for (Types.NestedField child : field.type().asStructType().fields()) {
+                assertRenamedVariantShredded(fileName, child, parquetType.asGroupType().getType(child.name()));
+            }
+        }
     }
 
     /** The second variant column's shape: deliberately unlike bucketVariant so the two cannot be confused. */

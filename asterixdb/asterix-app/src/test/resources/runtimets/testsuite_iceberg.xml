@@ -153,6 +153,12 @@
         <output-dir compare="Text">variant-two-columns</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="iceberg">
+      <compilation-unit name="variant-renamed-column">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">variant-renamed-column</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="negative">
     <test-case FilePath="iceberg/negative">

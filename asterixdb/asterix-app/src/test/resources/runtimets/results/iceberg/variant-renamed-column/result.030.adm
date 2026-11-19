@@ -1,0 +1,6 @@
+{ "id": 1, "bx": "x1", "bw": 1, "ay": null }
+{ "id": 3, "bx": "x3", "bw": 3, "ay": null }
+{ "id": 4, "bx": "x4", "bw": 4, "ay": null }
+{ "id": 5, "bx": "x5", "bw": 5, "ay": null }
+{ "id": 11, "bx": "x11", "bw": 11, "ay": "y11" }
+{ "id": 12, "bx": "x12", "bw": 12, "ay": "y12" }

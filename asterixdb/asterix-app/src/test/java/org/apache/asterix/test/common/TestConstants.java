@@ -112,9 +112,12 @@ public class TestConstants {
         public static final String SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER =
                 "%SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER%";
         public static final String SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER = "%SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER%";
+        public static final String RENAMED_VARIANT_PRE_RENAME_SNAPSHOT_ID_PLACEHOLDER =
+                "%RENAMED_VARIANT_PRE_RENAME_SNAPSHOT_ID%";
         public static long snapshot1SnapshotIdValue;
         public static long snapshot1TimestampLongValue;
         public static String snapshot2TimestampDatetimeValue;
         public static String snapshot3TimestampDateValue;
+        public static long renamedVariantPreRenameSnapshotIdValue;
     }
 }

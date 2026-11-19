@@ -40,10 +40,12 @@ import static org.apache.asterix.test.common.TestConstants.Azure.TENANT_ID_DEFAU
 import static org.apache.asterix.test.common.TestConstants.Azure.TENANT_ID_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.sasToken;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.NESSIE_SERVER_URI_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.RENAMED_VARIANT_PRE_RENAME_SNAPSHOT_ID_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_SNAPSHOT_ID_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.SNAPSHOT_3_TIMESTAMP_DATE_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Iceberg.renamedVariantPreRenameSnapshotIdValue;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.snapshot1SnapshotIdValue;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.snapshot1TimestampLongValue;
 import static org.apache.asterix.test.common.TestConstants.Iceberg.snapshot2TimestampDatetimeValue;
@@ -2572,6 +2574,8 @@ public class TestExecutor {
                 ? str.replace(NESSIE_SERVER_URI_PLACEHOLDER, getNessieEndpointDefault()) : str;
         str = str.replace(SNAPSHOT_1_SNAPSHOT_ID_PLACEHOLDER, String.valueOf(snapshot1SnapshotIdValue));
         str = str.replace(SNAPSHOT_1_TIMESTAMP_LONG_PLACEHOLDER, String.valueOf(snapshot1TimestampLongValue));
+        str = str.replace(RENAMED_VARIANT_PRE_RENAME_SNAPSHOT_ID_PLACEHOLDER,
+                String.valueOf(renamedVariantPreRenameSnapshotIdValue));
         str = snapshot2TimestampDatetimeValue != null
                 ? str.replace(SNAPSHOT_2_TIMESTAMP_DATETIME_PLACEHOLDER, snapshot2TimestampDatetimeValue) : str;
         str = snapshot3TimestampDateValue != null
