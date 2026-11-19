@@ -211,8 +211,8 @@ public final class LSMVTreeTestContext extends AbstractVectorTreeTestContext {
                 VTreeDataTupleAccessor.identityFields(effectiveFactory.isQuantized(), NUM_KEY_FIELDS), effectiveFactory,
                 (VTreeQuantizationParams) null, // builderFactory, quantizationParams
                 TestVTreeDistanceFunctionFactory.INSTANCE, // distanceFunctionFactory (test fixture)
-                // Identity quantizer: these fixtures store full-precision vectors, and the top-K cursor
-                // requires a quantizer. Inert on this bare leaf layout, which carries no quantized bytes.
+                // Identity quantizer: the top-K cursor requires a quantizer, and these fixtures put
+                // full-precision doubles in the quantized-embedding field, which it decodes per candidate.
                 TestVTreeQuantizerFactory.INSTANCE, SINGLE_CLOSEST, EPSILON, compressorDecompressorFactory);
 
         return new LSMVTreeTestContext(fieldSerdes, lsmVTree, numVectorFields);

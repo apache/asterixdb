@@ -34,8 +34,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
@@ -85,6 +88,8 @@ public final class HyracksConnection implements Closeable, IHyracksClientConnect
     private final IHyracksClientInterface hci;
 
     private final ClusterControllerInfo ccInfo;
+
+    private volatile Credentials consoleCredentials;
 
     private volatile boolean running = false;
 
@@ -262,6 +267,14 @@ public final class HyracksConnection implements Closeable, IHyracksClientConnect
         }
     }
 
+    /**
+     * Sets the credentials with which {@link #deployBinary} uploads to the Cluster Controller's console, for a
+     * Cluster Controller whose console requires authentication.
+     */
+    public void setConsoleCredentials(String user, String password) {
+        consoleCredentials = new UsernamePasswordCredentials(user, password);
+    }
+
     @Override
     public DeploymentId deployBinary(List<String> files) throws Exception {
         /** generate a deployment id */
@@ -283,6 +296,9 @@ public final class HyracksConnection implements Closeable, IHyracksClientConnect
                     String url = "http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/"
                             + deploymentId.toString() + "&" + fileName;
                     HttpPut put = new HttpPut(url);
+                    if (consoleCredentials != null) {
+                        put.addHeader(new BasicScheme().authenticate(consoleCredentials, put, null));
+                    }
                     put.setEntity(new FileEntity(new File(file), "application/octet-stream"));
                     HttpResponse response = hc.execute(put);
                     response.getEntity().consumeContent();

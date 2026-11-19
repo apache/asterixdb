@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.clienthelper.Args;
@@ -74,6 +76,11 @@ public abstract class RemoteCommand extends ClientCommand {
         conn.setReadTimeout(timeoutMillis);
         conn.setRequestMethod(method.name());
         conn.setRequestProperty("Connection", "close");
+        if (args.getUsername() != null && args.getPassword() != null) {
+            String credentials = args.getUsername() + ":" + args.getPassword();
+            String encoded = Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+            conn.setRequestProperty("Authorization", "Basic " + encoded);
+        }
         return conn;
     }
 }

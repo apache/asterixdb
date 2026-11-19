@@ -60,7 +60,7 @@ For example, to install a library with the following criteria:
 * `udfs` dataverse name
 * with a new Library name of `testlib`
 * from `lib.zip` in the present working directory
-* to the cluster at `localhost` with API port `19004` of the Asterix CC
+* to the cluster at `localhost` with the node controller API port `19004` (the `nc.api.port` setting)
 * with credentials being a username and password of `admin:admin`
 
 we would execute
@@ -125,7 +125,7 @@ scikit-learn here (our method is obviously better!), but it's just included as a
 
 Then, deploy it the same as the Java UDF was, with the library name `pylib` in `udfs` dataverse
 
-    curl -v -u admin:admin -X POST -F 'data=@./lib.pyz' -F 'type=python' localhost:19002/admin/udf/udfs/pylib
+    curl -v -u admin:admin -X POST -F 'data=@./lib.pyz' -F 'type=python' localhost:19004/admin/udf/udfs/pylib
 
 With the library deployed, we can define a function within it for use. For example, to expose the Python function
 `sentiment` in the module `sentiment_mod` in the class `sent_model`, the `CREATE FUNCTION` would be as follows
@@ -287,6 +287,6 @@ functions declared with the library are removed. First we'll drop the function w
 
 Then issue the proper `DELETE` request
 
-    curl -u admin:admin -X DELETE localhost:19002/admin/udf/udfs/testlib
+    curl -u admin:admin -X DELETE localhost:19004/admin/udf/udfs/testlib
 
 The library will also be dropped if you drop the dataverse entirely.

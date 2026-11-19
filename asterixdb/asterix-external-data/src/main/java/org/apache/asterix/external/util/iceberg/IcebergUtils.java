@@ -321,7 +321,8 @@ public class IcebergUtils {
 
     /**
      * Extracts and returns the iceberg catalog properties from the provided configuration
-     * Also, prefixes the collection auths with ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL to avoid conflicts
+     * Also carries the collection properties the catalog's FileIO needs ({@link IcebergConstants#catalogFileIoParams}),
+     * prefixed with ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL to avoid conflicts
      *
      * @param configuration configuration
      * @return catalog properties
@@ -334,12 +335,12 @@ public class IcebergUtils {
             String key = entry.getKey();
             if (key.startsWith(ICEBERG_CATALOG_PROPERTY_PREFIX_INTERNAL)) {
                 properties.put(key.substring(ICEBERG_CATALOG_PROPERTY_PREFIX_INTERNAL.length()), entry.getValue());
-            } else if (IcebergConstants.authParams.contains(key)) {
+            } else if (IcebergConstants.catalogFileIoParams.contains(key)) {
                 properties.put(ICEBERG_COLLECTION_PROPERTY_PREFIX_INTERNAL + key, entry.getValue());
             }
         }
 
-        // we only need reader type from collection properties (other than auth params) for setting FileIO later
+        // we only need reader type from collection properties (other than the carried ones) for setting FileIO later
         properties.put(IcebergConstants.ICEBERG_IO_READER_TYPE, ioReader);
         // setFileIoProperties reads the vending switch from these properties; it arrives via the
         // catalog-prefix branch above, so nothing further needs carrying across.

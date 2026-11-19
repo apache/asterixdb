@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.application;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.config.IConfigManager;
@@ -45,4 +46,14 @@ public interface ICCApplication extends IApplication {
      * @return true if the application is accepting jobs. False, otherwise.
      */
     boolean acceptingJobs(Set<JobFlag> jobFlags);
+
+    /**
+     * Called once the application has started, before the console starts accepting requests.
+     *
+     * @return the credentials that the console endpoints require, keyed by user name, each a bcrypt hash of the
+     *         user's password; or {@code null} to leave the console unauthenticated
+     */
+    default Map<String, String> getConsoleCredentials() {
+        return null;
+    }
 }

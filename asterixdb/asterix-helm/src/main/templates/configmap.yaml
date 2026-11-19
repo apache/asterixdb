@@ -1,0 +1,51 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+  labels:
+    {{- include "asterixdb.labels" . | nindent 4 }}
+data:
+  cc.conf: |-
+    {{- range until (.Values.numNodes | int) }}
+    [nc/{{ $.Release.Name }}-nc-{{ . }}]
+    iodevices = /var/lib/asterix/io1,/var/lib/asterix/io2
+    {{- end }}
+
+    [nc]
+    ncservice.port = -1
+    cluster.address = {{ include "asterixdb.ccAddress" . }}
+    credential.file = /etc/asterixdb/passwd
+
+    [cc]
+    heartbeat.period = 2000
+    credential.file = /etc/asterixdb/passwd
+
+    [common]
+    default.dir = /var/lib/asterix
+    log.level = {{ .Values.logLevel }}
+    storage.partitioning = static
+    storage.partitions.count = {{ .Values.storagePartitions }}
+    cloud.deployment = true
+    cloud.storage.scheme = s3
+    cloud.storage.bucket = {{ .Values.rustfs.bucket }}
+    cloud.storage.region = {{ .Values.rustfs.region }}
+    cloud.storage.endpoint = {{ include "asterixdb.rustfsEndpoint" . }}
+    cloud.storage.force.path.style = true

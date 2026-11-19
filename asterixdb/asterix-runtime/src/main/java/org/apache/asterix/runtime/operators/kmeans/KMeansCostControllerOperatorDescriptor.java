@@ -277,6 +277,10 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
             return new AbstractOperatorNodePushable() {
                 private final IFrameWriter[] writers = new IFrameWriter[2];
+                // The last round's column, which the weighing pass merges; null when it holds no real minima.
+                private MaterializerTaskState lastScore;
+                // The number of pool members that lastScore was scored against.
+                private int lastCount;
 
                 @Override
                 public int getInputArity() {
@@ -336,6 +340,7 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                         // rather than at joblet cleanup.
                         try {
                             try {
+                                KMeansLoopIO.discard(lastScore);
                                 KMeansLoopIO.discard(poolState);
                             } finally {
                                 if (!vectorsHandedOff) {
@@ -372,11 +377,21 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                                         "the CLUSTER BY seed was not a numeric array of the declared dimension; the "
                                                 + "initial candidates were sampled uniformly from the input instead"));
                     }
+                    // The pool only grows, so each round scores the vectors against the members the previous round
+                    // appended and merges the result into that round's column. A bootstrap column holds a constant
+                    // and no real minima, so the next round scores the whole pool.
+                    boolean previousReal = false;
+                    int previousCount = 0;
                     try {
                         for (int r = 0; r < loopRounds; r++) {
-                            // A fresh column per round; the previous one is dead once Op3 consumed it, which the
-                            // loop's ordering guarantees has happened before this round begins.
-                            KMeansLoopIO.discard(scoreState);
+                            // A fresh column per round. The loop's ordering guarantees that Op3 has consumed the
+                            // previous column by the time this round starts, so that column is kept only for the merge.
+                            MaterializerTaskState previous = scoreState;
+                            final boolean usePrevious = previousReal && previous != null;
+                            if (!usePrevious) {
+                                KMeansLoopIO.discard(previous);
+                                previous = null;
+                            }
                             scoreState = LoopControlState.sharedRunFile(ctx,
                                     LoopControlState.scoreStateId(loopKey, partition));
                             ctx.setStateObject(scoreState);
@@ -389,22 +404,39 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                             final boolean bootstrapRound = poolEmpty;
                             // Blocked against pool[r], which stays on disk. Vectors reach the sink in run-file
                             // order, so localSum adds its terms in a fixed order.
-                            KMeansLoopIO.streamScoredAgainstPool(vectorState, poolState, ctx, framesLimit,
-                                    KMeansLoopIO.distanceFunction(metric), (vecs, n, nearest, nearestIdx) -> {
-                                        for (int i = 0; i < n; i++) {
-                                            if (bootstrapRound) {
-                                                // The column is built from this array: Op3 reads the same 1.
-                                                nearest[i] = 1.0d;
-                                            }
-                                            double best = nearest[i];
-                                            if (!Double.isNaN(best) && best != Double.POSITIVE_INFINITY) {
-                                                localSum[0] += best;
-                                            }
-                                        }
-                                        // Recorded for Op3, which needs exactly these minima against this same pool.
-                                        column.append(nearest, nearestIdx, n);
-                                    });
+                            final KMeansLoopIO.ScoredBlockConsumer body = (vecs, n, nearest, nearestIdx) -> {
+                                for (int i = 0; i < n; i++) {
+                                    if (bootstrapRound) {
+                                        // The column is built from this array: Op3 reads the same 1.
+                                        nearest[i] = 1.0d;
+                                    }
+                                    double best = nearest[i];
+                                    if (!Double.isNaN(best) && best != Double.POSITIVE_INFINITY) {
+                                        localSum[0] += best;
+                                    }
+                                }
+                                // Recorded for Op3, which needs exactly these minima against this same pool.
+                                column.append(nearest, nearestIdx, n);
+                            };
+                            final int poolCount = KMeansLoopIO.countRawVectors(poolState, ctx);
+                            if (usePrevious) {
+                                final int offset = previousCount;
+                                try (KMeansLoopIO.ScoreColumnReader prior =
+                                        new KMeansLoopIO.ScoreColumnReader(previous, ctx)) {
+                                    KMeansLoopIO.streamScoredAgainstPool(KMeansLoopIO.source(vectorState, ctx),
+                                            sink -> KMeansLoopIO.streamRawVectors(poolState, ctx, offset, sink), ctx,
+                                            framesLimit, KMeansLoopIO.distanceFunction(metric),
+                                            KMeansLoopIO.mergeWithPrevious(prior, offset, body));
+                                } finally {
+                                    KMeansLoopIO.discard(previous);
+                                }
+                            } else {
+                                KMeansLoopIO.streamScoredAgainstPool(vectorState, poolState, ctx, framesLimit,
+                                        KMeansLoopIO.distanceFunction(metric), body);
+                            }
                             column.finish();
+                            previousReal = !bootstrapRound;
+                            previousCount = poolCount;
                             tb.reset();
                             tb.addField(IntegerSerializerDeserializer.INSTANCE, r);
                             tb.addField(IntegerSerializerDeserializer.INSTANCE, partition);
@@ -419,6 +451,12 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                             if (poolEmpty) {
                                 poolEmpty = isEmpty(poolState); // this round's draws may have ended the bootstrap
                             }
+                        }
+                        if (previousReal) {
+                            // The weighing pass resumes from this column; it now owns the file.
+                            lastScore = scoreState;
+                            lastCount = previousCount;
+                            scoreState = null;
                         }
                     } finally {
                         KMeansLoopIO.discard(scoreState);
@@ -485,12 +523,25 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                             new TaskId(getActivityId(), partition));
                     weighColumn.open(ctx);
                     try {
-                        // Pass A: score every vector against the final pool once, keeping the assignment.
+                        // Pass A: assign every vector to its nearest member of the final pool and record the
+                        // assignment. The last round's column covers the earlier members, so only its draws are scored.
                         final KMeansLoopIO.ScoreColumnWriter column =
                                 new KMeansLoopIO.ScoreColumnWriter(weighColumn, ctx);
-                        KMeansLoopIO.streamScoredAgainstPool(vectorState, poolState, ctx, framesLimit,
-                                KMeansLoopIO.distanceFunction(metric),
-                                (vecs, n, nearest, nearestIdx) -> column.append(nearest, nearestIdx, n));
+                        final KMeansLoopIO.ScoredBlockConsumer record =
+                                (vecs, n, nearest, nearestIdx) -> column.append(nearest, nearestIdx, n);
+                        if (lastScore != null) {
+                            final int offset = lastCount;
+                            try (KMeansLoopIO.ScoreColumnReader prior =
+                                    new KMeansLoopIO.ScoreColumnReader(lastScore, ctx)) {
+                                KMeansLoopIO.streamScoredAgainstPool(KMeansLoopIO.source(vectorState, ctx),
+                                        sink -> KMeansLoopIO.streamRawVectors(poolState, ctx, offset, sink), ctx,
+                                        framesLimit, KMeansLoopIO.distanceFunction(metric),
+                                        KMeansLoopIO.mergeWithPrevious(prior, offset, record));
+                            }
+                        } else {
+                            KMeansLoopIO.streamScoredAgainstPool(vectorState, poolState, ctx, framesLimit,
+                                    KMeansLoopIO.distanceFunction(metric), record);
+                        }
                         column.finish();
 
                         // Pass B: sweep the slot range with a budget-sized window, so a pool small enough
@@ -502,6 +553,8 @@ public class KMeansCostControllerOperatorDescriptor extends AbstractOperatorDesc
                         envelope.flush();
                     } finally {
                         KMeansLoopIO.discard(weighColumn);
+                        KMeansLoopIO.discard(lastScore);
+                        lastScore = null;
                     }
                 }
 

@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.operators.kmeans;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.runtime.utils.VectorDistanceCalculation;
@@ -154,6 +155,43 @@ public class KMeansBoundedScanTest {
         }
     }
 
+    /**
+     * Merging a scan of the new pool members into the previous column must give exactly what one scan over the
+     * whole pool gives, at every block size and wherever the previous pool ends, including a round that added no
+     * member.
+     */
+    @Test
+    public void incrementalScanMatchesAWholePoolScan() throws Exception {
+        double[][] vectors = vectors(500, 16, 7L);
+        double[][] pool = vectors(64, 16, 99L);
+        assertSpansManyBlocks(1, 16, vectors.length);
+
+        for (int framesLimit : new int[] { 1, 4096 }) {
+            List<Scored> whole = scan(vectors, pool, framesLimit);
+            for (int previousCount : new int[] { 1, 40, 63, 64 }) {
+                assertSameSequence(whole, incrementalScan(vectors, pool, previousCount, framesLimit));
+            }
+        }
+    }
+
+    /** A new member that ties the previous minimum leaves the earlier member as the nearest. */
+    @Test
+    public void incrementalTiesKeepTheEarlierMember() throws Exception {
+        double[][] vectors = new double[2000][];
+        for (int i = 0; i < vectors.length; i++) {
+            vectors[i] = new double[] { 0.0d, 0.0d };
+        }
+        // Four members all exactly the same distance from every vector; the previous round saw the first two.
+        double[][] pool = { { 1.0d, 0.0d }, { -1.0d, 0.0d }, { 0.0d, 1.0d }, { 0.0d, -1.0d } };
+        assertSpansManyBlocks(1, 2, vectors.length);
+
+        for (int framesLimit : new int[] { 1, 2, 4096 }) {
+            for (Scored s : incrementalScan(vectors, pool, 2, framesLimit)) {
+                Assert.assertEquals("framesLimit=" + framesLimit, 0, s.index);
+            }
+        }
+    }
+
     /** The capacity is at least one vector, so even a width that overruns the budget still makes progress. */
     @Test
     public void blockCapacityIsAtLeastOne() {
@@ -199,6 +237,42 @@ public class KMeansBoundedScanTest {
         } finally {
             vectorState.close();
             poolState.close();
+        }
+        return out;
+    }
+
+    /**
+     * Scores the vectors against the first {@code previousCount} pool members into a column, then scans only the
+     * remaining members and merges them into that column, flattening the merged blocks into per-vector order.
+     */
+    private static List<Scored> incrementalScan(double[][] vectors, double[][] pool, int previousCount, int framesLimit)
+            throws Exception {
+        IHyracksTaskContext ctx = TestUtils.create(FRAME_SIZE);
+        MaterializerTaskState vectorState = materialize(ctx, vectors, 1);
+        MaterializerTaskState poolState = materialize(ctx, pool, 2);
+        MaterializerTaskState previousPool = materialize(ctx, Arrays.copyOf(pool, previousCount), 3);
+        MaterializerTaskState column = materialize(ctx, new double[0][], 4);
+        List<Scored> out = new ArrayList<>();
+        try {
+            KMeansLoopIO.ScoreColumnWriter writer = new KMeansLoopIO.ScoreColumnWriter(column, ctx);
+            KMeansLoopIO.streamScoredAgainstPool(vectorState, previousPool, ctx, framesLimit, EUCLIDEAN_SQUARED,
+                    (vecs, n, nearest, nearestIdx) -> writer.append(nearest, nearestIdx, n));
+            writer.finish();
+            try (KMeansLoopIO.ScoreColumnReader previous = new KMeansLoopIO.ScoreColumnReader(column, ctx)) {
+                KMeansLoopIO.streamScoredAgainstPool(KMeansLoopIO.source(vectorState, ctx),
+                        sink -> KMeansLoopIO.streamRawVectors(poolState, ctx, previousCount, sink), ctx, framesLimit,
+                        EUCLIDEAN_SQUARED,
+                        KMeansLoopIO.mergeWithPrevious(previous, previousCount, (vecs, n, nearest, nearestIdx) -> {
+                            for (int i = 0; i < n; i++) {
+                                out.add(new Scored(vecs[i].clone(), nearest[i], nearestIdx[i]));
+                            }
+                        }));
+            }
+        } finally {
+            vectorState.close();
+            poolState.close();
+            previousPool.close();
+            column.close();
         }
         return out;
     }

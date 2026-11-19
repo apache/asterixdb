@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import org.apache.asterix.clienthelper.commands.ClientCommand;
 import org.apache.asterix.clienthelper.commands.ClientCommand.Command;
 import org.apache.asterix.clienthelper.commands.GenerateCredentialCommand;
+import org.apache.asterix.clienthelper.commands.GenerateDefaultCredentialCommand;
 import org.apache.asterix.clienthelper.commands.GetClusterStateCommand;
 import org.apache.asterix.clienthelper.commands.ShutdownAllCommand;
 import org.apache.asterix.clienthelper.commands.ShutdownCommand;
@@ -125,6 +126,8 @@ public class AsterixHelperExecution {
                 return new SleepCommand(args);
             case ADD_CREDENTIAL:
                 return new GenerateCredentialCommand(args);
+            case GENERATE_DEFAULT_CREDENTIAL:
+                return new GenerateDefaultCredentialCommand(args);
             default:
                 throw new IllegalStateException("NYI: " + command);
         }

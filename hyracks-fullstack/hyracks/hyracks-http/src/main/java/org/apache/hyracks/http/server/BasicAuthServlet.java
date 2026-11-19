@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.http.server;
-
-import static org.apache.asterix.api.http.server.ServletConstants.*;
+package org.apache.hyracks.http.server;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,34 +43,48 @@ public class BasicAuthServlet implements IServlet {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static String BASIC_AUTH_METHOD_NAME = "Basic";
+    private static final String CHALLENGE = BASIC_AUTH_METHOD_NAME + " realm=\"AsterixDB\", charset=\"UTF-8\"";
     private Base64.Decoder b64Decoder;
     Map<String, String> storedCredentials;
     Map<String, String> ephemeralCredentials;
     private final IServlet delegate;
-    private ConcurrentMap<String, Object> ctx;
+    private final boolean challenge;
 
-    public BasicAuthServlet(ConcurrentMap<String, Object> ctx, IServlet delegate, Map<String, String> storedCredentials,
+    public BasicAuthServlet(IServlet delegate, Map<String, String> storedCredentials,
             Map<String, String> ephemeralCredentials) {
-        this.ctx = ctx;
+        this(delegate, storedCredentials, ephemeralCredentials, false);
+    }
+
+    /**
+     * @param challenge
+     *            whether a rejected request is answered with a Basic challenge, which makes a browser prompt for
+     *            credentials
+     */
+    public BasicAuthServlet(IServlet delegate, Map<String, String> storedCredentials,
+            Map<String, String> ephemeralCredentials, boolean challenge) {
         this.delegate = delegate;
+        this.challenge = challenge;
         b64Decoder = Base64.getDecoder();
         this.storedCredentials = storedCredentials;
         this.ephemeralCredentials = ephemeralCredentials;
     }
 
-    public static Pair<Map<String, String>, Map<String, String>> generateSysAuthHeader(
-            ConcurrentMap<String, Object> ctx) {
-        Map<String, String> storedCredentials = (Map<String, String>) ctx.get(CREDENTIAL_MAP);
-        // generate internal user
+    /**
+     * Generates a random system credential, distinct from every stored user, for servers to call each other with.
+     *
+     * @param storedCredentials
+     *            the stored credentials, keyed by user name
+     * @return the {@code Authorization} header that carries the system credential, and the ephemeral credentials,
+     *         keyed by user name, that accept it; these only authorize GET requests
+     */
+    public static Pair<String, Map<String, String>> generateSystemCredential(Map<String, String> storedCredentials) {
         String sysUser;
         do {
             sysUser = generateRandomString(32);
         } while (storedCredentials.containsKey(sysUser));
         String sysPassword = generateRandomString(128);
-        Map<String, String> ephemeralCredentials = Collections.singletonMap(sysUser, hashPassword(sysPassword));
-        String sysAuthHeader = createAuthHeader(sysUser, sysPassword);
-        ctx.put(SYS_AUTH_HEADER, sysAuthHeader);
-        return Pair.of(storedCredentials, ephemeralCredentials);
+        return Pair.of(createAuthHeader(sysUser, sysPassword),
+                Collections.singletonMap(sysUser, hashPassword(sysPassword)));
     }
 
     @Override
@@ -87,14 +99,23 @@ public class BasicAuthServlet implements IServlet {
 
     @Override
     public ConcurrentMap<String, Object> ctx() {
-        return ctx;
+        return delegate.ctx();
     }
 
     @Override
     public void handle(IServletRequest request, IServletResponse response) {
         try {
+            // Allow CORS preflight (OPTIONS) through without credentials so the browser can
+            // discover allowed headers/methods before issuing the authenticated request.
+            if (HttpMethod.OPTIONS.equals(request.getHttpRequest().method())) {
+                delegate.handle(request, response);
+                return;
+            }
             boolean authorized = authorize(request);
             if (!authorized) {
+                if (challenge) {
+                    response.setHeader(HttpHeaderNames.WWW_AUTHENTICATE, CHALLENGE);
+                }
                 response.setStatus(HttpResponseStatus.UNAUTHORIZED);
             } else {
                 delegate.handle(request, response);
@@ -166,7 +187,7 @@ public class BasicAuthServlet implements IServlet {
     }
 
     private static String generateRandomString(int size) {
-        return RandomStringUtils.randomAlphanumeric(size);
+        return RandomStringUtils.secure().nextAlphanumeric(size);
     }
 
     @Override

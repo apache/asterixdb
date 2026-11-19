@@ -153,7 +153,6 @@ import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -839,8 +838,16 @@ public class TestExecutor {
         }
     }
 
+    /**
+     * Returns the context {@link #executeHttpRequest(HttpUriRequest)} runs a request with. Called once per request, so
+     * an override may hold per-request state. The default authenticates as the test clusters' admin user.
+     */
     protected HttpContext getHttpContext() {
-        return null;
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("admin", "admin"));
+        HttpClientContext context = HttpClientContext.create();
+        context.setCredentialsProvider(credentialsProvider);
+        return context;
     }
 
     protected HttpResponse checkResponse(HttpResponse httpResponse, Predicate<Integer> responseCodeValidator)
@@ -3064,9 +3071,8 @@ public class TestExecutor {
         Thread t = new Thread(() -> {
             while (true) {
                 try {
-                    final HttpClient client = HttpClients.createDefault();
                     final HttpGet get = new HttpGet(getEndpoint(Servlets.CLUSTER_STATE));
-                    final HttpResponse httpResponse = client.execute(get, getHttpContext());
+                    final HttpResponse httpResponse = executeHttpRequest(get);
                     final int statusCode = httpResponse.getStatusLine().getStatusCode();
                     final String response = EntityUtils.toString(httpResponse.getEntity());
                     if (statusCode != HttpStatus.SC_OK) {

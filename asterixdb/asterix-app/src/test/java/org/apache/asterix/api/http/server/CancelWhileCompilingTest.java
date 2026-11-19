@@ -43,6 +43,7 @@ import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
+import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -50,7 +51,6 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -113,7 +113,7 @@ public class CancelWhileCompilingTest {
     }
 
     private static void post(String clientContextId) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient()) {
             HttpPost httpPost = new HttpPost(QUERY_SERVICE);
             httpPost.setEntity(
                     new StringEntity("{\"statement\": \"select 1; select 2; select 3;\", \"multi-statement\": true,"
@@ -129,7 +129,7 @@ public class CancelWhileCompilingTest {
     }
 
     private static int cancel(String clientContextId) throws Exception {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient()) {
             HttpDelete delete = new HttpDelete(RUNNING_REQUESTS + "?client_context_id=" + clientContextId);
             try (CloseableHttpResponse response = httpClient.execute(delete)) {
                 return response.getStatusLine().getStatusCode();

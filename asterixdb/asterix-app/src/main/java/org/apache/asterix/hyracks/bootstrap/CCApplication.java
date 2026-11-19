@@ -30,11 +30,10 @@ import static org.apache.hyracks.control.common.controllers.ControllerConfig.Opt
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -45,11 +44,14 @@ import org.apache.asterix.api.http.IQueryWebServerRegistrant;
 import org.apache.asterix.api.http.server.ActiveRequestsServlet;
 import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
+import org.apache.asterix.api.http.server.BasicAuthServletFactory;
 import org.apache.asterix.api.http.server.ClusterApiServlet;
 import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
+import org.apache.asterix.api.http.server.CredentialFileUtil;
 import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
 import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
+import org.apache.asterix.api.http.server.PingServlet;
 import org.apache.asterix.api.http.server.PlanCacheApiServlet;
 import org.apache.asterix.api.http.server.QueryResultApiServlet;
 import org.apache.asterix.api.http.server.QueryServiceServlet;
@@ -108,9 +110,6 @@ import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
 import org.apache.asterix.utils.RedactionUtil;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -156,6 +155,7 @@ public class CCApplication extends BaseCCApplication {
     protected ICcApplicationContext appCtx;
     private IJobCapacityController jobCapacityController;
     private HyracksConnection hcc;
+    private Map<String, String> credentialMap;
 
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
@@ -248,26 +248,6 @@ public class CCApplication extends BaseCCApplication {
         return ICloudGuardian.NoOpCloudGuardian.INSTANCE;
     }
 
-    private Map<String, String> parseCredentialMap(String credPath) {
-        File credentialFile = new File(credPath);
-        Map<String, String> storedCredentials = new HashMap<>();
-        if (credentialFile.exists()) {
-            try (CSVParser p =
-                    CSVParser.parse(credentialFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withDelimiter(':'))) {
-                List<CSVRecord> recs = p.getRecords();
-                for (CSVRecord r : recs) {
-                    if (r.size() != 2) {
-                        throw new IOException("Passwd file must have exactly two fields.");
-                    }
-                    storedCredentials.put(r.get(0), r.get(1));
-                }
-            } catch (IOException e) {
-                LOGGER.error("Malformed credential file", e);
-            }
-        }
-        return storedCredentials;
-    }
-
     protected ICcApplicationContext createApplicationContext(ILibraryManager libraryManager,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator lifecycleCoordinator,
             IReceptionistFactory receptionistFactory, IConfigValidatorFactory configValidatorFactory,
@@ -332,8 +312,9 @@ public class CCApplication extends BaseCCApplication {
         HttpServer webServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
                 externalProperties.getWebInterfacePort(), config);
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
-                ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(), componentProvider));
+        webServer.addServlet(wrapWithAuth(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
+                ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(), componentProvider),
+                true));
         return webServer;
     }
 
@@ -347,30 +328,67 @@ public class CCApplication extends BaseCCApplication {
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
                 ccServiceCtx.getControllerService().getExecutor());
         jsonAPIServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ccServiceCtx);
-        jsonAPIServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
-                parseCredentialMap(((ClusterControllerService) (appCtx.getServiceContext().getControllerService()))
-                        .getCCConfig().getCredentialFilePath()));
+        jsonAPIServer.setAttribute(ServletConstants.CREDENTIAL_MAP, getCredentialMap());
 
         // Other APIs.
-        addServlet(jsonAPIServer, Servlets.QUERY_STATUS);
-        addServlet(jsonAPIServer, Servlets.QUERY_RESULT);
-        addServlet(jsonAPIServer, Servlets.QUERY_SERVICE);
-        addServlet(jsonAPIServer, Servlets.RUNNING_REQUESTS);
-        addServlet(jsonAPIServer, Servlets.CONNECTOR);
-        addServlet(jsonAPIServer, Servlets.SHUTDOWN);
+        addWrappedServlet(jsonAPIServer, Servlets.QUERY_STATUS);
+        addWrappedServlet(jsonAPIServer, Servlets.QUERY_RESULT);
+        addWrappedServlet(jsonAPIServer, Servlets.QUERY_SERVICE);
+        addWrappedServlet(jsonAPIServer, Servlets.RUNNING_REQUESTS);
+        addWrappedServlet(jsonAPIServer, Servlets.SHUTDOWN);
+        addWrappedServlet(jsonAPIServer, Servlets.CONNECTOR);
+        addWrappedServlet(jsonAPIServer, Servlets.REBALANCE);
+        addWrappedServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
+        addWrappedServlet(jsonAPIServer, Servlets.ACTIVE_STATS);
+        addWrappedServlet(jsonAPIServer, Servlets.PLAN_CACHE);
+        addWrappedServlet(jsonAPIServer, Servlets.CLUSTER_STATE);
+        addWrappedServlet(jsonAPIServer, Servlets.CLUSTER_STATE_NODE_DETAIL); // must not precede add of CLUSTER_STATE
+        addWrappedServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
+        // left open for health checks
         addServlet(jsonAPIServer, Servlets.VERSION);
-        addServlet(jsonAPIServer, Servlets.PLAN_CACHE);
-        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE);
-        addServlet(jsonAPIServer, Servlets.REBALANCE);
-        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_NODE_DETAIL); // must not precede add of CLUSTER_STATE
-        addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
-        addServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
-        addServlet(jsonAPIServer, Servlets.ACTIVE_STATS);
+        addServlet(jsonAPIServer, Servlets.PING);
         return jsonAPIServer;
     }
 
     protected void addServlet(HttpServer server, String path) {
         server.addServlet(createServlet(server, path, path));
+    }
+
+    protected void addWrappedServlet(HttpServer server, String path) {
+        server.addServlet(wrapWithAuth(createServlet(server, path, path), false));
+    }
+
+    /**
+     * @param challenge
+     *            whether a rejected request is answered with a Basic challenge, for servlets a browser navigates to
+     * @return the servlet behind Basic authentication, or the servlet itself when this application does not
+     *         authenticate its APIs
+     */
+    protected IServlet wrapWithAuth(IServlet servlet, boolean challenge) {
+        if (!authenticatesApis()) {
+            return servlet;
+        }
+        return new BasicAuthServletFactory(getCredentialMap(), Collections.emptyMap(), challenge).wrap(servlet);
+    }
+
+    private boolean authenticatesApis() {
+        return appCtx.getExternalProperties().isApiAuthenticationEnabled() && !ccExtensionManager.hasExtensions();
+    }
+
+    @Override
+    public Map<String, String> getConsoleCredentials() {
+        return authenticatesApis() ? getCredentialMap() : null;
+    }
+
+    // loaded on first use, as the servers that need it may be set up in any order
+    private Map<String, String> getCredentialMap() {
+        if (credentialMap == null) {
+            String credentialFilePath = ((ClusterControllerService) (appCtx.getServiceContext().getControllerService()))
+                    .getCCConfig().getCredentialFilePath();
+            credentialMap = CredentialFileUtil.load(credentialFilePath,
+                    appCtx.getExternalProperties().isApiAuthenticationEnabled());
+        }
+        return credentialMap;
     }
 
     protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
@@ -418,6 +436,8 @@ public class CCApplication extends BaseCCApplication {
                 return new DiagnosticsApiServlet(appCtx, ctx, paths);
             case Servlets.ACTIVE_STATS:
                 return new ActiveStatsApiServlet(appCtx, ctx, paths);
+            case Servlets.PING:
+                return new PingServlet(ctx, paths);
             default:
                 throw new IllegalStateException(key);
         }

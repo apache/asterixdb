@@ -21,6 +21,7 @@ package org.apache.asterix.test.server;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -95,6 +96,7 @@ public class RecoveryIT {
                 joinPath(asterixInstallerPath.getPath(), "src", "test", "resources", "transactionts", "scripts");
         env.put("SCRIPT_HOME", scriptHomePath);
 
+        writeTestPasswdFile(ncServiceHomePath);
         TestExecutor.executeScript(pb, joinPath(scriptHomePath, "setup_teardown", "configure_and_validate.sh"));
         TestExecutor.executeScript(pb, joinPath(scriptHomePath, "setup_teardown", "stop_and_delete.sh"));
         HDFSCluster.getInstance().setup(HDFS_BASE);
@@ -108,6 +110,18 @@ public class RecoveryIT {
         FileUtils.deleteDirectory(dataCopyDir);
         TestExecutor.executeScript(pb, joinPath(scriptHomePath, "setup_teardown", "stop_and_delete.sh"));
         HDFSCluster.getInstance().cleanup();
+    }
+
+    private static void writeTestPasswdFile(String ncServiceHome) throws Exception {
+        File passwdFile = new File(joinPath(ncServiceHome, "opt", "local", "conf", "passwd"));
+        try (FileWriter fw = new FileWriter(passwdFile, false)) {
+            // admin:admin (bcrypt hash of "admin")
+            fw.write("admin:$2a$12$JxgDzf/uOn1NS2Y3exhrDOf7JY/eUHQH7HeH90s5Ye2gALoO0FsQy\n");
+        }
+        File adminPasswordFile = new File(joinPath(ncServiceHome, "opt", "local", "conf", ".admin_password"));
+        try (FileWriter fw = new FileWriter(adminPasswordFile, false)) {
+            fw.write("admin\n");
+        }
     }
 
     @Parameters(name = "RecoveryIT {index}: {0}")

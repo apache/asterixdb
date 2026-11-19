@@ -1,0 +1,107 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: asterixdb-cloud-primer
+
+services:
+  asterix:
+    image: apache/asterixdb:latest
+    environment:
+      # Without this the JVM sizes its heap from the container's share of host memory, which on a
+      # small Docker/Podman VM can leave the node below what the final cross-collection query needs,
+      # and it fails with HYR0009.
+      - JAVA_OPTS=-Xmx2g
+    ports:
+      - "${ASTERIX_QUERY_PORT:-19002}:19002"
+      - "${ASTERIX_WEB_PORT:-19006}:19006"
+    configs:
+      - source: asterixdb.conf
+        target: /conf/asterixdb.conf
+    command: -config-file /conf/asterixdb.conf --nc -node-id 1 -cluster-address 127.0.0.1
+    depends_on:
+      storage:
+        condition: service_healthy
+      iceberg-storage:
+        condition: service_healthy
+      nessie:
+        condition: service_started
+    restart: on-failure
+
+  storage:
+    image: adobe/s3mock:4.12.4
+    environment:
+      - COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS=asterixdb-test
+      - COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT=true
+      - COM_ADOBE_TESTING_S3MOCK_STORE_ROOT=/data
+    volumes:
+      - s3mock-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--header=Accept:application/json", "--quiet", "--output-document=-",
+             "http://localhost:9090/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  iceberg-storage:
+    image: adobe/s3mock:4.12.4
+    # S3Mock creates the bucket at startup, so no separate initialization container is
+    # needed. Unlike the durable store it gets no volume, so the Iceberg table and
+    # Delta files must be seeded again whenever this service is recreated.
+    environment:
+      - COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS=iceberg-container
+      - COM_ADOBE_TESTING_S3MOCK_STORE_REGION=us-west-2
+    ports:
+      # The seeder runs on the host and reaches this endpoint as http://localhost:8001.
+      - "8001:9090"
+    healthcheck:
+      test: ["CMD", "wget", "--header=Accept:application/json", "--quiet", "--output-document=-",
+             "http://localhost:9090/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  nessie:
+    image: ghcr.io/projectnessie/nessie:0.107.5
+    ports:
+      - "19120:19120"
+
+volumes:
+  s3mock-data:
+
+configs:
+  asterixdb.conf:
+    content: |
+      [nc/1]
+      nc.api.port=19004
+      iodevices=./io1,./io2,./io3
+      ncservice.port=-1
+
+      [cc]
+
+      [common]
+      default.dir=.
+      log.level=INFO
+      cloud.deployment=true
+      cloud.storage.scheme=s3
+      cloud.storage.force.path.style=true
+      cloud.storage.region=us-east-1
+      cloud.storage.endpoint=http://storage:9090
+      cloud.storage.bucket=asterixdb-test
+      cloud.storage.anonymous.auth=true
+      cloud.storage.cache.policy=selective
+      storage.partitioning=static
+      storage.partitions.count=3
