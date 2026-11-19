@@ -62,7 +62,7 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
                 if (lsmIndex.getDiskCacheManager().isSweepable()) {
                     sweepableIndexes.put(resourceId, new SweepableIndexUnit(localResource, lsmIndex));
                 } else {
-                    unsweepableIndexes.put(resourceId, new UnsweepableIndexUnit(localResource));
+                    unsweepableIndexes.put(resourceId, new UnsweepableIndexUnit(localResource, lsmIndex));
                 }
                 inactiveResources.remove(localResource.getId());
             }
@@ -168,6 +168,13 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
 
     Collection<UnsweepableIndexUnit> getUnsweepableIndexes() {
         return unsweepableIndexes.values();
+    }
+
+    void getUnsweepableIndexes(Collection<UnsweepableIndexUnit> indexes) {
+        // a synchronized map's views are not synchronized while iterated
+        synchronized (unsweepableIndexes) {
+            indexes.addAll(unsweepableIndexes.values());
+        }
     }
 
     void getSweepableIndexes(Collection<SweepableIndexUnit> indexes) {

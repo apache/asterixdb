@@ -115,13 +115,14 @@ public class LSMBTreeLocalResource extends LsmResource {
         pageWriteCallbackFactory.initialize(serviceCtx, this);
         //TODO: enable updateAwareness for secondary LSMBTree indexes
         boolean updateAware = false;
+        boolean allowHoles = storageManager.getDiskCacheMonitoringService(serviceCtx).isRowIndexPageCachingEnabled();
         return LSMBTreeUtil.createLSMTree(storageConfig, ioManager, vbcs, file,
                 storageManager.getBufferCache(serviceCtx), typeTraits, cmpFactories, bloomFilterKeyFields,
                 bloomFilterFalsePositiveRate, mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx, this), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory, pageWriteCallbackFactory, isPrimary, filterTypeTraits, filterCmpFactories,
                 btreeFields, filterFields, durable, metadataPageManagerFactory, updateAware, serviceCtx.getTracer(),
-                compressorDecompressorFactory, hasBloomFilter, nullTypeTraits, nullIntrospector, atomic);
+                compressorDecompressorFactory, hasBloomFilter, nullTypeTraits, nullIntrospector, atomic, allowHoles);
     }
 
     public boolean isSecondaryNoIncrementalMaintenance() {

@@ -23,6 +23,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 
 public interface IBufferCache {
@@ -98,6 +99,13 @@ public interface IBufferCache {
      * @return the pinned page
      */
     ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException;
+
+    /**
+     * @return the {@link IBufferCacheReadContext} that {@link #pin(long)} uses
+     */
+    default IBufferCacheReadContext getDefaultReadContext() {
+        return DefaultBufferCacheReadContextProvider.DEFAULT;
+    }
 
     /**
      * Unpin a page to indicate can be evicted

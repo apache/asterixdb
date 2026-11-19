@@ -33,6 +33,16 @@ public interface IPhysicalDrive {
     boolean computeAndCheckIsPressured();
 
     /**
+     * Computes the actual pressure on the drive, as {@link #computeAndCheckIsPressured()} does, but without logging
+     * it: for a check repeated many times in a row, such as after every file that a sweep punches
+     *
+     * @return true if pressured, false otherwise
+     */
+    default boolean computeAndCheckIsPressuredQuietly() {
+        return computeAndCheckIsPressured();
+    }
+
+    /**
      * @return true if the drive is not pressured, false otherwise
      */
     boolean isUnpressured();

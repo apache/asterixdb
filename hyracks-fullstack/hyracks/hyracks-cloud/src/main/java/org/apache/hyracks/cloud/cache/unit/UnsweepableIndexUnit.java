@@ -18,11 +18,19 @@
  */
 package org.apache.hyracks.cloud.cache.unit;
 
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.LocalResource;
 
+/**
+ * A row-based index. It is not swept column by column, but its files can still be punched by a
+ * {@link org.apache.hyracks.cloud.sweeper.RowIndexSweeper} where they allow holes.
+ */
 public final class UnsweepableIndexUnit extends AbstractIndexUnit {
-    public UnsweepableIndexUnit(LocalResource localResource) {
+    private final ILSMIndex index;
+
+    public UnsweepableIndexUnit(LocalResource localResource, ILSMIndex index) {
         super(localResource);
+        this.index = index;
     }
 
     @Override
@@ -33,6 +41,10 @@ public final class UnsweepableIndexUnit extends AbstractIndexUnit {
     @Override
     protected boolean isSweepable() {
         return false;
+    }
+
+    public ILSMIndex getIndex() {
+        return index;
     }
 
     public String getPath() {

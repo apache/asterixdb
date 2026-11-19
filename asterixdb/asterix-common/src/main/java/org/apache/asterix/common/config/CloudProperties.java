@@ -28,6 +28,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
 import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.GIGABYTE;
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -74,6 +75,8 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
         CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE(DOUBLE, 0.9d),
         CLOUD_STORAGE_DISK_MONITOR_INTERVAL(POSITIVE_INTEGER, 120),
         CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD(POSITIVE_INTEGER, 360),
+        CLOUD_STORAGE_ROW_INDEX_PAGE_CACHING(BOOLEAN, true),
+        CLOUD_STORAGE_ROW_INDEX_READ_AHEAD_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, MEGABYTE)),
         CLOUD_STORAGE_DEBUG_MODE_ENABLED(BOOLEAN, false),
         CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, GIGABYTE)),
         CLOUD_PROFILER_LOG_INTERVAL(NONNEGATIVE_INTEGER, 5),
@@ -129,6 +132,8 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                 case CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE:
                 case CLOUD_STORAGE_DISK_MONITOR_INTERVAL:
                 case CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD:
+                case CLOUD_STORAGE_ROW_INDEX_PAGE_CACHING:
+                case CLOUD_STORAGE_ROW_INDEX_READ_AHEAD_SIZE:
                 case CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE:
                 case CLOUD_STORAGE_DEBUG_MODE_ENABLED:
                 case CLOUD_PROFILER_LOG_INTERVAL:
@@ -193,6 +198,16 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
                             + " checks for pressure on disk space when using the 'selective' caching policy";
                 case CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD:
                     return "The duration in minutes to consider an index is inactive";
+                case CLOUD_STORAGE_ROW_INDEX_PAGE_CACHING:
+                    return "Whether B-tree indexes are cached page by page, as columnar ones are, when the"
+                            + " 'selective' caching policy is used: a page is read from the cloud storage on first"
+                            + " access instead of the whole index being downloaded when it is opened, and under"
+                            + " pressure the local files of the least recently opened indexes are punched back to"
+                            + " holes";
+                case CLOUD_STORAGE_ROW_INDEX_READ_AHEAD_SIZE:
+                    return "When B-tree indexes are cached page by page, how many bytes to read from the cloud storage"
+                            + " in one request for a page that is not cached locally: the page and as many of the"
+                            + " pages after it as fit, which are cached locally as well. 0 reads one page at a time";
                 case CLOUD_STORAGE_DEBUG_MODE_ENABLED:
                     return "Whether or not the debug mode is enabled when using the 'selective' caching policy";
                 case CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE:
@@ -314,6 +329,14 @@ public class CloudProperties extends AbstractProperties implements ICloudPropert
     public long getStorageIndexInactiveDurationThreshold() {
         int minutes = accessor.getInt(Option.CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD);
         return TimeUnit.MINUTES.toNanos(minutes);
+    }
+
+    public boolean isStorageRowIndexPageCachingEnabled() {
+        return accessor.getBoolean(Option.CLOUD_STORAGE_ROW_INDEX_PAGE_CACHING);
+    }
+
+    public long getStorageRowIndexReadAheadSize() {
+        return accessor.getLong(Option.CLOUD_STORAGE_ROW_INDEX_READ_AHEAD_SIZE);
     }
 
     public boolean isStorageDebugModeEnabled() {

@@ -86,6 +86,14 @@ public class BufferCacheHeaderHelper {
         return buf;
     }
 
+    /**
+     * @return whether the page read into this header is a hole in the local file. Every written page has a frame
+     *         size multiplier of at least one, so a multiplier of zero means its header was never written locally.
+     */
+    public boolean isEmpty() {
+        return buf.getInt(FRAME_MULTIPLIER_OFF) == 0;
+    }
+
     private void setPageInfo(CachedPage cPage) {
         buf.putInt(FRAME_MULTIPLIER_OFF, cPage.getFrameSizeMultiplier());
         // TODO EXTRA_BLOCK_PAGE_ID_OFF is always going to be the following page, use it for CRC32 instead?

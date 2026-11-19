@@ -34,13 +34,15 @@ public final class CloudDiskCacheMonitoringAndPrefetchingService
     private final DiskCacheSweeperThread monitorThread;
     private final IPhysicalDrive drive;
     private final int evictionPlanReevaluationThreshold;
+    private final boolean rowIndexPageCaching;
 
     public CloudDiskCacheMonitoringAndPrefetchingService(ExecutorService executor, IPhysicalDrive drive,
-            DiskCacheSweeperThread monitorThread, int evictionPlanReevaluationThreshold) {
+            DiskCacheSweeperThread monitorThread, int evictionPlanReevaluationThreshold, boolean rowIndexPageCaching) {
         this.executor = executor;
         this.drive = drive;
         this.monitorThread = monitorThread;
         this.evictionPlanReevaluationThreshold = evictionPlanReevaluationThreshold;
+        this.rowIndexPageCaching = rowIndexPageCaching;
     }
 
     @Override
@@ -87,5 +89,10 @@ public final class CloudDiskCacheMonitoringAndPrefetchingService
     @Override
     public int getEvictionPlanReevaluationThreshold() {
         return evictionPlanReevaluationThreshold;
+    }
+
+    @Override
+    public boolean isRowIndexPageCachingEnabled() {
+        return rowIndexPageCaching;
     }
 }

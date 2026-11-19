@@ -51,14 +51,18 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
     public void read(CachedPage cPage, IBufferCacheReadContext context, IThreadStats threadStats)
             throws HyracksDataException {
         final BufferCacheHeaderHelper header = checkoutHeaderHelper();
+        beginLoad();
         try {
             compressedFileManager.setCompressedPageInfo(cPage);
             int size = cPage.getCompressedPageSize();
-            long bytesRead = readHeaderFromFile(header, getFirstPageOffset(cPage), size);
+            final long offset = getFirstPageOffset(cPage);
+            long bytesRead = readHeaderFromFile(header, offset, size);
             if (!verifyBytesRead(cPage.getCompressedPageSize(), bytesRead)) {
                 return;
             }
 
+            // Sampled before processHeader, which may fill the hole
+            final boolean hole = header.isEmpty();
             final ByteBuffer cBuffer = context.processHeader(ioManager, this, header, cPage, threadStats);
             final ByteBuffer uBuffer = cPage.getBuffer();
             fixBufferPointers(uBuffer, 0);
@@ -71,10 +75,50 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
             final int totalPages = cPage.getFrameSizeMultiplier();
             if (totalPages > 1) {
                 pageReplacementStrategy.fixupCapacityOnLargeRead(cPage);
-                readExtraPages(cPage, cBuffer);
+                if (hole) {
+                    readHoleExtraPages(cPage, context, header, offset, threadStats);
+                } else {
+                    readExtraPages(cPage, cBuffer);
+                }
             }
         } finally {
+            endLoad();
             returnHeaderHelper(header);
+        }
+    }
+
+    private void readHoleExtraPages(CachedPage cPage, IBufferCacheReadContext context, BufferCacheHeaderHelper header,
+            long firstPageOffset, IThreadStats threadStats) throws HyracksDataException {
+        final int totalPages = cPage.getFrameSizeMultiplier();
+        final int extraBlockPageId = cPage.getExtraBlockPageId();
+        // The LAF appends each page's offset as the page is written, and a large page is written in one go, so its
+        // extra pages are stored back to back and are read together. The first page's buffer must stay intact
+        // until the context has persisted it, so they are read into a buffer of their own.
+        final long extraPagesOffset = getStartPageOffset(extraBlockPageId);
+        final long extraPagesSize = getPagesTotalSize(extraBlockPageId, totalPages - 1);
+        final ByteBuffer extraPages = ByteBuffer.allocate(Math.toIntExact(extraPagesSize));
+        context.readHoleExtraPages(ioManager, this, header.getBuffer(), firstPageOffset, extraPages, extraPagesOffset,
+                threadStats);
+
+        final ByteBuffer uBuffer = cPage.getBuffer();
+        for (int i = 1; i < totalPages; i++) {
+            fixBufferPointers(uBuffer, i);
+            compressedFileManager.setExtraCompressedPageInfo(cPage, i - 1);
+            final long start = getExtraPageOffset(cPage) - extraPagesOffset;
+            final long end = start + cPage.getCompressedPageSize();
+            if (start < 0 || end > extraPagesSize) {
+                throw new IllegalStateException("Extra page " + i + " of the large page at offset " + firstPageOffset
+                        + " in " + getFileReference() + " is not within its extra pages [" + extraPagesOffset + ", "
+                        + (extraPagesOffset + extraPagesSize) + ")");
+            }
+            final ByteBuffer extraPage = extraPages.duplicate();
+            extraPage.limit((int) end);
+            extraPage.position((int) start);
+            if (cPage.getCompressedPageSize() < bufferCache.getPageSize()) {
+                uncompressToPageBuffer(extraPage, uBuffer);
+            } else {
+                uBuffer.put(extraPage);
+            }
         }
     }
 

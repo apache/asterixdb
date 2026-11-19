@@ -39,6 +39,8 @@
     "cloud.storage.index.inactive.duration.threshold" : 360,
     "cloud.storage.prefix" : "",
     "cloud.storage.region" : "",
+    "cloud.storage.row.index.page.caching" : true,
+    "cloud.storage.row.index.read.ahead.size" : 1048576,
     "cloud.storage.s3.access.key.id" : null,
     "cloud.storage.s3.checksum.behavior" : null,
     "cloud.storage.s3.client.read.timeout" : -1,

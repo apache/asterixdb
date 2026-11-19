@@ -67,4 +67,12 @@ public interface IDiskCacheMonitoringService {
      * @return threshold for re-evaluation of eviction plan
      */
     int getEvictionPlanReevaluationThreshold();
+
+    /**
+     * @return whether row-based indexes are cached page by page, allowing their local files to have holes that are
+     *         read from the cloud storage, and to be swept to make space in {@link #getPhysicalDrive()}
+     */
+    default boolean isRowIndexPageCachingEnabled() {
+        return false;
+    }
 }

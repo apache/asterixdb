@@ -70,4 +70,28 @@ public interface IBufferCacheReadContext {
      */
     ByteBuffer processHeader(IOManager ioManager, BufferedFileHandle fileHandle, BufferCacheHeaderHelper header,
             CachedPage cPage, IThreadStats threadStats) throws HyracksDataException;
+
+    /**
+     * Reads the extra pages of a large page whose first page was a hole in the local file that
+     * {@link #processHeader} filled. Only the first page of a large page carries a header, so its extra pages
+     * cannot be told apart from holes and must not be read from the local file.
+     * <p>
+     * An implementation that keeps a local copy of what it reads must write the extra pages and the first page's
+     * body before the first page's header: until the header is written, the page still reads as a hole.
+     *
+     * @param ioManager        I/O manager
+     * @param fileHandle       file the page belongs to
+     * @param firstPage        the first page as stored, from index 0 to its limit, as {@link #processHeader}
+     *                         filled it; its position is not meaningful
+     * @param firstPageOffset  offset of the first page in the file
+     * @param extraPages       buffer whose remaining bytes receive the extra pages as stored
+     * @param extraPagesOffset offset of the extra pages in the file
+     * @param threadStats      stats of the reading thread
+     */
+    default void readHoleExtraPages(IOManager ioManager, BufferedFileHandle fileHandle, ByteBuffer firstPage,
+            long firstPageOffset, ByteBuffer extraPages, long extraPagesOffset, IThreadStats threadStats)
+            throws HyracksDataException {
+        throw new IllegalStateException(getClass().getSimpleName() + " cannot read a large page that is a hole in "
+                + fileHandle.getFileReference());
+    }
 }

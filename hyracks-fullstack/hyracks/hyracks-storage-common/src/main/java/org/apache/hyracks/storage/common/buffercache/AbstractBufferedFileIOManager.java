@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.StampedLock;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -83,6 +84,9 @@ public abstract class AbstractBufferedFileIOManager {
     private volatile long lastIoNanos;
     // System.nanoTime() as of the last release of the descriptor, for logging how long it stayed released
     private volatile long releasedNanos;
+
+    // shared by every load of a page from this file, exclusive while its local copy is being punched
+    private final ReentrantReadWriteLock sweepLock = new ReentrantReadWriteLock();
 
     protected AbstractBufferedFileIOManager(BufferCache bufferCache, IIOManager ioManager,
             BlockingQueue<BufferCacheHeaderHelper> headerPageCache, IPageReplacementStrategy pageReplacementStrategy) {
@@ -392,6 +396,48 @@ public abstract class AbstractBufferedFileIOManager {
         }
     }
 
+    /* ********************************
+     * Sweeping
+     * ********************************
+     */
+
+    /**
+     * Runs {@code punch}, as {@link #doCacheWriteOnHandle(IHandleOperation)} does, to punch this file's local copy to
+     * holes, while no page of it is being loaded: a load that arrives meanwhile waits for it. Never waits for a load
+     * in progress, nor punches a file that has been closed, purged or deleted, whose descriptor number another file
+     * may since have been given. Meanwhile the file can be neither closed nor deleted.
+     *
+     * @return false if {@code punch} did not run, because a page was being loaded or the file is no longer open
+     */
+    public final boolean tryPunch(IHandleOperation<?> punch) throws HyracksDataException {
+        if (!sweepLock.writeLock().tryLock()) {
+            return false;
+        }
+        try {
+            return doCacheWriteOnHandle(handle -> {
+                if (retired || handle == null) {
+                    return false;
+                }
+                punch.run(handle);
+                return true;
+            });
+        } finally {
+            sweepLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Called before loading a page from this file, and {@link #endLoad()} after, so that the local copy is not
+     * punched in between
+     */
+    protected final void beginLoad() {
+        sweepLock.readLock().lock();
+    }
+
+    protected final void endLoad() {
+        sweepLock.readLock().unlock();
+    }
+
     /**
      * Return start offset of a page
      *
@@ -600,7 +646,7 @@ public abstract class AbstractBufferedFileIOManager {
         }
     }
 
-    protected final long getFileSize() throws HyracksDataException {
+    public final long getFileSize() throws HyracksDataException {
         return ioManager.getSize(fileHandle);
     }
 

@@ -21,17 +21,21 @@ package org.apache.hyracks.cloud.cache.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IDiskSpaceMaker;
 import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
 import org.apache.hyracks.cloud.cache.unit.UnsweepableIndexUnit;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
+import org.apache.hyracks.cloud.sweeper.RowIndexSweeper;
 import org.apache.hyracks.cloud.sweeper.Sweeper;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
@@ -47,32 +51,38 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
     private final CloudDiskResourceCacheLockNotifier resourceManager;
     private final IPhysicalDrive physicalDrive;
     private final List<SweepableIndexUnit> indexes;
+    private final List<UnsweepableIndexUnit> rowIndexes;
     private final ICloudIOManager cloudIOManager;
     private final Sweeper sweeper;
+    // null unless row-based indexes are cached page by page
+    private final RowIndexSweeper rowIndexSweeper;
     private final long inactiveTimeThreshold;
     private final AtomicBoolean paused;
 
     public DiskCacheSweeperThread(ExecutorService executorService, long waitTime,
             CloudDiskResourceCacheLockNotifier resourceManager, ICloudIOManager cloudIOManager, int numOfSweepThreads,
             int sweepQueueSize, IPhysicalDrive physicalDrive, BufferCache bufferCache,
-            Map<Integer, BufferedFileHandle> fileInfoMap, long inactiveTimeThreshold) {
+            Map<Integer, BufferedFileHandle> fileInfoMap, long inactiveTimeThreshold, boolean rowIndexPageCaching) {
         this.waitTime = TimeUnit.SECONDS.toMillis(waitTime);
         this.resourceManager = resourceManager;
         this.physicalDrive = physicalDrive;
         this.inactiveTimeThreshold = inactiveTimeThreshold;
         indexes = new ArrayList<>();
+        rowIndexes = new ArrayList<>();
         this.cloudIOManager = cloudIOManager;
         paused = new AtomicBoolean();
         sweeper = new Sweeper(paused, executorService, cloudIOManager, bufferCache, fileInfoMap, numOfSweepThreads,
                 sweepQueueSize);
+        rowIndexSweeper = rowIndexPageCaching ? new RowIndexSweeper(cloudIOManager, fileInfoMap) : null;
     }
 
     public void pause() {
         LOGGER.info("Pausing Sweeper threads...");
+        // Set paused to ignore all future sweep requests, and to stop punching row-based indexes at the next file
+        paused.set(true);
         // Synchronize to ensure the thread is not sweeping
         synchronized (this) {
-            // Set paused to ignore all future sweep requests
-            paused.set(true);
+            LOGGER.debug("The sweeper thread is not sweeping");
         }
         sweeper.waitForRunningRequests();
         LOGGER.info("Sweeper threads have been paused successfully");
@@ -139,11 +149,56 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
                 resourceManager.getEvictionLock().writeLock().unlock();
             }
 
-            if (shouldSweep) {
+            /*
+             * Row-based indexes are punched first: every sweep of a columnar index lowers, for good, the bar its
+             * columns must clear to be evicted, and an evicted column is never cached again.
+             */
+            if (shouldSweep && punchRowIndexes()) {
                 // index eviction didn't help. Sweep!
                 sweep();
             }
         }
+    }
+
+    /**
+     * Punches row-based indexes, the least recently opened first, until the drive is no longer pressured
+     *
+     * @return whether the drive is still pressured
+     */
+    private boolean punchRowIndexes() {
+        if (rowIndexSweeper == null) {
+            return true;
+        }
+        rowIndexes.clear();
+        resourceManager.getUnsweepableIndexes(rowIndexes);
+        sortLeastRecentlyOpenedFirst(rowIndexes);
+        // checked before every file the sweeper punches, so it must not log each time
+        BooleanSupplier stop = () -> paused.get() || !physicalDrive.computeAndCheckIsPressuredQuietly();
+        for (int i = 0; i < rowIndexes.size() && !stop.getAsBoolean(); i++) {
+            UnsweepableIndexUnit index = rowIndexes.get(i);
+            try {
+                rowIndexSweeper.sweep(index, stop);
+            } catch (Exception e) {
+                // e.g. a failed punch, or an index dropped part way: as with a failed columnar sweep, only this index
+                // is left for the next cycle
+                LOGGER.error("Failed to punch holes in {}", index, e);
+            }
+        }
+        rowIndexes.clear();
+        return physicalDrive.computeAndCheckIsPressured();
+    }
+
+    /**
+     * The times are read once, before sorting: they move as indexes are opened, and a sort whose order changes under it
+     * may fail, which would end the monitoring thread.
+     */
+    private static void sortLeastRecentlyOpenedFirst(List<UnsweepableIndexUnit> indexes) {
+        Map<UnsweepableIndexUnit, Long> lastOpened = new IdentityHashMap<>(indexes.size());
+        for (int i = 0; i < indexes.size(); i++) {
+            UnsweepableIndexUnit index = indexes.get(i);
+            lastOpened.put(index, index.getLastAccessTime());
+        }
+        indexes.sort(Comparator.comparingLong(lastOpened::get));
     }
 
     private boolean evictInactive() {

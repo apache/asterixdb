@@ -234,6 +234,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     }
 
     @Override
+    public IBufferCacheReadContext getDefaultReadContext() {
+        return defaultContext;
+    }
+
+    @Override
     public ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException {
         boolean newPage = context.isNewPage();
         // Calling the pinSanityCheck should be used only for debugging, since

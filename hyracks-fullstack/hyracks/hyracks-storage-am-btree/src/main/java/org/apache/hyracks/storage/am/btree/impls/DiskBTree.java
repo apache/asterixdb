@@ -48,7 +48,6 @@ import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
-import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -378,7 +377,8 @@ public class DiskBTree extends BTree {
         }
 
         protected IBufferCacheReadContext getBufferCacheOperationContext() {
-            return DefaultBufferCacheReadContextProvider.DEFAULT;
+            // The cache's own default fills a page that is a hole in the local file from cloud storage
+            return btree.getBufferCache().getDefaultReadContext();
         }
     }
 

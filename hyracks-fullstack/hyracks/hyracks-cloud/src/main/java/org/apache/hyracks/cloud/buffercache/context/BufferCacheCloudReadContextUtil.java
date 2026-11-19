@@ -33,9 +33,7 @@ public class BufferCacheCloudReadContextUtil {
     }
 
     public static boolean isEmpty(BufferCacheHeaderHelper header) {
-        ByteBuffer headerBuf = header.getBuffer();
-        // THIS IS ONLY VALID FOR COLUMNAR
-        return headerBuf.getInt(BufferCacheHeaderHelper.FRAME_MULTIPLIER_OFF) == 0;
+        return header.isEmpty();
     }
 
     public static void persist(ICloudIOManager cloudIOManager, BufferedFileHandle fileHandle, ByteBuffer buffer,

@@ -77,6 +77,7 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
     public void read(CachedPage cPage, IBufferCacheReadContext context, IThreadStats threadStats)
             throws HyracksDataException {
         final BufferCacheHeaderHelper header = checkoutHeaderHelper();
+        beginLoad();
         try {
             setPageInfo(cPage);
             int pageSize = bufferCache.getPageSizeWithHeader();
@@ -86,13 +87,15 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
                 return;
             }
 
+            // Sampled before processHeader, which may fill the hole
+            final boolean hole = header.isEmpty();
             final ByteBuffer buf = context.processHeader(ioManager, this, header, cPage, threadStats);
             cPage.getBuffer().put(buf);
+            readExtraPages(cPage, context, header, hole, threadStats);
         } finally {
+            endLoad();
             returnHeaderHelper(header);
         }
-
-        readExtraPages(cPage);
     }
 
     private void setPageInfo(CachedPage cPage) {
@@ -100,13 +103,19 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
         cPage.setCompressedPageSize(bufferCache.getPageSize());
     }
 
-    private void readExtraPages(CachedPage cPage) throws HyracksDataException {
+    private void readExtraPages(CachedPage cPage, IBufferCacheReadContext context, BufferCacheHeaderHelper header,
+            boolean hole, IThreadStats threadStats) throws HyracksDataException {
         final int totalPages = cPage.getFrameSizeMultiplier();
         if (totalPages > 1) {
             pageReplacementStrategy.fixupCapacityOnLargeRead(cPage);
             cPage.getBuffer().position(bufferCache.getPageSize());
             cPage.getBuffer().limit(totalPages * bufferCache.getPageSize());
-            readToBuffer(cPage.getBuffer(), getExtraPageOffset(cPage));
+            if (hole) {
+                context.readHoleExtraPages(ioManager, this, header.getBuffer(), getFirstPageOffset(cPage),
+                        cPage.getBuffer(), getExtraPageOffset(cPage), threadStats);
+            } else {
+                readToBuffer(cPage.getBuffer(), getExtraPageOffset(cPage));
+            }
         }
     }
 

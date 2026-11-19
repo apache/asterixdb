@@ -77,6 +77,13 @@ public final class PhysicalDrive implements IPhysicalDrive {
     }
 
     @Override
+    public boolean computeAndCheckIsPressuredQuietly() {
+        long usedSpace = getUsedSpace(drivePaths);
+        this.usedSpace.set(usedSpace);
+        return usedSpace > diskSpace.getPressureCapacity();
+    }
+
+    @Override
     public boolean isUnpressured() {
         return usedSpace.get() <= diskSpace.getPressureCapacity();
     }

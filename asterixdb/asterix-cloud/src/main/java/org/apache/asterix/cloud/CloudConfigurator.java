@@ -78,7 +78,9 @@ public final class CloudConfigurator {
         physicalDrive = createPhysicalDrive(diskCacheManagerRequired, cloudProperties, ioManager);
         lockNotifier = createLockNotifier(diskCacheManagerRequired);
         pageAllocator = createPageAllocator(diskCacheManagerRequired);
-        defaultContext = createDefaultBufferCachePageOpContext(diskCacheManagerRequired, physicalDrive);
+        long readAheadSize = cloudProperties.isStorageRowIndexPageCachingEnabled()
+                ? cloudProperties.getStorageRowIndexReadAheadSize() : 0L;
+        defaultContext = createDefaultBufferCachePageOpContext(diskCacheManagerRequired, physicalDrive, readAheadSize);
         diskCacheMonitoringInterval = cloudProperties.getStorageDiskMonitorInterval();
     }
 
@@ -120,12 +122,14 @@ public final class CloudConfigurator {
         long inactiveThreshold = cloudProperties.getStorageIndexInactiveDurationThreshold();
         // +1 for the monitorThread
         ExecutorService executor = Executors.newFixedThreadPool(numOfSweepThreads + 1);
+        boolean rowIndexPageCaching = cloudProperties.isStorageRowIndexPageCachingEnabled();
         DiskCacheSweeperThread monitorThread = new DiskCacheSweeperThread(executor, diskCacheMonitoringInterval,
                 resourceCacheManager, cloudIOManager, numOfSweepThreads, maxSweepQueueSize, physicalDrive,
-                diskBufferCache, fileInfoMap, inactiveThreshold);
+                diskBufferCache, fileInfoMap, inactiveThreshold, rowIndexPageCaching);
 
-        IDiskCacheMonitoringService diskCacheService = new CloudDiskCacheMonitoringAndPrefetchingService(executor,
-                physicalDrive, monitorThread, cloudProperties.getEvictionPlanReevaluationThreshold());
+        IDiskCacheMonitoringService diskCacheService =
+                new CloudDiskCacheMonitoringAndPrefetchingService(executor, physicalDrive, monitorThread,
+                        cloudProperties.getEvictionPlanReevaluationThreshold(), rowIndexPageCaching);
         localIoManager.setSpaceMaker(monitorThread);
         return diskCacheService;
     }
@@ -175,9 +179,9 @@ public final class CloudConfigurator {
     }
 
     private static IBufferCacheReadContext createDefaultBufferCachePageOpContext(boolean diskCacheManagerRequired,
-            IPhysicalDrive drive) {
+            IPhysicalDrive drive, long readAheadSize) {
         if (diskCacheManagerRequired) {
-            return new DefaultCloudReadContext(drive);
+            return new DefaultCloudReadContext(drive, readAheadSize);
         }
 
         return DefaultBufferCacheReadContextProvider.DEFAULT;
