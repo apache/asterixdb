@@ -81,6 +81,8 @@
           <!-- there is no .git directory when building from a source assembly- a static git.properties file (generated
                at source assembly time) is used in this case -->
           <failOnNoGitDirectory>false</failOnNoGitDirectory>
+          <!-- never contact a remote to compute git.local.branch.ahead/behind -->
+          <offline>true</offline>
         </configuration>
       </plugin>
       <plugin>
@@ -735,6 +737,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-column</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-referencing</artifactId>
     </dependency>
@@ -868,7 +875,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents.client5</groupId>
       <artifactId>httpclient5</artifactId>
-      <version>5.6.4</version>
+      <version>5.6.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -1217,13 +1224,13 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk18on</artifactId>
-      <version>1.86</version>
+      <version>1.87</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk18on</artifactId>
-      <version>1.86</version>
+      <version>1.87</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

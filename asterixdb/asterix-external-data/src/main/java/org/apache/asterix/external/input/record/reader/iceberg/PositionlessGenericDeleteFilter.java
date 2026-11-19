@@ -93,6 +93,7 @@ final class PositionlessGenericDeleteFilter extends org.apache.iceberg.data.Dele
 
     @Override
     protected DeleteLoader newDeleteLoader() {
-        return deleteCache != null ? deleteCache.newLoader(this::loadInputFile) : super.newDeleteLoader();
+        return deleteCache != null ? deleteCache.newLoader(this::loadInputFile)
+                : new FixedKeySafeDeleteLoader(this::loadInputFile);
     }
 }

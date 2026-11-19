@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util.azure;
 
+import static org.apache.asterix.external.util.ExternalDataUtils.isAuthFlagSet;
 import static org.apache.asterix.external.util.azure.AzureConstants.ACCOUNT_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.azure.AzureConstants.CLIENT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.azure.AzureConstants.CLIENT_SECRET_FIELD_NAME;
@@ -44,6 +45,7 @@ import static org.apache.asterix.external.util.azure.AzureConstants.TENANT_ID_FI
 
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.mapred.JobConf;
 
@@ -71,11 +73,12 @@ public class AzureUtils {
         throw new AssertionError("do not instantiate");
     }
 
-    public static void configureAzureHdfsJobConf(JobConf conf, Map<String, String> configuration, String endpoint) {
+    public static void configureAzureHdfsJobConf(JobConf conf, Map<String, String> configuration, String endpoint)
+            throws CompilationException {
         String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
         String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
         String clientSecret = configuration.get(CLIENT_SECRET_FIELD_NAME);
-        String managedIdentity = configuration.get(MANAGED_IDENTITY_FIELD_NAME);
+        boolean managedIdentity = isAuthFlagSet(configuration, MANAGED_IDENTITY_FIELD_NAME);
 
         // disable caching FileSystem
         HDFSUtils.disableHadoopFileSystemCache(conf, HADOOP_AZURE_PROTOCOL);
@@ -84,7 +87,7 @@ public class AzureUtils {
             setSharedKeyCredential(conf, configuration, endpoint);
         } else if (sharedAccessSignature != null) {
             setSasCredential(conf, configuration);
-        } else if (managedIdentity != null) {
+        } else if (managedIdentity) {
             setManagedIdentityCredential(conf, configuration);
         } else if (clientSecret != null) {
             setClientSecretCredentials(conf, configuration);

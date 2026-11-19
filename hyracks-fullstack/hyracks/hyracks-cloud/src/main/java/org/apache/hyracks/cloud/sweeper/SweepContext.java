@@ -93,7 +93,7 @@ public final class SweepContext implements ISweepContext {
     public int punchHole(int startPageId, int numberOfPage) throws HyracksDataException {
         long offset = handle.getStartPageOffset(startPageId);
         long length = handle.getPagesTotalSize(startPageId, numberOfPage);
-        return cloudIOManager.punchHole(handle.getFileHandle(), offset, length);
+        return handle.doCacheWriteOnHandle(fileHandle -> cloudIOManager.punchHole(fileHandle, offset, length));
     }
 
     public BufferCache getBufferCache() {

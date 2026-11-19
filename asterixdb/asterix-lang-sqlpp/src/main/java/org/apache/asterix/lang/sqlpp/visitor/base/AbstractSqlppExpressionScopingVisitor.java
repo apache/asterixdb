@@ -270,8 +270,18 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             }
         }
         if (gc.hasDecorList()) {
+            // A decoration carries a variable bound outside this block through the GROUP BY, so its
+            // expression is resolved in the scope preceding the block, not in the pre-group scope: there a
+            // FROM or LET variable of the block that shares the outer variable's name would capture it.
+            scopeChecker.pushExistingScope(scopeChecker.getPrecedingScope());
+            try {
+                for (GbyVariableExpressionPair decorVarExpr : gc.getDecorPairList()) {
+                    decorVarExpr.setExpr(visit(decorVarExpr.getExpr(), gc));
+                }
+            } finally {
+                scopeChecker.removeCurrentScope();
+            }
             for (GbyVariableExpressionPair decorVarExpr : gc.getDecorPairList()) {
-                decorVarExpr.setExpr(visit(decorVarExpr.getExpr(), gc));
                 VariableExpr decorVar = decorVarExpr.getVar();
                 if (decorVar != null) {
                     addNewVarSymbolToScope(newScope, decorVar.getVar(), decorVar.getSourceLocation());
@@ -309,8 +319,14 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
                 it.set(Pair.of(visit(memberField.getLeft(), cc), memberField.getRight()));
             }
         }
-        // The decorations read the pre-cluster scope too.
-        visitDecorations(cc, cc);
+        // The decorations carry variables bound outside the block, resolved in the scope preceding it (see
+        // the GROUP BY case).
+        scopeChecker.pushExistingScope(scopeChecker.getPrecedingScope());
+        try {
+            visitDecorations(cc, cc);
+        } finally {
+            scopeChecker.removeCurrentScope();
+        }
         // After the clause the block's own bindings are gone, as after a GROUP BY: the new scope descends
         // from the scope preceding the SELECT block, so a FROM or LET variable read after the clause fails
         // name resolution. A SQL-92 aggregate's arguments are mapped through the cluster field list.

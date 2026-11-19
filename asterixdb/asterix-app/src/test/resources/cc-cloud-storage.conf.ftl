@@ -43,6 +43,8 @@ storage.buffercache.size=128MB
 storage.memorycomponent.globalbudget=512MB
 storage.max.columns.in.zeroth.segment=800
 storage.page.zero.writer=default
+# far below what the suite opens, so that descriptors are released and reopened under cloud reads and writes
+storage.buffer.cache.max.open.descriptors=32
 
 [cc]
 address = 127.0.0.1

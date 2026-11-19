@@ -49,6 +49,10 @@ public class NodeHeartbeatWork extends AbstractHeartbeatWork {
         final NodeControllerState ncState = nodeManager.getNodeControllerState(nodeId);
         if (ncState != null) {
             ncState.getNodeController().heartbeatAck(ccs.getCcId(), null);
+        } else if (!ccs.getApplication().getGatekeeper().isAuthorized(nodeId)) {
+            // a node deauthorized on its way out of the cluster keeps heartbeating until it is stopped; a negative
+            // ack would send it to re-register, which addNode refuses, and a refused registration halts the node
+            LOGGER.info("received a heartbeat from unauthorized node {}; not acking", nodeId);
         } else {
             // unregistered nc- let him know
             InetSocketAddress refreshedNcAddress = NetworkUtil.refresh(ncAddress);

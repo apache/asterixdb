@@ -73,9 +73,6 @@ public class TestConstants {
         public static final String BLOB_ENDPOINT_PLACEHOLDER = "%azure-endpoint%";
         public static String BLOB_ENDPOINT_DEFAULT = AZURITE_ENDPOINT;
 
-        public static final String MANAGED_IDENTITY_PLACEHOLDER = "%azure-managedidentity%";
-        public static final String MANAGED_IDENTITY_DEFAULT = "myManagedIdentity";
-
         public static final String CLIENT_ID_PLACEHOLDER = "%azure-clientid%";
         public static final String CLIENT_ID_DEFAULT = "myClientId";
 

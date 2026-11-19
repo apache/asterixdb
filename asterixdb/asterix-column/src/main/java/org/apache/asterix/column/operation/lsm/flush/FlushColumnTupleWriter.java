@@ -48,13 +48,17 @@ import org.apache.logging.log4j.Logger;
 public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final FlushColumnMetadata columnMetadata;
-    protected final NoWriteFlushColumnMetadata columnMetadataWithCurrentTuple;
+    protected NoWriteFlushColumnMetadata columnMetadataWithCurrentTuple;
 
     protected final BatchFinalizerVisitor finalizer;
     protected final ColumnBatchWriter writer;
 
     private final ColumnTransformer transformer;
-    private final NoWriteColumnTransformer transformerForCurrentTuple;
+    private NoWriteColumnTransformer transformerForCurrentTuple;
+    /** {@link FlushColumnMetadata#getRoutingChanges()} when the pre-pass schema was last copied. */
+    private int routingChangesCopied;
+    /** Columns the batch held when the pre-pass schema was last copied: the copy has not visited them. */
+    private int columnsVisitedBeforeCopy;
     private final RecordLazyVisitablePointable pointable;
     private final int maxNumberOfTuples;
     private final IColumnValuesWriter[] primaryKeyWriters;
@@ -82,18 +86,34 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
             primaryKeyWriters[i] = columnMetadata.getWriter(i);
         }
 
-        Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
-        IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
         try {
-            columnMetadataWithCurrentTuple = NoWriteFlushColumnMetadata.createMutableMetadata(
-                    columnMetadata.getDatasetType(), columnMetadata.getMetaType(),
-                    columnMetadata.getNumberOfPrimaryKeys(), columnMetadata.isMetaContainsKey(), writerFactory,
-                    multiPageOpRef, columnMetadata.serializeColumnsMetadata());
+            copyPrePassSchema();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Copies the schema into the pre-pass that sizes pages ({@link #updateColumnMetadataForCurrentTuple}): as the
+     * flush starts, and again once a node of the schema changes which names it routes to its map. The pre-pass cannot
+     * make that change itself, so an older copy would keep minting a column per name the schema routes to the map --
+     * the growth a collapse stops -- and size pages, and reserve buffers, for columns that are never written.
+     */
+    private void copyPrePassSchema() throws IOException {
+        Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
+        IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
+        routingChangesCopied = columnMetadata.getRoutingChanges();
+        columnMetadataWithCurrentTuple = NoWriteFlushColumnMetadata.createMutableMetadata(
+                columnMetadata.getDatasetType(), columnMetadata.getMetaType(), columnMetadata.getNumberOfPrimaryKeys(),
+                columnMetadata.isMetaContainsKey(), writerFactory, multiPageOpRef,
+                columnMetadata.serializeColumnsMetadata());
         transformerForCurrentTuple = new NoWriteColumnTransformer(columnMetadataWithCurrentTuple,
                 columnMetadataWithCurrentTuple.getRoot(), columnMetadataWithCurrentTuple.getMetaRoot());
+    }
+
+    /** Called once the pre-pass schema has been copied anew, for pre-pass transformers of its own to follow it. */
+    protected void onPrePassSchemaCopied() {
+        // NoOp
     }
 
     @Override
@@ -180,7 +200,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     private int getSpaceOccupiedBySparseWriter(int maxColumnsInPageZerothSegment, int bufferCapacity) {
-        int presentColumns = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch();
+        int presentColumns = transformerForCurrentTuple.getNumberOfVisitedColumnsInBatch() + columnsVisitedBeforeCopy;
         int maximumNumberOfColumnsInASegment =
                 SparseColumnMultiPageZeroWriter.getMaximumNumberOfColumnsInAPage(bufferCapacity);
         int numberOfExtraPagesRequired = presentColumns <= maxColumnsInPageZerothSegment ? 0
@@ -207,6 +227,16 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     public void updateColumnMetadataForCurrentTuple(ITupleReference tuple) throws HyracksDataException {
+        if (columnMetadata.getRoutingChanges() != routingChangesCopied) {
+            // Counted again by the copy, whose visits start afresh: an over-count, which only closes a page early.
+            columnsVisitedBeforeCopy = presentColumnsIndexes.cardinality();
+            try {
+                copyPrePassSchema();
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
+            }
+            onPrePassSchemaCopied();
+        }
         // Execution can reach here in case of Load statements
         // and the type of tuple in that case is PermutingFrameTupleReference
         if (tuple instanceof LSMBTreeTupleReference) {
@@ -263,6 +293,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     public void reset() {
         transformer.resetValuesEstimatedSize();
         transformerForCurrentTuple.reset();
+        columnsVisitedBeforeCopy = 0;
         presentColumnsIndexes.clear();
     }
 

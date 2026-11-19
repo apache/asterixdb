@@ -76,7 +76,7 @@ public class LSMColumnBTreeUtil {
 
         // Initialize managers
         boolean diskCacheEnabled = diskCacheService.isEnabled();
-        IColumnManager columnManager = columnManagerFactory.createColumnManager();
+        IColumnManager columnManager = columnManagerFactory.createColumnManager(storageConfig.getAppConfig());
         IColumnIndexDiskCacheManager diskCacheManager = diskCacheEnabled
                 ? new CloudColumnIndexDiskCacheManager(columnManager.getNumberOfPrimaryKeys(),
                         diskCacheService.getEvictionPlanReevaluationThreshold(),

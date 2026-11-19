@@ -21,6 +21,7 @@ package org.apache.asterix.column;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnTupleProjector;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnWriteMetadata;
@@ -45,9 +46,11 @@ public final class ColumnManager implements IColumnManager {
     private final List<List<String>> primaryKeys;
     private final List<Integer> keySourceIndicator;
     private final MergeColumnTupleProjector mergeColumnTupleProjector;
+    private final CollapseDetectorSettings collapseDetectorSettings;
 
     ColumnManager(ARecordType datasetType, ARecordType metaType, List<List<String>> primaryKeys,
-            List<Integer> keySourceIndicator) {
+            List<Integer> keySourceIndicator, CollapseDetectorSettings collapseDetectorSettings) {
+        this.collapseDetectorSettings = collapseDetectorSettings;
         this.datasetType = datasetType;
         this.metaType = metaType;
         this.primaryKeys = primaryKeys;
@@ -66,7 +69,8 @@ public final class ColumnManager implements IColumnManager {
     public IColumnMetadata activate() throws HyracksDataException {
         Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
         IColumnValuesWriterFactory factory = new ColumnValuesWriterFactory(multiPageOpRef);
-        return new FlushColumnMetadata(datasetType, metaType, primaryKeys, keySourceIndicator, factory, multiPageOpRef);
+        return new FlushColumnMetadata(datasetType, metaType, primaryKeys, keySourceIndicator, factory, multiPageOpRef,
+                collapseDetectorSettings);
     }
 
     @Override
@@ -75,7 +79,7 @@ public final class ColumnManager implements IColumnManager {
             Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
             IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
             return FlushColumnMetadata.create(datasetType, metaType, primaryKeys.size(), keySourceIndicator,
-                    writerFactory, multiPageOpRef, metadata);
+                    writerFactory, multiPageOpRef, metadata, collapseDetectorSettings);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

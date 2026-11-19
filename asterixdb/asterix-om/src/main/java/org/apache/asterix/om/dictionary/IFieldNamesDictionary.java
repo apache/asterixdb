@@ -58,6 +58,18 @@ public interface IFieldNamesDictionary {
     int getFieldNameIndex(String fieldName) throws HyracksDataException;
 
     /**
+     * Non-creating lookup by the serialized field name.
+     * <p>
+     * Unlike {@link #getOrCreateFieldNameIndex(IValueReference)} this never inserts, which lets a caller test whether
+     * a field name is already known without growing the dictionary. Needed on the ingestion hot path for nodes whose
+     * field names are unbounded, where interning every name is exactly the cost being avoided.
+     *
+     * @param fieldName serialized field name
+     * @return index of the field if it exists, otherwise -1
+     */
+    int getFieldNameIndex(IValueReference fieldName) throws HyracksDataException;
+
+    /**
      * @param index encoded index
      * @return the fieldName present at the requested index
      */

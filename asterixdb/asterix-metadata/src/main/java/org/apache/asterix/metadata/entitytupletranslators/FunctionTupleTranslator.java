@@ -36,8 +36,6 @@ import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RESOURCES_FIELD_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_WITHPARAMS_FIELD_NAME;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.PROPERTIES_NAME_FIELD_NAME;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.PROPERTIES_VALUE_FIELD_NAME;
 
 import java.io.DataOutput;
 import java.util.ArrayList;
@@ -165,11 +163,14 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
                 externalIdentifier.add(((AString) externalIdentifierCursor.get()).getStringValue());
             }
             libraryName = getString(functionRecord, MetadataRecordTypes.FIELD_NAME_LIBRARY_NAME);
-            String libraryDataverseCanonicalName = getString(functionRecord, FIELD_NAME_LIBRARY_DATAVERSE_NAME);
-            libraryDataverseName = DataverseName.createFromCanonicalForm(libraryDataverseCanonicalName);
-            libraryDatabaseName = getString(functionRecord, FIELD_NAME_LIBRARY_DATABASE_NAME);
-            if (libraryDatabaseName == null) {
-                libraryDatabaseName = MetadataUtil.databaseFor(libraryDataverseName);
+            // an external function that calls out over HTTP has no library
+            if (libraryName != null) {
+                String libraryDataverseCanonicalName = getString(functionRecord, FIELD_NAME_LIBRARY_DATAVERSE_NAME);
+                libraryDataverseName = DataverseName.createFromCanonicalForm(libraryDataverseCanonicalName);
+                libraryDatabaseName = getString(functionRecord, FIELD_NAME_LIBRARY_DATABASE_NAME);
+                if (libraryDatabaseName == null) {
+                    libraryDatabaseName = MetadataUtil.databaseFor(libraryDataverseName);
+                }
             }
             resources = getResources(functionRecord, FUNCTION_ARECORD_FUNCTION_RESOURCES_FIELD_NAME);
             definition = null;
@@ -290,9 +291,9 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             while (cursor.next()) {
                 ARecord field = (ARecord) cursor.get();
                 final ARecordType fieldType = field.getType();
-                final int keyIdx = fieldType.getFieldIndex(PROPERTIES_NAME_FIELD_NAME);
+                final int keyIdx = fieldType.getFieldIndex(FIELD_NAME_NAME);
                 String key = keyIdx >= 0 ? ((AString) field.getValueByPos(keyIdx)).getStringValue() : "";
-                final int valueIdx = fieldType.getFieldIndex(PROPERTIES_VALUE_FIELD_NAME);
+                final int valueIdx = fieldType.getFieldIndex(FIELD_NAME_VALUE);
                 String value = valueIdx >= 0 ? ((AString) field.getValueByPos(valueIdx)).getStringValue() : "";
                 adaptorConfiguration.put(key, value);
             }
@@ -505,31 +506,33 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             return;
         }
 
-        if (functionEntity.databaseNameIndex() >= 0) {
+        if (function.getLibraryName() != null) {
+            if (functionEntity.databaseNameIndex() >= 0) {
+                fieldName.reset();
+                aString.setValue(FIELD_NAME_LIBRARY_DATABASE_NAME);
+                stringSerde.serialize(aString, fieldName.getDataOutput());
+                fieldValue.reset();
+                aString.setValue(function.getLibraryDatabaseName());
+                stringSerde.serialize(aString, fieldValue.getDataOutput());
+                recordBuilder.addField(fieldName, fieldValue);
+            }
+
             fieldName.reset();
-            aString.setValue(FIELD_NAME_LIBRARY_DATABASE_NAME);
+            aString.setValue(FIELD_NAME_LIBRARY_DATAVERSE_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
-            aString.setValue(function.getLibraryDatabaseName());
+            aString.setValue(function.getLibraryDataverseName().getCanonicalForm());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(fieldName, fieldValue);
+
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_LIBRARY_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aString.setValue(function.getLibraryName());
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
-
-        fieldName.reset();
-        aString.setValue(FIELD_NAME_LIBRARY_DATAVERSE_NAME);
-        stringSerde.serialize(aString, fieldName.getDataOutput());
-        fieldValue.reset();
-        aString.setValue(function.getLibraryDataverseName().getCanonicalForm());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(fieldName, fieldValue);
-
-        fieldName.reset();
-        aString.setValue(MetadataRecordTypes.FIELD_NAME_LIBRARY_NAME);
-        stringSerde.serialize(aString, fieldName.getDataOutput());
-        fieldValue.reset();
-        aString.setValue(function.getLibraryName());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(fieldName, fieldValue);
 
         fieldName.reset();
         aString.setValue(FUNCTION_ARECORD_FUNCTION_EXTERNAL_IDENTIFIER_FIELD_NAME);

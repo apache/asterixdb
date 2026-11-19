@@ -67,7 +67,6 @@ import org.apache.iceberg.types.Type;
 import org.apache.iceberg.types.Types;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -132,6 +131,11 @@ public class IcebergEqualityDeleteKeyTypesTest {
                     k -> k < 20, nested, 2);
             add(cases, "binary", Types.BinaryType.get(),
                     k -> ByteBuffer.wrap(("bin-" + k).getBytes(StandardCharsets.UTF_8)), k -> k < 20, nested, 2);
+            // Iceberg's binary reader refills the previous row's buffer whenever the next value fits in it, so only
+            // keys of one length exercise that reuse; the case above changes length at k = 10
+            add(cases, "binary_same_length", Types.BinaryType.get(),
+                    k -> ByteBuffer.wrap(String.format("bin-%02d", k).getBytes(StandardCharsets.UTF_8)), k -> k < 20,
+                    nested, 2);
         }
         return cases;
     }
@@ -188,10 +192,6 @@ public class IcebergEqualityDeleteKeyTypesTest {
 
     @Test
     public void withoutCache() throws Exception {
-        // Iceberg reads equality delete files reusing its containers, and its fixed-length reader fills the same
-        // array for every row it reads, so every loaded fixed key holds the last one read: only that key is deleted,
-        // with or without the cache. The cache must still change nothing, which the other tests check.
-        Assume.assumeFalse("fixed-length equality keys are mis-loaded by Iceberg itself", "fixed".equals(typeName));
         Assert.assertEquals(expectedIds(), readAll(null));
     }
 

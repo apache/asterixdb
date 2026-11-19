@@ -115,7 +115,7 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
         return true;
     }
 
-    static Integer getOutputLimit(LimitOperator limitOp) {
+    public static Integer getOutputLimit(LimitOperator limitOp) {
         if (!limitOp.hasMaxObjects()) {
             // No limit
             return null;

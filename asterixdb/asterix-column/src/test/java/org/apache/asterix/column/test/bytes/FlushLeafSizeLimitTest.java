@@ -25,6 +25,7 @@ import java.util.Collections;
 import org.apache.asterix.column.common.buffer.DummyBufferCache;
 import org.apache.asterix.column.common.buffer.TestWriteMultiPageOp;
 import org.apache.asterix.column.common.row.DummyLSMBTreeTupleReference;
+import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleWriter;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
@@ -56,7 +57,7 @@ public class FlushLeafSizeLimitTest {
         Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
         IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
         FlushColumnMetadata columnMetadata = new FlushColumnMetadata(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, null,
-                Collections.emptyList(), null, writerFactory, multiPageOpRef);
+                Collections.emptyList(), null, writerFactory, multiPageOpRef, CollapseDetectorSettings.DEFAULT);
         columnMetadata.init(new TestWriteMultiPageOp(bufferCache, fileId));
         FlushColumnTupleWriter writer = new FlushColumnTupleWriter(columnMetadata, PAGE_SIZE, MAX_NUMBER_OF_TUPLES,
                 0.15, MAX_LEAF_NODE_SIZE, DefaultColumnWriteContext.INSTANCE);

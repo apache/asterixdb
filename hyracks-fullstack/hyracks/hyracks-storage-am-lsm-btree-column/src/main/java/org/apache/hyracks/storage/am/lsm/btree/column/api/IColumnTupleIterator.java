@@ -40,6 +40,14 @@ public interface IColumnTupleIterator extends ILSMTreeTupleReference, Comparable
     void newPage() throws HyracksDataException;
 
     /**
+     * Valid after {@link #newPage()}.
+     *
+     * @return false if the page's range filter rules out every tuple, in which case the non-key columns of the
+     * page are never read and need not be prepared
+     */
+    boolean isColumnReadRequired();
+
+    /**
      * Reset the iterator starting at the provided index
      *
      * @param startIndex start from the tuple at this index

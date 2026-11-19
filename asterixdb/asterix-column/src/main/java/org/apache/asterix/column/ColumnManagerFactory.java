@@ -22,10 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleReaderWriterFactory;
 import org.apache.asterix.column.operation.lsm.load.LoadColumnTupleReaderWriterFactory;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnTupleReaderWriterFactory;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
@@ -67,8 +69,9 @@ public final class ColumnManagerFactory implements IColumnManagerFactory {
     }
 
     @Override
-    public IColumnManager createColumnManager() {
-        return new ColumnManager(datasetType, metaType, primaryKeys, keySourceIndicator);
+    public IColumnManager createColumnManager(IApplicationConfig nodeConfig) {
+        return new ColumnManager(datasetType, metaType, primaryKeys, keySourceIndicator,
+                new CollapseDetectorSettings(nodeConfig::get));
     }
 
     @Override

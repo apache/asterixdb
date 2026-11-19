@@ -53,6 +53,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
     protected boolean includeMutableComponent;
     protected int numBTrees;
     private BTreeAccessor[] btreeAccessors;
+    private ILSMComponent[] accessorComponents;
     protected BloomFilter[] bloomFilters;
     protected ILSMHarness lsmHarness;
     private boolean nextHasBeenCalled;
@@ -230,6 +231,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
             // object creation: should be relatively low
             btreeCursors = new ITreeIndexCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
+            accessorComponents = new ILSMComponent[numBTrees];
             bloomFilters = new BloomFilter[numBTrees];
         }
         includeMutableComponent = false;
@@ -238,6 +240,10 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
             ILSMComponent component = operationalComponents.get(i);
             BTree btree = (BTree) component.getIndex();
             LSMComponentType type = component.getType();
+            if (isAccessorBoundToComponent() && accessorComponents[i] != component) {
+                destroyAndNullifyCursorAtIndex(i);
+            }
+            accessorComponents[i] = component;
             if (type == LSMComponentType.MEMORY) {
                 includeMutableComponent = true;
                 if (bloomFilters[i] != null) {
@@ -263,6 +269,15 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         foundTuple = false;
         hashComputed = false;
         foundIn = -1;
+    }
+
+    /**
+     * Whether an accessor serves only the component it was built for. A cursor kept across searches reuses each slot's
+     * accessor, and flushes and merges between searches can put another component in a slot without changing their
+     * number; an accessor bound to its component must then be rebuilt.
+     */
+    protected boolean isAccessorBoundToComponent() {
+        return false;
     }
 
     protected BTreeAccessor createAccessor(LSMComponentType type, BTree btree, int i) throws HyracksDataException {

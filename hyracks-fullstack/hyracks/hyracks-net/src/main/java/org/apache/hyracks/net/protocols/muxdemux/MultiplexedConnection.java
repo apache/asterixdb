@@ -384,8 +384,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                         break;
                     }
                     case CLOSE_CHANNEL_ACK: {
-                        ccb = readerState.getCCBInCommand();
-                        ccb.reportLocalEOSAck();
+                        ccb = cSet.reportLocalEOSAck(readerState.command.getChannelId());
                         break;
                     }
                     case DATA: {

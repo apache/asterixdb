@@ -826,23 +826,26 @@ public class JoinNode {
         ICost dataScanCost;
 
         boolean isIndexOnlyApplicable = true;
+        boolean isPrimaryIndexUsed = false;
         int numSecondaryIndexesUsed = 0;
 
         if (mandatoryIndexesInfo.size() > 0) {
             for (int i = 0; i < mandatoryIndexesInfo.size(); i++) {
-                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this,
+                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this, mandatoryIndexesInfo.get(i).getIndex(),
                         mandatoryIndexesInfo.get(i).getSelectivity());
                 if ((mandatoryIndexesInfo.get(i).getIndex().getIndexType() == DatasetConfig.IndexType.ARRAY)) {
                     cost = cost.costAdd(cost); // double the cost for arrays.
                 }
 
                 isIndexOnlyApplicable = isIndexOnlyApplicable && mandatoryIndexesInfo.get(i).isIndexOnly();
+                isPrimaryIndexUsed |= mandatoryIndexesInfo.get(i).getIndex().isPrimaryIndex();
                 numSecondaryIndexesUsed += mandatoryIndexesInfo.get(i).getIndex().isPrimaryIndex() ? 0 : 1;
 
                 indexCosts = indexCosts.costAdd(cost); // a running tally
                 sel *= mandatoryIndexesInfo.get(i).getSelectivity();
             }
-            dataScanCost = joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel);
+            dataScanCost =
+                    indexDataScanCost(sel, isPrimaryIndexUsed, isIndexOnlyApplicable && numSecondaryIndexesUsed == 1);
             totalCost = indexCosts.costAdd(dataScanCost); // this is the total cost of using the mandatory costs. This cost cannot be skipped.
         }
 
@@ -851,19 +854,20 @@ public class JoinNode {
             optionalIndexesInfo.sort(Comparator.comparingDouble(o -> o.getSelectivity()));
 
             for (int i = 0; i < optionalIndexesInfo.size(); i++) {
-                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this,
+                ICost cost = joinEnum.getCostMethodsHandle().costIndexScan(this, optionalIndexesInfo.get(i).getIndex(),
                         optionalIndexesInfo.get(i).getSelectivity());
                 if ((optionalIndexesInfo.get(i).getIndex().getIndexType() == DatasetConfig.IndexType.ARRAY)) {
                     cost = cost.costAdd(cost); // double the cost for arrays.
                 }
                 indexCosts = indexCosts.costAdd(cost);
                 sel *= optionalIndexesInfo.get(i).getSelectivity();
-                dataScanCost = joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel);
-                opCost = indexCosts.costAdd(dataScanCost);
-                tc = totalCost.computeTotalCost();
-
+                isPrimaryIndexUsed |= optionalIndexesInfo.get(i).getIndex().isPrimaryIndex();
                 isIndexOnlyApplicable = isIndexOnlyApplicable && optionalIndexesInfo.get(i).isIndexOnly();
                 numSecondaryIndexesUsed += optionalIndexesInfo.get(i).getIndex().isPrimaryIndex() ? 0 : 1;
+                dataScanCost = indexDataScanCost(sel, isPrimaryIndexUsed,
+                        isIndexOnlyApplicable && numSecondaryIndexesUsed == 1);
+                opCost = indexCosts.costAdd(dataScanCost);
+                tc = totalCost.computeTotalCost();
 
                 if (tc > 0.0) {
                     if (opCost.costGT(totalCost)) { // we can stop here since additional indexes are not useful
@@ -896,6 +900,26 @@ public class JoinNode {
             planRegistry.addPlan(pn);
             setCheapestPlan(pn, forceEnum);
         }
+    }
+
+    /**
+     * Cost of reaching the records once the chosen indexes have been searched. A primary-index search returns
+     * the records itself and is used in place of any secondary index chosen with it, so only a plan of secondary
+     * indexes sorts its primary keys and fetches the records. An index-only plan answers the query from its one
+     * secondary index, so it sorts and deduplicates the primary keys without fetching any record.
+     *
+     * @param sel combined selectivity of the chosen indexes
+     * @param isPrimaryIndexUsed whether a primary index is among the chosen indexes
+     * @param isIndexOnly whether the plan is index-only
+     */
+    private ICost indexDataScanCost(double sel, boolean isPrimaryIndexUsed, boolean isIndexOnly) {
+        if (isPrimaryIndexUsed) {
+            return joinEnum.getCostHandle().zeroCost();
+        }
+        if (isIndexOnly) {
+            return joinEnum.getCostMethodsHandle().costIndexOnlyDistinct(this, sel);
+        }
+        return joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel);
     }
 
     private SelectOperator copySelExprsAndSetTrue(List<ILogicalExpression> selExprs, List<SelectOperator> selOpers,

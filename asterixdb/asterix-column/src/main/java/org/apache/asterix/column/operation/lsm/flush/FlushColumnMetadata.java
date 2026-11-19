@@ -36,10 +36,12 @@ import org.apache.asterix.column.metadata.AbstractColumnMetadata;
 import org.apache.asterix.column.metadata.PathInfoSerializer;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNestedNode;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
+import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.ArraySchemaNode;
+import org.apache.asterix.column.metadata.schema.collection.MapSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.MultisetSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaBuilderFromIATypeVisitor;
@@ -88,14 +90,23 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
     private final boolean metaContainsKeys;
     private boolean changed;
     private boolean schemaEvolved;
+    /**
+     * Times a node of this schema has changed which names it routes to its map. The flush's page-sizing pre-pass
+     * works on a copy of the schema and cannot follow such a change, so its writer copies the schema again on each.
+     */
+    private int routingChanges;
+    /** The collapse detector's thresholds for this index; see {@link CollapseDetectorSettings}. */
+    private final CollapseDetectorSettings collapseDetectorSettings;
     protected int level;
     protected int repeated;
     protected int requiredTemporaryBuffersCount;
 
     public FlushColumnMetadata(ARecordType datasetType, ARecordType metaType, List<List<String>> primaryKeys,
             List<Integer> keySourceIndicator, IColumnValuesWriterFactory columnWriterFactory,
-            Mutable<IColumnWriteMultiPageOp> multiPageOpRef) throws HyracksDataException {
+            Mutable<IColumnWriteMultiPageOp> multiPageOpRef, CollapseDetectorSettings collapseDetectorSettings)
+            throws HyracksDataException {
         super(datasetType, metaType, primaryKeys.size());
+        this.collapseDetectorSettings = collapseDetectorSettings;
         this.requiredTemporaryBuffersCount = 0;
         this.multiPageOpRef = multiPageOpRef;
         this.columnWriterFactory = columnWriterFactory;
@@ -139,8 +150,9 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
             Mutable<IColumnWriteMultiPageOp> multiPageOpRef, List<IColumnValuesWriter> columnWriters,
             int requiredTemporaryBuffers, IFieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root,
             ObjectSchemaNode metaRoot, Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels,
-            ArrayBackedValueStorage serializedMetadata) {
+            ArrayBackedValueStorage serializedMetadata, CollapseDetectorSettings collapseDetectorSettings) {
         super(datasetType, metaType, numPrimaryKeys);
+        this.collapseDetectorSettings = collapseDetectorSettings;
         this.requiredTemporaryBuffersCount = requiredTemporaryBuffers;
         this.multiPageOpRef = multiPageOpRef;
         this.columnWriterFactory = columnWriterFactory;
@@ -254,12 +266,12 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
 
     public static FlushColumnMetadata create(ARecordType datasetType, ARecordType metaType, int numPrimaryKeys,
             List<Integer> keySourceIndicator, IColumnValuesWriterFactory columnWriterFactory,
-            Mutable<IColumnWriteMultiPageOp> multiPageOpRef, IValueReference serializedMetadata)
-            throws HyracksDataException {
+            Mutable<IColumnWriteMultiPageOp> multiPageOpRef, IValueReference serializedMetadata,
+            CollapseDetectorSettings collapseDetectorSettings) throws HyracksDataException {
         boolean metaContainsKeys = metaType != null && keySourceIndicator.get(0) == 1;
         try {
             return createMutableMetadata(datasetType, metaType, numPrimaryKeys, metaContainsKeys, columnWriterFactory,
-                    multiPageOpRef, serializedMetadata);
+                    multiPageOpRef, serializedMetadata, collapseDetectorSettings);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -267,7 +279,8 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
 
     public static FlushColumnMetadata createMutableMetadata(ARecordType datasetType, ARecordType metaType,
             int numPrimaryKeys, boolean metaContainsKeys, IColumnValuesWriterFactory columnWriterFactory,
-            Mutable<IColumnWriteMultiPageOp> multiPageOpRef, IValueReference serializedMetadata) throws IOException {
+            Mutable<IColumnWriteMultiPageOp> multiPageOpRef, IValueReference serializedMetadata,
+            CollapseDetectorSettings collapseDetectorSettings) throws IOException {
         DataInput input = new DataInputStream(new ByteArrayInputStream(serializedMetadata.getByteArray(),
                 serializedMetadata.getStartOffset(), serializedMetadata.getLength()));
         //Skip offsets
@@ -293,7 +306,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         logSchema(root, metaRoot, fieldNamesDictionary);
         return new FlushColumnMetadata(datasetType, metaType, numPrimaryKeys, metaContainsKeys, columnWriterFactory,
                 multiPageOpRef, writers, requiredTemporaryBuffers, fieldNamesDictionary, root, metaRoot,
-                definitionLevels, schemaStorage);
+                definitionLevels, schemaStorage, collapseDetectorSettings);
     }
 
     @Override
@@ -366,6 +379,15 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
      * Schema related methods
      * ********************************************************
      */
+
+    /** Records that a node of this schema changed which names it routes to its map. */
+    public void onRoutingChanged() {
+        routingChanges++;
+    }
+
+    public int getRoutingChanges() {
+        return routingChanges;
+    }
 
     public int getLevel() {
         return level;
@@ -629,6 +651,34 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
             default:
                 throw new IllegalArgumentException("Unsupported type " + childTypeTag);
 
+        }
+    }
+
+    /** Whether the schema nodes of this metadata run the collapse detector. */
+    public boolean isCollapseDetectorEnabled() {
+        return collapseDetectorSettings.enabled;
+    }
+
+    public CollapseDetectorSettings getCollapseDetectorSettings() {
+        return collapseDetectorSettings;
+    }
+
+    /**
+     * Creates the collapsed representation for an object node whose field-name set is unbounded: a STRING key column
+     * plus a shared value node.
+     */
+    public MapSchemaNode createMapNode() throws HyracksDataException {
+        // The key column lives inside the map's repeated group, exactly like the value node, so it has to be created
+        // in that level context. Creating it at the enclosing object's level would give it a lower max definition
+        // level than the values it is paired with, and the two columns would no longer line up per entry.
+        level++;
+        repeated++;
+        try {
+            PrimitiveSchemaNode keyNode = (PrimitiveSchemaNode) createChild(ATypeTag.STRING);
+            return (MapSchemaNode) addDefinitionLevelsAndGet(new MapSchemaNode(keyNode));
+        } finally {
+            level--;
+            repeated--;
         }
     }
 

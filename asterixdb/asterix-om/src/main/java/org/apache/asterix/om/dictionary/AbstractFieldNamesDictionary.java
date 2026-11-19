@@ -37,6 +37,13 @@ public abstract class AbstractFieldNamesDictionary implements IFieldNamesDiction
      */
     public static final IValueReference DUMMY_FIELD_NAME;
     public static final int DUMMY_FIELD_NAME_INDEX = -1;
+    /**
+     * Synthetic index for the collapsed-map child of an object. Negative like {@link #DUMMY_FIELD_NAME_INDEX}, so it
+     * can never collide with an interned field name, which lets the map be an ordinary child: every schema walker
+     * reaches it without special-casing, and it serializes with the other children. Only code that resolves a child
+     * index back to a printable name has to skip it.
+     */
+    public static final int MAP_FIELD_NAME_INDEX = -2;
 
     //For declared fields
     private final AMutableString mutableString;

@@ -66,6 +66,13 @@ public interface IParallelCacher {
     long getUncachedTotalSize();
 
     /**
+     * Unlike {@link #getUncachedFiles()}, does not wait for a download in progress, so it may be momentarily stale
+     *
+     * @return number of uncached files
+     */
+    int getUncachedFileCount();
+
+    /**
      * Creates empty data files
      *
      * @param indexFile a file reference in an index

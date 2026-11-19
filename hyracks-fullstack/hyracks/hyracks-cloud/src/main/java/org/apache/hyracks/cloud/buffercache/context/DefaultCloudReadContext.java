@@ -24,7 +24,6 @@ import static org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHel
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
@@ -82,8 +81,7 @@ public class DefaultCloudReadContext implements IBufferCacheReadContext {
     public static ByteBuffer readAndPersistPage(IOManager ioManager, BufferedFileHandle fileHandle,
             BufferCacheHeaderHelper header, CachedPage cPage, IThreadStats threadStats, boolean persist)
             throws HyracksDataException {
-        ByteBuffer headerBuf =
-                readAndPersistIfEmpty(ioManager, fileHandle.getFileHandle(), header, cPage, threadStats, persist);
+        ByteBuffer headerBuf = readAndPersistIfEmpty(ioManager, fileHandle, header, cPage, threadStats, persist);
 
         cPage.setFrameSizeMultiplier(headerBuf.getInt(FRAME_MULTIPLIER_OFF));
         cPage.setExtraBlockPageId(headerBuf.getInt(EXTRA_BLOCK_PAGE_ID_OFF));
@@ -101,18 +99,20 @@ public class DefaultCloudReadContext implements IBufferCacheReadContext {
      * @param cPage      cached page
      * @return header buffer
      */
-    private static ByteBuffer readAndPersistIfEmpty(IOManager ioManager, IFileHandle fileHandle,
+    private static ByteBuffer readAndPersistIfEmpty(IOManager ioManager, BufferedFileHandle fileHandle,
             BufferCacheHeaderHelper header, CachedPage cPage, IThreadStats threadStats, boolean persist)
             throws HyracksDataException {
         ByteBuffer headerBuf = header.getBuffer();
-        if (BufferCacheCloudReadContextUtil.isEmpty(header)) {
+        boolean empty = BufferCacheCloudReadContextUtil.isEmpty(header);
+        CloudCacheStats.pageRead(!empty, headerBuf.limit());
+        if (empty) {
             // header indicates the page is empty
             // reset the buffer position to 0. Limit should be already set before the call of processHeader
             headerBuf.position(0);
             long offset = cPage.getCompressedPageOffset();
             ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
             // Read pageZero from the cloud
-            cloudIOManager.cloudRead(fileHandle, offset, headerBuf);
+            cloudIOManager.cloudRead(fileHandle.getFileHandle(), offset, headerBuf);
             // accounting pageZero for cloud read
             threadStats.cloudPageRead();
             headerBuf.flip();

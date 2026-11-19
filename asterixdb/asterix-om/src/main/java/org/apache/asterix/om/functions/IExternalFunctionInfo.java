@@ -32,6 +32,8 @@ public interface IExternalFunctionInfo extends IFunctionInfo {
 
     FunctionKind getKind();
 
+    List<String> getParameterNames();
+
     List<IAType> getParameterTypes();
 
     IAType getReturnType();

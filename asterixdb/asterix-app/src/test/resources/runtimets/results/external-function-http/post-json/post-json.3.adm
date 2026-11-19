@@ -1,0 +1,1 @@
+{ "method": "POST", "path": "/echo", "contentType": "application/json; charset=UTF-8", "body": { "a": 1, "b": { "x": [ 2.5, null, "s" ] } } }

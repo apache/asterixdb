@@ -1,0 +1,27 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+-- A shredded decimal with more digits than a double holds must not lose its file to pruning. The engine reads
+-- decimal16Value as its double, 1.2345678901234568E20, which equals this literal, so both copies of the row match.
+-- The fully shredded copy (id=7) is the one whose manifest carries a bound for decimal16Value; comparing that bound
+-- with the literal exactly would call it unmatchable and drop id=7, leaving only the serialized copy (id=1).
+SELECT VALUE id
+FROM shreddedVariant
+WHERE variant_field.decimal16Value = 123456789012345678901.123456789
+ORDER BY id;

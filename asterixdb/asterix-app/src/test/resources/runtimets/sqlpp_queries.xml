@@ -6355,6 +6355,26 @@
         <output-dir compare="Text">query-ASTERIXDB-3016</output-dir>
       </compilation-unit>
     </test-case-->
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-outer-shadow-01">
+        <output-dir compare="Text">gby-outer-shadow-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-outer-shadow-02">
+        <output-dir compare="Text">gby-outer-shadow-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-outer-shadow-03">
+        <output-dir compare="Text">gby-outer-shadow-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="gby-outer-with-01">
+        <output-dir compare="Text">gby-outer-with-01</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">
@@ -13647,6 +13667,12 @@
     </test-case>
   </test-group>
   <test-group name="user-defined-functions">
+    <test-case FilePath="external-function-http">
+      <compilation-unit name="disabled">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1268: External HTTP functions are disabled</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="inline-in-expr">
         <output-dir compare="Text">inline-in-expr</output-dir>
@@ -15611,6 +15637,13 @@
         <output-dir compare="Text">all-cases</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="update-statements">
+      <compilation-unit name="request-dataverse">
+        <output-dir compare="Text">request-dataverse</output-dir>
+        <expected-error>Cannot update primary key</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
   </test-group>
 <test-group name="json">
     <test-case FilePath="json">
@@ -16849,6 +16882,11 @@
     <test-case FilePath="window">
       <compilation-unit name="win_opt_02">
         <output-dir compare="Text">win_opt_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="win_outer_alias_01">
+        <output-dir compare="Text">win_outer_alias_01</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

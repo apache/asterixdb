@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.asterix.column.common.buffer.TestWriteMultiPageOp;
 import org.apache.asterix.column.common.row.DummyLSMBTreeTupleReference;
 import org.apache.asterix.column.common.test.TestCase;
+import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleWithMetaWriter;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
@@ -88,7 +89,7 @@ public class FlushMetaColumnCountTest extends AbstractBytesTest {
         IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
         FlushColumnMetadata columnMetadata = new FlushColumnMetadata(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE,
                 DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, Collections.emptyList(), Collections.singletonList(0),
-                writerFactory, multiPageOpRef);
+                writerFactory, multiPageOpRef, CollapseDetectorSettings.DEFAULT);
         columnMetadata.init(new TestWriteMultiPageOp(dummyBufferCache, fileId));
 
         FlushColumnTupleWithMetaWriter writer = new FlushColumnTupleWithMetaWriter(columnMetadata, PAGE_SIZE,

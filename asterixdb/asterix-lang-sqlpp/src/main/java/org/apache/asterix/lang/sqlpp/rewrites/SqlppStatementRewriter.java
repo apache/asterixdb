@@ -24,6 +24,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCopyToRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppDeleteRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppSynonymRewriteVisitor;
+import org.apache.asterix.lang.sqlpp.visitor.SqlppUpdateRewriteVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 
 class SqlppStatementRewriter implements IStatementRewriter {
@@ -49,6 +50,7 @@ class SqlppStatementRewriter implements IStatementRewriter {
         if (stmt != null) {
             stmt.accept(SqlppSynonymRewriteVisitor.INSTANCE, metadataProvider);
             stmt.accept(SqlppDeleteRewriteVisitor.INSTANCE, metadataProvider);
+            stmt.accept(SqlppUpdateRewriteVisitor.INSTANCE, metadataProvider);
             stmt.accept(SqlppCopyToRewriteVisitor.INSTANCE, metadataProvider);
         }
     }

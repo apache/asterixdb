@@ -42,7 +42,6 @@ import org.apache.logging.log4j.Logger;
 
 public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final List<IColumnTupleIterator> componentTupleList;
 
     public LSMColumnBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx) {
         this(opCtx, false, NoOpIndexCursorStats.INSTANCE);
@@ -51,7 +50,6 @@ public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
     public LSMColumnBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx, boolean returnDeletedTuples,
             IIndexCursorStats stats) {
         super(opCtx, returnDeletedTuples, stats);
-        componentTupleList = new ArrayList<>();
     }
 
     @Override
@@ -72,9 +70,7 @@ public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
         if (type == LSMComponentType.MEMORY) {
             return super.createCursor(type, accessor);
         }
-        ColumnBTreeRangeSearchCursor cursor = (ColumnBTreeRangeSearchCursor) accessor.createSearchCursor(false);
-        componentTupleList.add((IColumnTupleIterator) cursor.doGetTuple());
-        return cursor;
+        return accessor.createSearchCursor(false);
     }
 
     @Override
@@ -117,6 +113,21 @@ public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
      * @return we need the tuple references for vertical merges
      */
     public List<IColumnTupleIterator> getComponentTupleList() {
-        return componentTupleList;
+        // Read from the cursors in place: a cursor kept across searches replaces those whose slot changed component.
+        List<IColumnTupleIterator> componentTuples = new ArrayList<>(rangeCursors.length);
+        for (int i = 0; i < rangeCursors.length; i++) {
+            if (!isMemoryComponent[i]) {
+                componentTuples
+                        .add((IColumnTupleIterator) ((ColumnBTreeRangeSearchCursor) rangeCursors[i]).doGetTuple());
+            }
+        }
+        return componentTuples;
+    }
+
+    @Override
+    protected boolean isAccessorBoundToComponent() {
+        // A column accessor's projection is clipped from the newest schema when the accessor is built: a component
+        // flushed later may have columns that schema lacks.
+        return true;
     }
 }

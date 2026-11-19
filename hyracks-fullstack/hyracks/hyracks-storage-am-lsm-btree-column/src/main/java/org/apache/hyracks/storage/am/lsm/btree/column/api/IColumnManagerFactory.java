@@ -20,15 +20,17 @@ package org.apache.hyracks.storage.am.lsm.btree.column.api;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 
 public interface IColumnManagerFactory extends Serializable, IJsonSerializable {
     /**
+     * @param nodeConfig the configuration of the node the index lives on, for the column manager's own settings
      * @return a new instance of {@link IColumnManager}
      */
-    IColumnManager createColumnManager();
+    IColumnManager createColumnManager(IApplicationConfig nodeConfig);
 
     /**
      * Get column tuple reader/writer for the {@link LSMIOOperationType#LOAD}

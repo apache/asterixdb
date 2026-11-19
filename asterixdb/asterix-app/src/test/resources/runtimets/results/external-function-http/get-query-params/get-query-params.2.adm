@@ -1,0 +1,4 @@
+{ "method": "GET", "path": "/echo", "query": "q=a+b%26c%3Dd&page=2" }
+{ "method": "GET", "path": "/echo", "query": "q=%7B%22k%22%3A%5B1%2C%22v%22%5D%7D&page=2.5" }
+{ "method": "GET", "path": "/echo", "query": "q=true&page=x" }
+{ "method": "GET", "path": "/echo", "query": "q=2026-11-20&page=5c0e4a2b-1f3d-4e8a-9b7c-2d6f8a1e3c90" }

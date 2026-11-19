@@ -680,10 +680,19 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         out.print(skip(step) + "update " + datasetSymbol
                 + generateFullName(update.getDataverseName(), update.getDatasetName()));
         if (update.getVar() != null) {
-            out.print("as ");
+            out.print(" as ");
             update.getVar().accept(this, step);
         }
-        update.getQuery().accept(this, step + 2);
+        out.println();
+        update.getChangeSeq().accept(this, step + 2);
+        if (update.getCondition() != null) {
+            out.print(skip(step) + " where ");
+            update.getCondition().accept(this, step + 2);
+        }
+        if (update.getReturnExpression() != null) {
+            out.print(skip(step) + " returning ");
+            update.getReturnExpression().accept(this, step + 2);
+        }
         out.println(SEMICOLON);
         return null;
     }

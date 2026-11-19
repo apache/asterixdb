@@ -126,6 +126,11 @@ public final class ParallelCacher implements IParallelCacher {
     }
 
     @Override
+    public int getUncachedFileCount() {
+        return uncachedDataFiles.size() + uncachedMetadataFiles.size();
+    }
+
+    @Override
     public synchronized boolean createEmptyDataFiles(FileReference indexFile) throws HyracksDataException {
         String indexSubPath = StoragePathUtil.getIndexSubPath(indexFile, false);
         Set<FileReference> toCreate = getForAllPartitions(uncachedDataFiles.values(), indexSubPath);

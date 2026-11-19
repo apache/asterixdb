@@ -49,7 +49,7 @@
           <execution>
             <phase>generate-sources</phase>
             <configuration>
-              <tasks>
+              <target>
                 <ant antfile="build-script.xml" target="build">
                   <property name="main.class" value="org.apache.hyracks.algebricks.tests.script.IdentityStreamingScript" />
                   <property name="script.classpath" refid="maven.compile.classpath" />
@@ -59,7 +59,7 @@
                   <property name="target.dir" value="${basedir}/target/testscripts" />
                   <property name="target" value="idscript" />
                 </ant>
-              </tasks>
+              </target>
             </configuration>
             <goals>
               <goal>run</goal>

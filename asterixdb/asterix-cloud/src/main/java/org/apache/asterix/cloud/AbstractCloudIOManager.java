@@ -189,6 +189,21 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     protected abstract Set<UncachedFileReference> getUncachedFiles();
 
+    /**
+     * Files of this node's partitions that are in cloud storage but have not yet been brought to the local drive. A
+     * file leaves this set when its index is first opened, although with holes allowed its pages may still be read from
+     * the cloud afterwards, and it can return to it when the index is evicted. Does not wait for a download in
+     * progress, so suits being polled for metrics.
+     *
+     * @return number of uncached files
+     */
+    public abstract int getUncachedFileCount();
+
+    /**
+     * @return total size of the files counted by {@link #getUncachedFileCount()}, in bytes
+     */
+    public abstract long getUncachedFileBytes();
+
     @Override
     public void downloadLibrary(Collection<FileReference> libPath) throws HyracksDataException {
         try (IParallelDownloader downloader = cloudClient.createParallelDownloader(bucket, localIoManager)) {
@@ -268,6 +283,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     @Override
     public final int cloudWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
         ICloudWriter cloudWriter = ((CloudFileHandle) fHandle).getCloudWriter();
+        ((CloudFileHandle) fHandle).uploadWritten();
         int writtenBytes;
         try {
             ensurePosition(fHandle, cloudWriter.position(), offset);
@@ -282,6 +298,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     @Override
     public final long cloudWrite(IFileHandle fHandle, long offset, ByteBuffer[] data) throws HyracksDataException {
         ICloudWriter cloudWriter = ((CloudFileHandle) fHandle).getCloudWriter();
+        ((CloudFileHandle) fHandle).uploadWritten();
         int writtenBytes;
         try {
             ensurePosition(fHandle, cloudWriter.position(), offset);
@@ -358,6 +375,16 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         return new DeleteBulkCloudOperation(localIoManager, bucket, cloudClient, NoOpDeleteBulkCallBack.INSTANCE);
     }
 
+    /**
+     * Restores the file first if it was evicted from the local cache while its descriptor was released, as opening it
+     * would.
+     */
+    @Override
+    public final void reopen(IFileHandle fHandle) throws HyracksDataException {
+        onOpen((CloudFileHandle) fHandle);
+        super.reopen(fHandle);
+    }
+
     @Override
     public final void close(IFileHandle fHandle) throws HyracksDataException {
         try {
@@ -377,6 +404,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             ICloudWriter cloudWriter = ((CloudFileHandle) fileHandle).getCloudWriter();
             try {
                 cloudWriter.finish();
+                ((CloudFileHandle) fileHandle).uploadFinished();
             } catch (HyracksDataException e) {
                 savedEx = e;
             }

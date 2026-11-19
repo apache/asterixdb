@@ -352,20 +352,30 @@ public class GCSCloudClient implements ICloudClient {
         if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
             builder.setHost(config.getEndpoint());
         }
-        if (config.getMaxIdleSeconds() > 0 || config.getMaxLifetimeSeconds() > 0) {
-            HttpClientBuilder hcb = ApacheHttpTransport.newDefaultHttpClientBuilder();
-            if (config.getMaxIdleSeconds() > 0) {
-                hcb.evictIdleConnections(config.getMaxIdleSeconds(), TimeUnit.SECONDS);
-            }
-            if (config.getMaxLifetimeSeconds() > 0) {
-                hcb.setConnectionTimeToLive(config.getMaxLifetimeSeconds(), TimeUnit.SECONDS);
-            }
-            ApacheHttpTransport transport = new ApacheHttpTransport(hcb.build());
-            HttpTransportOptions transportOptions = HttpStorageOptions.defaults().getDefaultTransportOptions()
-                    .toBuilder().setHttpTransportFactory(() -> transport).build();
-            builder.setTransportOptions(transportOptions);
-        }
+        builder.setTransportOptions(transportOptions(config));
         return builder.build().getService();
+    }
+
+    /**
+     * The transport both GCS clients use: Apache HTTP, which applies the connection idle and lifetime limits and
+     * carries the request metrics.
+     */
+    static HttpTransportOptions transportOptions(GCSClientConfig config) {
+        HttpClientBuilder hcb = ApacheHttpTransport.newDefaultHttpClientBuilder();
+        // the default pool allows 20 connections per route, and every request goes to the one storage endpoint, so
+        // the parallel downloader's workers (2 per processor) would queue for them
+        int maxConnections =
+                config.getRequestsMaxHttpConnections() > 0 ? config.getRequestsMaxHttpConnections() : Integer.MAX_VALUE;
+        hcb.setMaxConnTotal(maxConnections).setMaxConnPerRoute(maxConnections);
+        if (config.getMaxIdleSeconds() > 0) {
+            hcb.evictIdleConnections(config.getMaxIdleSeconds(), TimeUnit.SECONDS);
+        }
+        if (config.getMaxLifetimeSeconds() > 0) {
+            hcb.setConnectionTimeToLive(config.getMaxLifetimeSeconds(), TimeUnit.SECONDS);
+        }
+        ApacheHttpTransport transport = new ApacheHttpTransport(new GCSRequestMetricsHttpClient(hcb.build()));
+        return HttpStorageOptions.defaults().getDefaultTransportOptions().toBuilder()
+                .setHttpTransportFactory(() -> transport).build();
     }
 
     private String stripCloudPrefix(String objectName) {

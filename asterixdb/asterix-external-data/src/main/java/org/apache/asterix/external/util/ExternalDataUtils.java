@@ -69,6 +69,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -150,6 +151,9 @@ import io.delta.kernel.exceptions.KernelEngineException;
 import io.delta.kernel.exceptions.KernelException;
 
 public class ExternalDataUtils {
+
+    private static final Set<String> AUTH_FLAGS = Set.of(AwsConstants.INSTANCE_PROFILE_FIELD_NAME,
+            GCSConstants.APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME, AzureConstants.MANAGED_IDENTITY_FIELD_NAME);
 
     private static final Map<String, String> validTimeZonesMap = new HashMap<>();
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
@@ -1236,6 +1240,32 @@ public class ExternalDataUtils {
 
     public static Optional<String> getFirstNotNull(Map<String, String> configuration, String... parameters) {
         return Arrays.stream(parameters).filter(field -> configuration.get(field) != null).findFirst();
+    }
+
+    /**
+     * Whether an authentication flag, such as {@code instanceProfile}, is set. The flag takes {@code true} or
+     * {@code false} in any letter case, and is not set when absent.
+     *
+     * @throws CompilationException if the flag has any other value
+     */
+    public static boolean isAuthFlagSet(Map<String, String> configuration, String flag) throws CompilationException {
+        return validateAndGetBooleanProperty(flag, configuration.get(flag));
+    }
+
+    /**
+     * As {@link #getFirstNotNull}, except that an authentication flag is provided only when it is set: a flag set to
+     * {@code false} selects no authentication method, and so conflicts with none.
+     */
+    public static Optional<String> getFirstProvided(Map<String, String> configuration, String... parameters)
+            throws CompilationException {
+        for (String parameter : parameters) {
+            boolean provided = AUTH_FLAGS.contains(parameter) ? isAuthFlagSet(configuration, parameter)
+                    : configuration.get(parameter) != null;
+            if (provided) {
+                return Optional.of(parameter);
+            }
+        }
+        return Optional.empty();
     }
 
     public static ATypeTag peekArgument(IAType type, IValueReference valueReference, TaggedValuePointable pointy)

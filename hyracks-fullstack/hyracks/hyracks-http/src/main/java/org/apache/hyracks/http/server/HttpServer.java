@@ -36,6 +36,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongConsumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -49,7 +51,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -96,7 +97,10 @@ public class HttpServer {
     private final Set<SocketAddress> addresses;
     private final Set<SocketAddress> boundAddresses;
     private final ThreadPoolExecutor executor;
+    private final AtomicLong rejectedRequests = new AtomicLong();
     // Mutable members
+    private volatile LongConsumer queueWaitListener = waitNanos -> {
+    };
     private volatile int state = STOPPED;
     private volatile Thread recoveryThread;
     private final List<Channel> channels;
@@ -315,7 +319,7 @@ public class HttpServer {
         b.group(bossGroup, workerGroup).channel(channelImpl)
                 .childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(RECEIVE_BUFFER_SIZE))
                 .childOption(ChannelOption.AUTO_READ, Boolean.FALSE)
-                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .childOption(ChannelOption.ALLOCATOR, config.getAllocator())
                 .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, WRITE_BUFFER_WATER_MARK)
                 .handler(new LoggingHandler(LogLevel.DEBUG)).childHandler(getChannelInitializer());
         List<Pair<SocketAddress, ChannelFuture>> channelFutures = new ArrayList<>();
@@ -456,6 +460,31 @@ public class HttpServer {
 
     public int getWorkQueueSize() {
         return workQueue.size();
+    }
+
+    /**
+     * @return the number of requests refused because the executor they were submitted to could not accept them
+     */
+    public long getRejectedRequestCount() {
+        return rejectedRequests.get();
+    }
+
+    /**
+     * Sets the listener told, for every request that starts executing, how long it waited in the work queue.
+     * It is invoked on the executor thread just before the request is handled, so it must not block.
+     *
+     * @param listener receives the queue wait in nanoseconds
+     */
+    public void setQueueWaitListener(LongConsumer listener) {
+        queueWaitListener = listener;
+    }
+
+    void requestRejected() {
+        rejectedRequests.incrementAndGet();
+    }
+
+    void requestStarted(long queueWaitNanos) {
+        queueWaitListener.accept(queueWaitNanos);
     }
 
     public IChannelClosedHandler getChannelClosedHandler() {

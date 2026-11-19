@@ -49,6 +49,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private final RangePredicate reusablePred;
     private ISearchOperationCallback searchCallback;
     private BTreeAccessor[] btreeAccessors;
+    private ILSMComponent[] accessorComponents;
     protected boolean[] isMemoryComponent;
     private ArrayTupleBuilder tupleBuilder;
     private boolean canCallProceed = true;
@@ -380,6 +381,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             // object creation: should be relatively low
             rangeCursors = new IIndexCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
+            accessorComponents = new ILSMComponent[numBTrees];
             isMemoryComponent = new boolean[numBTrees];
         } else if (rangeCursors.length != numBTrees) {
             // should destroy first
@@ -392,6 +394,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             }
             rangeCursors = new IIndexCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
+            accessorComponents = new ILSMComponent[numBTrees];
             isMemoryComponent = new boolean[numBTrees];
         }
         for (int i = 0; i < numBTrees; i++) {
@@ -411,6 +414,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                 rangeCursors[i].close();
             }
             isMemoryComponent[i] = type == LSMComponentType.MEMORY;
+            accessorComponents[i] = component;
         }
         IndexCursorUtils.open(btreeAccessors, rangeCursors, searchPred);
         try {
@@ -426,7 +430,8 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private boolean destroyIncompatible(ILSMComponent component, int index) throws HyracksDataException {
         // exclusive or. if the component is memory and the previous one at that index was a disk component
         // or vice versa, then we should destroy the cursor and accessor since they need to be recreated
-        if (component.getType() == LSMComponentType.MEMORY ^ isMemoryComponent[index]) {
+        if (component.getType() == LSMComponentType.MEMORY ^ isMemoryComponent[index]
+                || isAccessorBoundToComponent() && accessorComponents[index] != component) {
             Throwable failure = CleanupUtils.destroy(null, btreeAccessors[index]);
             btreeAccessors[index] = null;
             failure = CleanupUtils.destroy(failure, rangeCursors[index]);
@@ -442,6 +447,15 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     @Override
     public boolean getSearchOperationCallbackProceedResult() {
         return resultOfSearchCallbackProceed;
+    }
+
+    /**
+     * Whether an accessor serves only the component it was built for. A cursor kept across searches reuses each slot's
+     * accessor, and flushes and merges between searches can put another component in a slot without changing their
+     * number; an accessor bound to its component must then be rebuilt.
+     */
+    protected boolean isAccessorBoundToComponent() {
+        return false;
     }
 
     protected BTreeAccessor createAccessor(ILSMComponent component, int index) throws HyracksDataException {

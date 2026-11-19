@@ -86,6 +86,21 @@ public final class PhysicalDrive implements IPhysicalDrive {
         return usedSpace.get() < diskSpace.getPressureCapacity();
     }
 
+    @Override
+    public long getUsedSpace() {
+        return usedSpace.get();
+    }
+
+    @Override
+    public long getAllocatedCapacity() {
+        return diskSpace.getAllocatedCapacity();
+    }
+
+    @Override
+    public long getPressureCapacity() {
+        return diskSpace.getPressureCapacity();
+    }
+
     public static long getUsedSpace(List<FileStore> drivePaths) {
         long totalUsedSpace = 0;
         for (FileStore device : drivePaths) {

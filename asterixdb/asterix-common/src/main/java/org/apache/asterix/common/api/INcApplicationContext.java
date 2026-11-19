@@ -24,6 +24,7 @@ import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.functions.IHttpEndpointResolver;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
@@ -32,6 +33,7 @@ import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.transactions.IRecoveryManagerFactory;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.control.CcId;
@@ -161,4 +163,15 @@ public interface INcApplicationContext extends IApplicationContext {
      * @return disk cache service
      */
     IDiskCacheMonitoringService getDiskCacheService();
+
+    /**
+     * @return the resolver of the endpoints of external HTTP functions on this node
+     */
+    IHttpEndpointResolver getHttpEndpointResolver();
+
+    /**
+     * @return the client that external HTTP functions send their requests with on this node. It applies the node's
+     *         egress policy and does not follow redirects.
+     */
+    CloseableHttpClient getHttpFunctionClient();
 }

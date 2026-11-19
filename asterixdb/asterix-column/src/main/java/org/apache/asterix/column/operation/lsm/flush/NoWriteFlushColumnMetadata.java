@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNestedNode;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
+import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
@@ -77,9 +78,20 @@ public final class NoWriteFlushColumnMetadata extends FlushColumnMetadata {
             ObjectSchemaNode metaRoot, Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels,
             ArrayBackedValueStorage schemaStorage) {
         super(datasetType, metaType, numPrimaryKeys, metaContainsKeys, columnWriterFactory, multiPageOpRef, writers,
-                requiredTemporaryBuffers, fieldNamesDictionary, root, metaRoot, definitionLevels, schemaStorage);
+                requiredTemporaryBuffers, fieldNamesDictionary, root, metaRoot, definitionLevels, schemaStorage,
+                CollapseDetectorSettings.DEFAULT);
         buffersRequiredByCurrentTuple = 0;
         numColumns = 0;
+    }
+
+    /**
+     * Off: this schema only sizes the pages of a flush, from a copy of the flush's schema taken anew whenever that
+     * schema changes which names a node routes to its map. Deciding a collapse here would diverge from the flush's
+     * own decision, and the detector's work would be wasted.
+     */
+    @Override
+    public boolean isCollapseDetectorEnabled() {
+        return false;
     }
 
     public static NoWriteFlushColumnMetadata createMutableMetadata(ARecordType datasetType, ARecordType metaType,

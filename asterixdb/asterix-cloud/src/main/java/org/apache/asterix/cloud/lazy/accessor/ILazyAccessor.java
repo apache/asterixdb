@@ -119,4 +119,14 @@ public interface ILazyAccessor {
      * @return all uncached files
      */
     Set<UncachedFileReference> getUncachedFiles();
+
+    /**
+     * @return number of uncached files, without waiting for a download in progress
+     */
+    int getUncachedFileCount();
+
+    /**
+     * @return total size of uncached files, without waiting for a download in progress
+     */
+    long getUncachedFileBytes();
 }

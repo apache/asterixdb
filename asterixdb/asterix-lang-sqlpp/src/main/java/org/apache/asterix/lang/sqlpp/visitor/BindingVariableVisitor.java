@@ -92,11 +92,11 @@ public class BindingVariableVisitor extends AbstractSqlppAstVisitor<Void, Collec
         // The clause binds its descriptor and members variables where the query named them, plus the
         // cluster-id and centroid variables the rewrite derives from the descriptor.
         //
-        // The decorations are deliberately NOT reported, unlike GROUP BY's. They are drawn from the scope's
-        // live variables (SqlppGroupByAggregationSugarVisitor), and Scope.liveSymbols walks into enclosing
-        // scopes, so a decoration can name an enclosing query's variable. Everything a decoration can
-        // legitimately name in this block is already a FROM or LET binding of it, so reporting them would add
-        // nothing and would let the CLUSTER BY correlation check subtract the very variable it exists to find.
+        // The decorations are deliberately NOT reported, unlike GROUP BY's. A decoration carries a variable
+        // bound outside the block (a WITH alias, a top-level LET, an enclosing query's variable) through the
+        // clause, never one of the block's own bindings, and the CLUSTER BY correlation check subtracts the
+        // reported bindings from the free variables to find exactly those enclosing variables: reporting the
+        // decorations would subtract the very variable it exists to find.
         addIfPresent(bindingVars, clusterbyClause.getClusterDescriptorVar());
         addIfPresent(bindingVars, clusterbyClause.getClusterMembersVar());
         addIfPresent(bindingVars, clusterbyClause.getClusterIdVar());

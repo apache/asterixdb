@@ -98,6 +98,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg">
+      <compilation-unit name="numeric-pushdown">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">numeric-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg">
       <compilation-unit name="variant-nested-in-struct">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">variant-nested-in-struct</output-dir>
@@ -213,6 +219,16 @@
       <compilation-unit name="invalid-timezone">
         <output-dir compare="Text">invalid-timezone</output-dir>
         <expected-error>ASX1172: Provided timezone is invalid: 'GMT+Zft!'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="iceberg/negative">
+      <compilation-unit name="invalid-boolean-option">
+        <output-dir compare="Text">invalid-boolean-option</output-dir>
+        <expected-error>ASX0047: Invalid value for parameter 'decimal-to-double': yes</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'timestamp-to-long': 1</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'date-to-int': ture</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'time-to-int': abc</expected-error>
+        <expected-error>ASX0047: Invalid value for parameter 'splitScanTasks': 0</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="iceberg/negative">

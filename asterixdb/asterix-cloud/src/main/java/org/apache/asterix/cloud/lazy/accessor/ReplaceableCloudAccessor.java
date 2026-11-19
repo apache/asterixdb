@@ -192,4 +192,14 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
     public Set<UncachedFileReference> getUncachedFiles() {
         return cacher.getUncachedFiles();
     }
+
+    @Override
+    public int getUncachedFileCount() {
+        return cacher.getUncachedFileCount();
+    }
+
+    @Override
+    public long getUncachedFileBytes() {
+        return cacher.getUncachedTotalSize();
+    }
 }

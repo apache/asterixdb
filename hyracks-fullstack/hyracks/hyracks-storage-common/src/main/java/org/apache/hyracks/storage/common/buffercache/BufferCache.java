@@ -103,6 +103,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private final AtomicLong descriptorsReleased = new AtomicLong();
     private final AtomicLong descriptorsReopened = new AtomicLong();
     private final AtomicLong descriptorsClosed = new AtomicLong();
+    private final AtomicLong descriptorReleaseSyncs = new AtomicLong();
     private final AtomicLong descriptorReleasePasses = new AtomicLong();
     private final AtomicLong descriptorReleasePassesOverBound = new AtomicLong();
     private volatile IFileDescriptorListener descriptorListener = IFileDescriptorListener.NO_OP;
@@ -1590,6 +1591,13 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     }
 
     /**
+     * @return how many releases first synced cache writes made through the descriptor
+     */
+    public long getDescriptorReleaseSyncCount() {
+        return descriptorReleaseSyncs.get();
+    }
+
+    /**
      * @return how many release passes have run
      */
     public long getDescriptorReleasePassCount() {
@@ -1651,6 +1659,15 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             LOGGER.debug("descriptor listener failed", e);
         }
         return open;
+    }
+
+    void descriptorReleaseSynced(long durationNanos) {
+        descriptorReleaseSyncs.incrementAndGet();
+        try {
+            descriptorListener.releaseSynced(durationNanos);
+        } catch (Exception e) {
+            LOGGER.debug("descriptor listener failed", e);
+        }
     }
 
     int descriptorClosed() {

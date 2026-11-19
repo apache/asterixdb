@@ -47,6 +47,15 @@ public interface IFileDescriptorListener {
     }
 
     /**
+     * A descriptor about to be released was synced first, for the cache writes made through it.
+     *
+     * @param durationNanos
+     *            how long the sync took
+     */
+    default void releaseSynced(long durationNanos) {
+    }
+
+    /**
      * A release pass finished.
      *
      * @param released

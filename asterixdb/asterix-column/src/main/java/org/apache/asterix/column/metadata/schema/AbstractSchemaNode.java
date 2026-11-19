@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.asterix.column.metadata.PathInfoSerializer;
 import org.apache.asterix.column.metadata.schema.collection.ArraySchemaNode;
+import org.apache.asterix.column.metadata.schema.collection.MapSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.MultisetSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
@@ -90,6 +91,8 @@ public abstract class AbstractSchemaNode {
                 return new ArraySchemaNode(input, definitionLevels);
             case MULTISET:
                 return new MultisetSchemaNode(input, definitionLevels);
+            case SPARSOBJECT:
+                return new MapSchemaNode(input, definitionLevels);
             case UNION:
                 return new UnionSchemaNode(input, definitionLevels);
             case NULL:

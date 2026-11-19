@@ -29,6 +29,7 @@ import org.apache.asterix.column.common.buffer.DummyBufferCache;
 import org.apache.asterix.column.common.buffer.DummyPage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.AbstractColumnBTreeLeafFrame;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
 
 public class TestColumnBufferProvider implements IColumnBufferProvider {
@@ -55,6 +56,13 @@ public class TestColumnBufferProvider implements IColumnBufferProvider {
 
     public void reset(DummyPage pageZero) throws HyracksDataException {
         pages.clear();
+        if (columnIndex >= pageZero.getBuffer().getInt(AbstractColumnBTreeLeafFrame.NUMBER_OF_COLUMNS_OFFSET)) {
+            // The column first appears in a later leaf. Its page-zero slot does not exist here, so reading it would
+            // follow whatever bytes follow page zero's offsets. An empty column reads as all missing, as in production.
+            numberOfPages = 0;
+            length = 0;
+            return;
+        }
         int offset = getColumnOffset(pageZero.getBuffer());
         startPage = pageZero.getPageId() + getColumnPageIndex(offset);
         startOffset = offset % PAGE_SIZE;

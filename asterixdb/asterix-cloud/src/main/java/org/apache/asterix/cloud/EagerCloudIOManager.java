@@ -72,6 +72,16 @@ final class EagerCloudIOManager extends AbstractCloudIOManager {
     }
 
     @Override
+    public int getUncachedFileCount() {
+        return 0;
+    }
+
+    @Override
+    public long getUncachedFileBytes() {
+        return 0L;
+    }
+
+    @Override
     protected void onOpen(CloudFileHandle fileHandle) {
         // NoOp
     }

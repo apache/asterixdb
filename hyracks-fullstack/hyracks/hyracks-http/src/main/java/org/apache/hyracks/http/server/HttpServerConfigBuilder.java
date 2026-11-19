@@ -18,7 +18,12 @@
  */
 package org.apache.hyracks.http.server;
 
+import java.util.Objects;
+
 import org.apache.hyracks.util.annotations.NotThreadSafe;
+
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 
 @NotThreadSafe
 public class HttpServerConfigBuilder {
@@ -37,6 +42,7 @@ public class HttpServerConfigBuilder {
     private int maxResponseChunkSize = RESPONSE_CHUNK_SIZE;
     private int maxRequestHeaderSize = MAX_REQUEST_HEADER_SIZE;
     private int maxRequestInitialLineLength = MAX_REQUEST_INITIAL_LINE_LENGTH;
+    private ByteBufAllocator allocator = PooledByteBufAllocator.DEFAULT;
 
     private HttpServerConfigBuilder() {
     }
@@ -84,8 +90,16 @@ public class HttpServerConfigBuilder {
         return this;
     }
 
+    /**
+     * Sets the allocator for the buffers of accepted connections; pooled by default.
+     */
+    public HttpServerConfigBuilder setAllocator(ByteBufAllocator allocator) {
+        this.allocator = Objects.requireNonNull(allocator);
+        return this;
+    }
+
     public HttpServerConfig build() {
         return HttpServerConfig.of(threadCount, requestQueueSize, maxRequestSize, maxRequestInitialLineLength,
-                maxRequestHeaderSize, maxRequestChunkSize, maxResponseChunkSize);
+                maxRequestHeaderSize, maxRequestChunkSize, maxResponseChunkSize, allocator);
     }
 }

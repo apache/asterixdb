@@ -49,6 +49,13 @@ public class ChannelSet {
 
     private final BitSet pendingEOSAckBitmap;
 
+    /**
+     * Channels that have become completely closed (both close acks seen) but still occupy their slot. A slot is only
+     * recycled when a channel is next created, so this is what lets that reclamation visit just the closed channels
+     * rather than every slot.
+     */
+    private final BitSet reclaimableBitmap;
+
     private int openChannelCount;
 
     private final IEventCounter pendingWriteEventsCounter;
@@ -61,6 +68,7 @@ public class ChannelSet {
         pendingChannelCreditsBitmap = new BitSet();
         pendingChannelSynBitmap = new BitSet();
         pendingEOSAckBitmap = new BitSet();
+        reclaimableBitmap = new BitSet();
         this.pendingWriteEventsCounter = pendingWriteEventsCounter;
         openChannelCount = 0;
     }
@@ -68,28 +76,46 @@ public class ChannelSet {
     ChannelControlBlock allocateChannel() throws NetException {
         synchronized (mConn) {
             cleanupClosedChannels();
-            int idx = allocationBitmap.nextClearBit(0);
-            if (idx < 0 || idx >= ccbArray.length) {
-                cleanupClosedChannels();
-                idx = allocationBitmap.nextClearBit(0);
-                if (idx < 0 || idx == ccbArray.length) {
-                    idx = ccbArray.length;
-                }
-            }
-            return createChannel(idx);
+            return createChannel(allocationBitmap.nextClearBit(0));
         }
     }
 
     private void cleanupClosedChannels() {
-        for (int i = 0; i < ccbArray.length; ++i) {
+        for (int i = reclaimableBitmap.nextSetBit(0); i >= 0; i = reclaimableBitmap.nextSetBit(i + 1)) {
             ChannelControlBlock ccb = ccbArray[i];
-            if (ccb != null) {
-                if (ccb.completelyClosed()) {
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace("Cleaning free channel: " + ccb);
-                    }
-                    freeChannel(ccb);
-                }
+            // a slot is only marked while it holds its block, and freeChannel() clears the mark when it empties one
+            assert ccb != null : i;
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Cleaning free channel: " + ccb);
+            }
+            freeChannel(ccb);
+        }
+    }
+
+    /**
+     * Records the ack of our close of the given channel, looking the channel up and acking it in one critical section.
+     *
+     * @return the channel acked
+     */
+    ChannelControlBlock reportLocalEOSAck(int channelId) {
+        synchronized (mConn) {
+            ChannelControlBlock ccb = ccbArray[channelId];
+            ccb.reportLocalEOSAck();
+            return ccb;
+        }
+    }
+
+    /**
+     * Called by a control block each time it records one of its two close acks, so that the flags and the mark cannot
+     * be separated. The acks arrive on different threads; each sets its flag before taking the lock to check, so
+     * whichever check runs second sees both and marks the slot. The identity check keeps a block that has already
+     * been superseded in its slot from marking its successor.
+     */
+    void markReclaimableIfClosed(ChannelControlBlock ccb) {
+        synchronized (mConn) {
+            int idx = ccb.getChannelId();
+            if (ccb.completelyClosed() && ccbArray[idx] == ccb) {
+                reclaimableBitmap.set(idx);
             }
         }
     }
@@ -108,6 +134,7 @@ public class ChannelSet {
         pendingChannelCreditsBitmap.clear(idx);
         pendingChannelSynBitmap.clear(idx);
         pendingEOSAckBitmap.clear(idx);
+        reclaimableBitmap.clear(idx);
         --openChannelCount;
     }
 
@@ -240,9 +267,7 @@ public class ChannelSet {
     }
 
     private void expand(int idx) {
-        while (idx >= ccbArray.length) {
-            ccbArray = Arrays.copyOf(ccbArray, ccbArray.length * 2);
-        }
+        ccbArray = Arrays.copyOf(ccbArray, Math.max(idx + 1, ccbArray.length * 2));
     }
 
     public MultiplexedConnection getMultiplexedConnection() {

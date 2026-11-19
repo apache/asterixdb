@@ -105,7 +105,9 @@ public class MuxDemux {
                 mConn.setTCPConnection(connection);
                 connection.setEventListener(mConn);
                 connection.setAttachment(mConn);
-                incomingConnectionMap.put(connection.getRemoteAddress(), mConn);
+                synchronized (MuxDemux.this) {
+                    incomingConnectionMap.put(connection.getRemoteAddress(), mConn);
+                }
             }
 
             @Override

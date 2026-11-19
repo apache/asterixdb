@@ -313,11 +313,13 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         boolean indexTouched = false;
         try {
             if (!iInfo.isOpen()) {
+                long start = System.nanoTime();
                 ILSMOperationTracker opTracker = iInfo.getIndex().getOperationTracker();
                 synchronized (opTracker) {
                     iInfo.getIndex().activate();
                 }
                 iInfo.setOpen(true);
+                IndexOpenListeners.indexOpened(System.nanoTime() - start);
             }
             iInfo.touch();
             indexTouched = true;

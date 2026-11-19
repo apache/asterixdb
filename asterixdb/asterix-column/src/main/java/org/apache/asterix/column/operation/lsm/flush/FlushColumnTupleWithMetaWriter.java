@@ -31,7 +31,7 @@ public class FlushColumnTupleWithMetaWriter extends FlushColumnTupleWriter {
     // Look-ahead counterpart of metaColumnTransformer: feeds the meta record into columnMetadataWithCurrentTuple so
     // the page-zero fit-check counts meta columns too. Without it the check sizes page zero for main-only columns
     // while the flush lays it out for main+meta columns, overflowing the zeroth segment (meta-sparse collections).
-    private final NoWriteColumnTransformer metaTransformerForCurrentTuple;
+    private NoWriteColumnTransformer metaTransformerForCurrentTuple;
     private final RecordLazyVisitablePointable metaPointableForCurrentTuple;
 
     public FlushColumnTupleWithMetaWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
@@ -43,6 +43,12 @@ public class FlushColumnTupleWithMetaWriter extends FlushColumnTupleWriter {
         metaTransformerForCurrentTuple = new NoWriteColumnTransformer(columnMetadataWithCurrentTuple,
                 columnMetadataWithCurrentTuple.getMetaRoot(), null);
         metaPointableForCurrentTuple = new TypedRecordLazyVisitablePointable(columnMetadata.getMetaType());
+    }
+
+    @Override
+    protected void onPrePassSchemaCopied() {
+        metaTransformerForCurrentTuple = new NoWriteColumnTransformer(columnMetadataWithCurrentTuple,
+                columnMetadataWithCurrentTuple.getMetaRoot(), null);
     }
 
     @Override

@@ -18,14 +18,28 @@
  */
 package org.apache.asterix.metadata.functions;
 
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_BEARER_TOKEN;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_BODY;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_CERTIFICATE;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_ALLOWED_SCOPES;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_CLIENT_ID;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_CLIENT_SECRET;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_TOKEN_URI;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_ON_ERROR;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_PASSWORD;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_USERNAME;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
+import org.apache.asterix.common.functions.HttpFunctionBodyFormat;
+import org.apache.asterix.common.functions.HttpFunctionOnError;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Function;
@@ -41,6 +55,10 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExternalFunctionCompilerUtil {
+
+    private static final List<String> UNIMPLEMENTED_HTTP_OPTIONS = List.of(OPTION_USERNAME, OPTION_PASSWORD,
+            OPTION_BEARER_TOKEN, OPTION_OAUTH_TOKEN_URI, OPTION_OAUTH_CLIENT_ID, OPTION_OAUTH_CLIENT_SECRET,
+            OPTION_OAUTH_ALLOWED_SCOPES, OPTION_CERTIFICATE);
 
     private ExternalFunctionCompilerUtil() {
         // do nothing
@@ -73,6 +91,18 @@ public class ExternalFunctionCompilerUtil {
         IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, paramTypes, function.getNullCall());
 
         ExternalFunctionLanguage lang = getExternalFunctionLanguage(function.getLanguage());
+        if (lang == ExternalFunctionLanguage.HTTP) {
+            // checked on every call, not only at CREATE, so that turning the feature off also stops the functions
+            // created while it was on
+            if (!metadataProvider.getApplicationContext().getExternalProperties().isExternalHttpFunctionEnabled()) {
+                throw new CompilationException(ErrorCode.EXTERNAL_HTTP_FUNCTION_DISABLED);
+            }
+            String unimplementedOption = findUnimplementedHttpOption(function.getResources());
+            if (unimplementedOption != null) {
+                throw new CompilationException(ErrorCode.EXTERNAL_HTTP_FUNCTION_CALL_UNSUPPORTED,
+                        function.getSignature().toString(), unimplementedOption);
+            }
+        }
 
         Boolean deterministic = function.getDeterministic();
         if (deterministic == null) {
@@ -80,11 +110,31 @@ public class ExternalFunctionCompilerUtil {
             throw new AsterixException(ErrorCode.METADATA_ERROR, function.getSignature().toString());
         }
 
-        return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), paramTypes,
-                returnType, typeComputer, lang,
-                new Namespace(function.getLibraryDatabaseName(), function.getLibraryDataverseName()),
+        Namespace libraryNamespace = function.getLibraryName() == null ? null
+                : new Namespace(function.getLibraryDatabaseName(), function.getLibraryDataverseName());
+        return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(),
+                function.getParameterNames(), paramTypes, returnType, typeComputer, lang, libraryNamespace,
                 function.getLibraryName(), function.getExternalIdentifier(), function.getResources(), deterministic,
                 function.getNullCall(), function.getBatched());
+    }
+
+    /**
+     * @return the first option of an HTTP function that calling the function does not support yet, or {@code null}
+     */
+    private static String findUnimplementedHttpOption(Map<String, String> resources) {
+        for (String option : UNIMPLEMENTED_HTTP_OPTIONS) {
+            if (resources.containsKey(option)) {
+                return option;
+            }
+        }
+        String body = resources.get(OPTION_BODY);
+        if (body != null && !HttpFunctionBodyFormat.JSON.name().equals(body)) {
+            return OPTION_BODY;
+        }
+        if (HttpFunctionOnError.NULL.name().equals(resources.get(OPTION_ON_ERROR))) {
+            return OPTION_ON_ERROR;
+        }
+        return null;
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataProvider metadataProvider, Function function) {
@@ -184,6 +234,7 @@ public class ExternalFunctionCompilerUtil {
         ExternalFunctionLanguage language = ((IExternalFunctionInfo) fnInfo).getLanguage();
         switch (language) {
             case JAVA:
+            case HTTP:
                 return false;
             case PYTHON:
                 return true;

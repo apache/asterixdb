@@ -1,0 +1,52 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
+
+CREATE EXTERNAL FUNCTION lookup(id) AT 'https://api.example.com/items/{id}';
+
+CREATE EXTERNAL FUNCTION score(a, b) AT 'https://localhost:8080/score' WITH {
+  "method": "post",
+  "body": "urlencoded",
+  "timeout": 30,
+  "urlencode": false,
+  "on-error": "null",
+  "headers": { "X-Trace": "on", "Authorization": "Bearer t" },
+  "deterministic": true,
+  "null-call": true
+};
+
+CREATE EXTERNAL FUNCTION secured(q) AT 'https://api.example.com/search' WITH {
+  "username": "alice",
+  "password": "secret"
+};
+
+CREATE EXTERNAL FUNCTION submit(a) AT 'https://api.example.com/submit' WITH { "method": "Post" };
+
+CREATE EXTERNAL FUNCTION authorized(q) AT 'https://api.example.com/search' WITH {
+  "oauthTokenUri": "https://auth.example.com/token",
+  "oauthClientId": "id",
+  "oauthClientSecret": "secret",
+  "oauthAllowedScopes": "read"
+};
+
+CREATE OR REPLACE EXTERNAL FUNCTION lookup(id) AT 'https://api.example.com/v2/items/{id}';
+
+CREATE EXTERNAL FUNCTION IF NOT EXISTS lookup(id) AT 'https://ignored.example.com/{id}';

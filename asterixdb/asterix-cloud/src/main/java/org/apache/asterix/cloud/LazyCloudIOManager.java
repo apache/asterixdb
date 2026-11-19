@@ -142,6 +142,16 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
         return accessor.getUncachedFiles();
     }
 
+    @Override
+    public int getUncachedFileCount() {
+        return accessor.getUncachedFileCount();
+    }
+
+    @Override
+    public long getUncachedFileBytes() {
+        return accessor.getUncachedFileBytes();
+    }
+
     private ILazyAccessor createAccessor(ParallelCacher cacher, boolean canReplaceAccessor) {
         if (canReplaceAccessor) {
             return new ReplaceableCloudAccessor(cloudClient, bucket, localIoManager, partitions, replacer, cacher);

@@ -87,7 +87,31 @@ public class ExternalProperties extends AbstractProperties {
                 BOOLEAN,
                 true,
                 "Whether the HTTP APIs require Basic authentication. The health check endpoints are always open, "
-                        + "and the UDF endpoints always require authentication");
+                        + "and the UDF endpoints always require authentication"),
+        EXTERNAL_FUNCTION_HTTP_ENABLED(
+                BOOLEAN,
+                false,
+                "Enable or disable external functions that call HTTP APIs. Such a function sends requests to any "
+                        + "host its definition names, including loopback, link-local (cloud metadata) and private "
+                        + "addresses, which an egress firewall does not cover. Disabling it also stops existing "
+                        + "functions from being called"),
+        EXTERNAL_FUNCTION_HTTP_TIMEOUT(
+                POSITIVE_INTEGER,
+                30,
+                "Timeout in seconds of a call to an external HTTP function that does not set its own"),
+        EXTERNAL_FUNCTION_HTTP_MAX_TIMEOUT(
+                POSITIVE_INTEGER,
+                120,
+                "Maximum timeout in seconds of a call to an external HTTP function. A longer timeout that a function "
+                        + "sets is reduced to it"),
+        EXTERNAL_FUNCTION_HTTP_MAX_REQUEST_SIZE(
+                POSITIVE_INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(1, StorageUtil.StorageUnit.MEGABYTE),
+                "Maximum size in bytes of a request an external HTTP function sends: its URL, headers and body"),
+        EXTERNAL_FUNCTION_HTTP_MAX_RESPONSE_SIZE(
+                POSITIVE_INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(32, StorageUtil.StorageUnit.MEGABYTE),
+                "Maximum size in bytes of the response body an external HTTP function accepts, after decompression");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -122,6 +146,11 @@ public class ExternalProperties extends AbstractProperties {
                 case GCP_IMPERSONATE_SERVICE_ACCOUNT_DURATION:
                 case ICEBERG_VARIANT_ENABLED:
                 case API_AUTHENTICATION_ENABLED:
+                case EXTERNAL_FUNCTION_HTTP_ENABLED:
+                case EXTERNAL_FUNCTION_HTTP_TIMEOUT:
+                case EXTERNAL_FUNCTION_HTTP_MAX_TIMEOUT:
+                case EXTERNAL_FUNCTION_HTTP_MAX_REQUEST_SIZE:
+                case EXTERNAL_FUNCTION_HTTP_MAX_RESPONSE_SIZE:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -219,8 +248,24 @@ public class ExternalProperties extends AbstractProperties {
         return accessor.getBoolean(Option.AWS_ASSUME_ROLE_ASYNC_REFRESH_ENABLED);
     }
 
-    public boolean isIcebergVariantEnabled() {
-        return accessor.getBoolean(Option.ICEBERG_VARIANT_ENABLED);
+    public boolean isExternalHttpFunctionEnabled() {
+        return accessor.getBoolean(Option.EXTERNAL_FUNCTION_HTTP_ENABLED);
+    }
+
+    public int getExternalHttpFunctionTimeout() {
+        return accessor.getInt(Option.EXTERNAL_FUNCTION_HTTP_TIMEOUT);
+    }
+
+    public int getExternalHttpFunctionMaxTimeout() {
+        return accessor.getInt(Option.EXTERNAL_FUNCTION_HTTP_MAX_TIMEOUT);
+    }
+
+    public int getExternalHttpFunctionMaxRequestSize() {
+        return accessor.getInt(Option.EXTERNAL_FUNCTION_HTTP_MAX_REQUEST_SIZE);
+    }
+
+    public int getExternalHttpFunctionMaxResponseSize() {
+        return accessor.getInt(Option.EXTERNAL_FUNCTION_HTTP_MAX_RESPONSE_SIZE);
     }
 
     public int getGcpImpersonateServiceAccountDuration() {

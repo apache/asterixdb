@@ -91,4 +91,14 @@ public class LocalAccessor extends AbstractLazyAccessor {
     public Set<UncachedFileReference> getUncachedFiles() {
         return Collections.emptySet();
     }
+
+    @Override
+    public int getUncachedFileCount() {
+        return 0;
+    }
+
+    @Override
+    public long getUncachedFileBytes() {
+        return 0L;
+    }
 }

@@ -28,7 +28,6 @@ import java.util.function.Supplier;
 
 import org.apache.iceberg.DeleteFile;
 import org.apache.iceberg.Schema;
-import org.apache.iceberg.data.BaseDeleteLoader;
 import org.apache.iceberg.data.DeleteLoader;
 import org.apache.iceberg.io.InputFile;
 import org.apache.iceberg.util.StructLikeSet;
@@ -68,7 +67,7 @@ final class IcebergDeleteCache {
      * @return a delete loader reading through this cache, opening delete files with {@code loadInputFile}
      */
     DeleteLoader newLoader(Function<DeleteFile, InputFile> loadInputFile) {
-        return new BaseDeleteLoader(loadInputFile) {
+        return new FixedKeySafeDeleteLoader(loadInputFile) {
             // Iceberg asks this before it looks the file up, so the total budget is not applied here: a file already
             // in the cache is served from it however full the cache is, and a miss that does not fit is loaded
             // uncached in getOrLoad.
@@ -88,7 +87,7 @@ final class IcebergDeleteCache {
             @Override
             public StructLikeSet loadEqualityDeletes(Iterable<DeleteFile> deleteFiles, Schema projection) {
                 if (hasStructField(projection)) {
-                    return new BaseDeleteLoader(loadInputFile).loadEqualityDeletes(deleteFiles, projection);
+                    return new FixedKeySafeDeleteLoader(loadInputFile).loadEqualityDeletes(deleteFiles, projection);
                 }
                 return super.loadEqualityDeletes(deleteFiles, projection);
             }

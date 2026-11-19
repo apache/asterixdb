@@ -1,0 +1,1 @@
+{ "encoded": { "method": "GET", "path": "/echo/items/a%20b%3Fc~d" }, "number": { "method": "GET", "path": "/echo/items/42" }, "uuid": { "method": "GET", "path": "/echo/items/5c0e4a2b-1f3d-4e8a-9b7c-2d6f8a1e3c90" }, "raw": { "method": "GET", "path": "/echo/items/a%2Bb%2520c" }, "mixed": { "method": "GET", "path": "/echo/items/x/1", "query": "q=y" } }

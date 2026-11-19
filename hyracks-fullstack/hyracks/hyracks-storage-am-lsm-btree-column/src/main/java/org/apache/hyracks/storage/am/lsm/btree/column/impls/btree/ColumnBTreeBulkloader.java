@@ -453,9 +453,10 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         }
 
         LOGGER.debug(
-                "{} columnar bulkloader wrote maximum {} and last {} and used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, maxLeafNodePages: {}, denseLeafCount: {}, and sparseLeafCount: {}",
+                "{} columnar bulkloader wrote maximum {} and last {} and used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, maxLeafNodePages: {}, denseLeafCount: {}, sparseLeafCount: {}, and maxPageZeroSegments: {}",
                 status, maxTupleCount, tupleCount, numberOfLeafNodes, numberOfTempConfiscatedPages,
-                maxNumberOfPagesForAColumn, maxNumberOfPagesInALeafNode, densePagesCount, sparseLeafsCount);
+                maxNumberOfPagesForAColumn, maxNumberOfPagesInALeafNode, densePagesCount, sparseLeafsCount,
+                maxNumberOfPageZeroSegments);
     }
 
     /*

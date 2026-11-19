@@ -110,6 +110,14 @@ public class FileHandle implements IFileHandle {
         }
     }
 
+    /**
+     * @return whether the descriptor can be closed now and reopened later without leaving anything written through
+     *         this handle incomplete
+     */
+    public boolean canReleaseDescriptor() {
+        return true;
+    }
+
     public synchronized boolean isOpen() {
         return raf != null && raf.getChannel().isOpen();
     }

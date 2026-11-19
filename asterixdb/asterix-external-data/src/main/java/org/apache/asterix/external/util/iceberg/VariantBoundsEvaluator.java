@@ -209,9 +209,11 @@ public final class VariantBoundsEvaluator {
             case LT_EQ:
                 return !isGreater(lower, literal);
             case GT:
-                return !isLessOrEqual(upper, literal);
+                // A floating-point upper bound leaves NaN out, while the engine orders NaN above every number, so a
+                // NaN row can match "> literal" whatever the bound says.
+                return isFloatingPoint(upper) || !isLessOrEqual(upper, literal);
             case GT_EQ:
-                return !isLess(upper, literal);
+                return isFloatingPoint(upper) || !isLess(upper, literal);
             case NOT_EQ:
             default:
                 // NOT_EQ can only be excluded when every value equals the literal, and nulls make that unsafe to
@@ -321,14 +323,12 @@ public final class VariantBoundsEvaluator {
         if (a instanceof Number && b instanceof Number) {
             Number na = (Number) a;
             Number nb = (Number) b;
-            if (na instanceof BigDecimal || nb instanceof BigDecimal) {
-                // Never go through longValue() here: a DECIMAL16 bound overflows a long, which would produce a
-                // nonsense ordering and could drop a file that matches.
-                BigDecimal da = toBigDecimal(na);
-                BigDecimal db = toBigDecimal(nb);
-                return (da == null || db == null) ? null : da.compareTo(db);
-            }
-            if (isFloatingPoint(na) || isFloatingPoint(nb)) {
+            // A decimal is compared as its double, never exactly: the engine reads a variant decimal through
+            // decimal-to-double, so a 34-digit decimal next to 0.1 reads back AS 0.1, and an exact comparison would
+            // prune the file of a row the engine matches. Rounding to double never reverses an order, so a file's
+            // rounded bounds still enclose every value it holds as the engine sees them. Never go through
+            // longValue() either: a DECIMAL16 bound overflows a long.
+            if (na instanceof BigDecimal || nb instanceof BigDecimal || na instanceof Double || nb instanceof Double) {
                 double da = na.doubleValue();
                 double db = nb.doubleValue();
                 if (Double.isNaN(da) || Double.isNaN(db)) {
@@ -343,6 +343,20 @@ public final class VariantBoundsEvaluator {
                 }
                 return da > db ? 1 : 0;
             }
+            if (na instanceof Float || nb instanceof Float) {
+                // With no double on either side the engine compares a float with an integer in float precision,
+                // converting through double exactly as here, so 16777217 reads as the float 16777216. Comparing as
+                // doubles would tell them apart and prune a file whose row the engine matches.
+                float fa = (float) na.doubleValue();
+                float fb = (float) nb.doubleValue();
+                if (Float.isNaN(fa) || Float.isNaN(fb)) {
+                    return null;
+                }
+                if (fa < fb) {
+                    return -1;
+                }
+                return fa > fb ? 1 : 0;
+            }
             return Long.compare(na.longValue(), nb.longValue());
         }
         if (a instanceof CharSequence && b instanceof CharSequence) {
@@ -356,22 +370,7 @@ public final class VariantBoundsEvaluator {
         return null;
     }
 
-    private static boolean isFloatingPoint(Number n) {
+    private static boolean isFloatingPoint(Object n) {
         return n instanceof Double || n instanceof Float;
-    }
-
-    /** Exact widening to {@link BigDecimal}, or {@code null} for values with no finite decimal value. */
-    private static BigDecimal toBigDecimal(Number n) {
-        if (n instanceof BigDecimal) {
-            return (BigDecimal) n;
-        }
-        if (n instanceof Double || n instanceof Float) {
-            double d = n.doubleValue();
-            return (Double.isNaN(d) || Double.isInfinite(d)) ? null : BigDecimal.valueOf(d);
-        }
-        if (n instanceof Long || n instanceof Integer || n instanceof Short || n instanceof Byte) {
-            return BigDecimal.valueOf(n.longValue());
-        }
-        return null;
     }
 }

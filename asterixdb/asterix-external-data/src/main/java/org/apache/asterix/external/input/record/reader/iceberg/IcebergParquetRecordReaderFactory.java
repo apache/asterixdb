@@ -52,6 +52,7 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.iceberg.IcebergConstants;
 import org.apache.asterix.external.util.iceberg.IcebergSnapshotUtils;
 import org.apache.asterix.external.util.iceberg.IcebergUtils;
+import org.apache.asterix.external.util.iceberg.NumericLiteralPredicateRewriter;
 import org.apache.asterix.external.util.iceberg.TimestampZonePredicateRewriter;
 import org.apache.asterix.external.util.iceberg.VariantBoundsEvaluator;
 import org.apache.asterix.external.util.iceberg.VariantPredicateRewriter;
@@ -176,13 +177,12 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
     /**
      * Rejects the scan when a column it reads, at any depth, has a type that cannot be read.
      *
-     * @param schema         the columns the scan reads
-     * @param variantEnabled whether VARIANT columns can be read
+     * @param schema the columns the scan reads
      * @throws CompilationException naming the type and the column, if {@code schema} has such a column
-     * @see IcebergParquetDataParser#findUnsupportedColumn(Schema, boolean)
+     * @see IcebergParquetDataParser#findUnsupportedColumn(Schema)
      */
-    static void ensureTypesSupported(Schema schema, boolean variantEnabled) throws CompilationException {
-        Integer id = IcebergParquetDataParser.findUnsupportedColumn(schema, variantEnabled);
+    static void ensureTypesSupported(Schema schema) throws CompilationException {
+        Integer id = IcebergParquetDataParser.findUnsupportedColumn(schema);
         if (id != null) {
             throw CompilationException.create(ErrorCode.UNSUPPORTED_ICEBERG_TYPE, schema.findType(id).toString(),
                     schema.findColumnName(id));
@@ -288,7 +288,7 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
             fileIoDescriptor = IcebergFileIoDescriptor.capture(table.io());
 
             projectedSchema = selectRequestedColumns(schemaAtSnapshot, configuration);
-            ensureTypesSupported(projectedSchema, appCtx.getExternalProperties().isIcebergVariantEnabled());
+            ensureTypesSupported(projectedSchema);
             scan = scan.project(projectedSchema);
             Expression filterExpression =
                     ((IcebergTableFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
@@ -302,6 +302,9 @@ public class IcebergParquetRecordReaderFactory implements IIcebergRecordReaderFa
                         configuration.get(ExternalDataConstants.KEY_TIMEZONE), warningCollector::warn);
                 filterExpression = TimestampZonePredicateRewriter.rewrite(filterExpression, schemaAtSnapshot,
                         timeZone == null ? null : timeZone.toZoneId(), isTimestampAsLong());
+                // Binding rounds a literal to a float or decimal column's type, while the engine compares against the
+                // literal as written, so a rounded literal can skip a file holding a matching row.
+                filterExpression = NumericLiteralPredicateRewriter.rewrite(filterExpression, schemaAtSnapshot);
                 // Predicates on a shredded VARIANT sub-field arrive as a dotted reference (variant_field.status),
                 // which cannot bind against the schema because a variant is one opaque VariantType. Rewrite those
                 // into Iceberg extract terms here — the first point where the Iceberg schema is known — so the

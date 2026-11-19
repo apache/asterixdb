@@ -223,10 +223,15 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
             letWheresFreeVars.removeAll(fromBindingVars);
         }
         if (selectBlock.hasGroupbyClause()) {
-            selectBlock.getGroupbyClause().accept(this, gbyFreeVars);
+            GroupbyClause groupbyClause = selectBlock.getGroupbyClause();
+            groupbyClause.accept(this, gbyFreeVars);
             // Remove group-by and let binding vars.
             gbyFreeVars.removeAll(fromBindingVars);
             gbyFreeVars.removeAll(letsBindingVars);
+            // A decoration carries a variable bound outside the block through the clause, so its variables stay
+            // free even where a FROM or LET variable of the block shares the name: dropping them would hide the
+            // read from an enclosing GROUP BY, which then fails to carry the variable through.
+            visitDecorations(groupbyClause.getDecorPairList(), gbyFreeVars);
             if (selectBlock.hasLetHavingClausesAfterGroupby()) {
                 visitLetWhereClauses(selectBlock.getLetHavingListAfterGroupby(), gbyLetHavingsFreeVars);
                 gbyLetHavingsFreeVars.removeAll(fromBindingVars);
@@ -240,6 +245,8 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
             selectBlock.getClusterbyClause().accept(this, clusterByFreeVars);
             clusterByFreeVars.removeAll(fromBindingVars);
             clusterByFreeVars.removeAll(letsBindingVars);
+            // Decorations stay free, as for GROUP BY.
+            visitDecorations(selectBlock.getClusterbyClause().getDecorPairList(), clusterByFreeVars);
             freeVars.addAll(clusterByFreeVars);
             // A LET or HAVING after CLUSTER BY parses into the same list as one after GROUP BY, so it has to be
             // traversed here too: skipping it hides a read of an enclosing query's variable from every caller
@@ -603,6 +610,15 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
     private void visit(List<Expression> exprs, Collection<VariableExpr> arg) throws CompilationException {
         for (Expression expr : exprs) {
             expr.accept(this, arg);
+        }
+    }
+
+    private void visitDecorations(List<GbyVariableExpressionPair> decorPairList, Collection<VariableExpr> freeVars)
+            throws CompilationException {
+        if (decorPairList != null) {
+            for (GbyVariableExpressionPair pair : decorPairList) {
+                pair.getExpr().accept(this, freeVars);
+            }
         }
     }
 

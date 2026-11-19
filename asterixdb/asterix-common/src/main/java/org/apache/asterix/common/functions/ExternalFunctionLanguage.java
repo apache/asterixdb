@@ -23,5 +23,6 @@ package org.apache.asterix.common.functions;
 // WARNING: These values are stored in function metadata. Do not rename.
 public enum ExternalFunctionLanguage {
     JAVA,
-    PYTHON
+    PYTHON,
+    HTTP
 }

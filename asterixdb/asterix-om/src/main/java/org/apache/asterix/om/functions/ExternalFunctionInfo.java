@@ -30,9 +30,10 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunctionInfo {
 
-    private static final long serialVersionUID = 5L;
+    private static final long serialVersionUID = 6L;
 
     private final FunctionKind kind;
+    private final List<String> parameterNames;
     private final List<IAType> parameterTypes;
     private final IAType returnType;
     private final ExternalFunctionLanguage language;
@@ -43,12 +44,13 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     private final boolean nullCall;
     private final boolean batched;
 
-    public ExternalFunctionInfo(FunctionIdentifier fid, FunctionKind kind, List<IAType> parameterTypes,
-            IAType returnType, IResultTypeComputer rtc, ExternalFunctionLanguage language, Namespace libraryNamespace,
-            String libraryName, List<String> externalIdentifier, Map<String, String> resources, boolean deterministic,
-            boolean nullCall, boolean batched) {
+    public ExternalFunctionInfo(FunctionIdentifier fid, FunctionKind kind, List<String> parameterNames,
+            List<IAType> parameterTypes, IAType returnType, IResultTypeComputer rtc, ExternalFunctionLanguage language,
+            Namespace libraryNamespace, String libraryName, List<String> externalIdentifier,
+            Map<String, String> resources, boolean deterministic, boolean nullCall, boolean batched) {
         super(fid, rtc, deterministic);
         this.kind = kind;
+        this.parameterNames = parameterNames;
         this.parameterTypes = parameterTypes;
         this.returnType = returnType;
         this.language = language;
@@ -63,6 +65,11 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     @Override
     public FunctionKind getKind() {
         return kind;
+    }
+
+    @Override
+    public List<String> getParameterNames() {
+        return parameterNames;
     }
 
     @Override

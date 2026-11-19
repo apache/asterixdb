@@ -25,6 +25,7 @@ import java.util.Collections;
 import org.apache.asterix.column.common.buffer.NoOpWriteMultiPageOp;
 import org.apache.asterix.column.common.test.TestBase;
 import org.apache.asterix.column.common.test.TestCase;
+import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.operation.lsm.flush.BatchFinalizerVisitor;
 import org.apache.asterix.column.operation.lsm.flush.ColumnTransformer;
@@ -53,7 +54,8 @@ public abstract class AbstractDummyTest extends TestBase {
         super(testCase);
         presentColumnsIndexes = new BitSet();
         columnMetadata = new FlushColumnMetadata(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, null,
-                Collections.emptyList(), null, WRITER_FACTORY, new MutableObject<>(NoOpWriteMultiPageOp.INSTANCE));
+                Collections.emptyList(), null, WRITER_FACTORY, new MutableObject<>(NoOpWriteMultiPageOp.INSTANCE),
+                CollapseDetectorSettings.DEFAULT);
         columnTransformer = new ColumnTransformer(columnMetadata, columnMetadata.getRoot(), presentColumnsIndexes);
         finalizer = new BatchFinalizerVisitor(columnMetadata);
         storage = new ArrayBackedValueStorage();

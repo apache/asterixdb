@@ -174,6 +174,22 @@ public class IOManager implements IIOManager {
         return fHandle;
     }
 
+    /**
+     * Reopen a handle whose descriptor was closed, in the mode it was opened in. Unlike opening, this does not check
+     * the mode, which for writing would create the file empty if it has since been removed, so the file must still
+     * exist.
+     *
+     * @param fHandle the handle to reopen
+     * @throws HyracksDataException if the file no longer exists or cannot be opened
+     */
+    public void reopen(IFileHandle fHandle) throws HyracksDataException {
+        FileReference fileRef = fHandle.getFileReference();
+        if (!fileRef.getFile().exists()) {
+            throw HyracksDataException.create(ErrorCode.FILE_DOES_NOT_EXIST, fileRef.getAbsolutePath());
+        }
+        ((FileHandle) fHandle).ensureOpen();
+    }
+
     @Override
     public int syncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
         IoRequest req = asyncWrite(fHandle, offset, data);

@@ -43,7 +43,7 @@ public class LogFile {
             root.mkdirs();
             out = new PrintWriter(new FileOutputStream(new File(root, openTime + ".log"), true));
         }
-        out.println(object.asText());
+        out.println(object.toString());
         out.flush();
     }
 

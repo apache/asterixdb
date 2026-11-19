@@ -26,6 +26,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
+import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class BufferCacheCloudReadContextUtil {
     private BufferCacheCloudReadContextUtil() {
@@ -37,7 +38,15 @@ public class BufferCacheCloudReadContextUtil {
         return headerBuf.getInt(BufferCacheHeaderHelper.FRAME_MULTIPLIER_OFF) == 0;
     }
 
-    public static void persist(ICloudIOManager cloudIOManager, IFileHandle fileHandle, ByteBuffer buffer, long offset)
+    public static void persist(ICloudIOManager cloudIOManager, BufferedFileHandle fileHandle, ByteBuffer buffer,
+            long offset) throws HyracksDataException {
+        fileHandle.doCacheWriteOnHandle(handle -> {
+            persist(cloudIOManager, handle, buffer, offset);
+            return null;
+        });
+    }
+
+    private static void persist(ICloudIOManager cloudIOManager, IFileHandle fileHandle, ByteBuffer buffer, long offset)
             throws HyracksDataException {
         int originalLimit = buffer.limit();
         buffer.position(RESERVED_HEADER_BYTES);

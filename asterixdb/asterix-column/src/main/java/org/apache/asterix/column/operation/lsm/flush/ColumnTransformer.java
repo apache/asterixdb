@@ -25,6 +25,7 @@ import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
+import org.apache.asterix.column.metadata.schema.collection.MapSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.util.RunLengthIntArray;
 import org.apache.asterix.column.values.IColumnValuesWriter;
@@ -117,15 +118,85 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
             currentParent.setVisitedBatchVersion(currentBatchVersion);
         }
 
+        objectNode.onDocumentVisited(columnMetadata);
+        // The map is resolved on first use, not here: the node can collapse partway through this very document, and
+        // the map itself is only built by the first key routed to it. Kept to few locals: this method recurses once
+        // per level of a document, and every local it declares is on the stack at each level.
+        int mapEntries = 0;
+        int mapMissingLevel = 0;
+        RunLengthIntArray mapDefLevels = null;
+
         for (int i = 0; i < pointable.getNumberOfChildren(); i++) {
             pointable.nextChild();
             IValueReference fieldName = pointable.getFieldName();
             ATypeTag childTypeTag = pointable.getChildTypeTag();
             if (childTypeTag != ATypeTag.MISSING) {
                 //Only write actual field values (including NULL) but ignore MISSING fields
-                AbstractSchemaNode childNode = objectNode.getOrCreateChild(fieldName, childTypeTag, columnMetadata);
-                acceptActualNode(pointable.getChildVisitablePointable(), childNode);
+                if (objectNode.routesToMap(fieldName, columnMetadata)) {
+                    if (mapDefLevels == null) {
+                        // Entered once per record, not once per entry: all of this record's map entries form a single
+                        // repeated group, exactly as a collection's items do.
+                        MapSchemaNode mapNode = objectNode.getOrCreateMapNode(columnMetadata);
+                        columnMetadata.enterNode(currentParent, mapNode);
+                        mapDefLevels = columnMetadata.getDefinitionLevels(mapNode);
+                        mapMissingLevel = columnMetadata.getLevel();
+                        mapNode.needAllColumns(true);
+                    }
+                    writeMapEntry(objectNode.getMapNode(), fieldName, pointable.getChildVisitablePointable(),
+                            objectNode);
+                    mapDefLevels.add(mapMissingLevel);
+                    mapEntries++;
+                } else {
+                    /*
+                     * Once a map entry of this record has been written, the map's repeated group stays open until the
+                     * record ends. A column field from before the collapse that follows it in the
+                     * document must step back out to the object's level: written inside the group, the column would
+                     * record the map's level and repetition, and its level stream would no longer match its place in
+                     * the schema.
+                     */
+                    if (mapDefLevels != null) {
+                        columnMetadata.exitLevel(objectNode.getMapNode());
+                    }
+                    int childrenBefore = objectNode.getChildren().size();
+                    int columnsBefore = columnMetadata.getNumberOfColumns();
+                    AbstractSchemaNode childNode = objectNode.getOrCreateChild(fieldName, childTypeTag, columnMetadata);
+                    boolean childWasGrowing = columnMetadata.isCollapseDetectorEnabled() && isGrowingObject(childNode);
+                    acceptActualNode(pointable.getChildVisitablePointable(), childNode);
+                    if (columnMetadata.isCollapseDetectorEnabled() && !childWasGrowing && isGrowingObject(childNode)) {
+                        objectNode.onChildGrowing(fieldName, columnMetadata);
+                    }
+                    if (columnMetadata.isCollapseDetectorEnabled()
+                            && objectNode.getChildren().size() > childrenBefore) {
+                        objectNode.onNewChildColumns(columnMetadata.getNumberOfColumns() - columnsBefore,
+                                columnMetadata);
+                    }
+                    if (mapDefLevels != null) {
+                        columnMetadata.enterLevel(objectNode.getMapNode());
+                    }
+                }
             }
+        }
+
+        if (mapDefLevels != null) {
+            // Close the record's group with a trailing missing entry, mirroring how a collection terminates its
+            // items. The key column has to receive that level too: it is repeated in lockstep with the value node,
+            // so if only one of the two records the terminator their level streams drift apart and the reader stops
+            // being able to tell which entry belongs to which record.
+            objectNode.getMapNode().getOrCreateItem(ATypeTag.MISSING, columnMetadata);
+            mapDefLevels.add(mapMissingLevel);
+            columnMetadata.exitCollectionNode(objectNode.getMapNode(), mapEntries);
+            currentParent = objectNode;
+        } else if (objectNode.isCollapsed() && objectNode.getMapNode() == null) {
+            /*
+             * The node collapsed, but no key has routed to the map yet. The decision itself is not serialized, only the
+             * map is, so build it now, entry-less: a flush whose new key arrives in its first document and is decided
+             * on a few documents later has no key left to build it with, and would otherwise lose the collapse. This
+             * record is not entered, so it reads the map as missing, as any record without map entries does.
+             */
+            MapSchemaNode emptyMap = objectNode.getOrCreateMapNode(columnMetadata);
+            columnMetadata.enterLevel(emptyMap);
+            emptyMap.getOrCreateItem(ATypeTag.MISSING, columnMetadata);
+            columnMetadata.exitLevel(emptyMap);
         }
 
         if (pointable.getNumberOfChildren() == 0) {
@@ -226,6 +297,36 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
         return null;
     }
 
+    /**
+     * Writes one collapsed field: its name into the map's key column, its value into the shared value node.
+     * The name is written as a value and is deliberately never interned, so the field-name dictionary stops growing.
+     */
+    private void writeMapEntry(MapSchemaNode mapNode, IValueReference fieldName, AbstractLazyVisitablePointable value,
+            ObjectSchemaNode objectNode) throws HyracksDataException {
+        AbstractSchemaNestedNode previousParent = currentParent;
+        currentParent = mapNode;
+
+        // Written through enterNode/exitNode exactly as an ordinary flat value is. Bypassing them leaves the key
+        // node's counter at zero, and flushDefinitionLevels uses that counter to decide how many missing levels to
+        // backfill — so the key column's level stream would no longer align with the value node's.
+        PrimitiveSchemaNode keyNode = mapNode.getKeyNode();
+        columnMetadata.enterNode(mapNode, keyNode);
+        presentColumnsIndexes.set(keyNode.getColumnIndex());
+        IColumnValuesWriter keyWriter = columnMetadata.getWriter(keyNode.getColumnIndex());
+        int sizeBeforeWrite = keyWriter.getEstimatedSize();
+        keyWriter.writeValue(ATypeTag.STRING, fieldName);
+        // The key column is an ordinary non-primary-key column, so its growth counts towards the flush leaf size cap
+        // exactly as any other value does.
+        valuesEstimatedSize += keyWriter.getEstimatedSize() - sizeBeforeWrite;
+        columnMetadata.exitNode(keyNode);
+
+        AbstractSchemaNode itemNode = mapNode.getOrCreateItem(value.getTypeTag(), columnMetadata);
+        acceptActualNode(value, itemNode);
+        objectNode.incrementColumns(itemNode.getDeltaColumnsChanged());
+
+        currentParent = previousParent;
+    }
+
     private void acceptActualNode(AbstractLazyVisitablePointable pointable, AbstractSchemaNode node)
             throws HyracksDataException {
         if (node.getTypeTag() == ATypeTag.UNION) {
@@ -258,5 +359,9 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
         } else {
             pointable.accept(this, node);
         }
+    }
+
+    private static boolean isGrowingObject(AbstractSchemaNode node) {
+        return node instanceof ObjectSchemaNode object && object.isGrowing();
     }
 }

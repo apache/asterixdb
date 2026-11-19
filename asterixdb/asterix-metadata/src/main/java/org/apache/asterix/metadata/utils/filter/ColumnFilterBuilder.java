@@ -18,12 +18,17 @@
  */
 package org.apache.asterix.metadata.utils.filter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.iterable.accessor.ColumnFilterValueAccessorEvaluatorFactory;
 import org.apache.asterix.column.filter.iterable.evaluator.ColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.ColumnDatasetProjectionFiltrationInfo;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -42,11 +47,19 @@ public class ColumnFilterBuilder extends AbstractFilterBuilder {
         if (filterExpression == null || filterPaths.isEmpty()) {
             return NoOpColumnFilterEvaluatorFactory.INSTANCE;
         }
-        IScalarEvaluatorFactory evalFactory = createEvaluator(filterExpression);
-        if (evalFactory == null) {
-            return NoOpColumnFilterEvaluatorFactory.INSTANCE;
+        // Each conjunct of a top-level AND is evaluated alone, so that a component can drop the ones it cannot filter.
+        List<Mutable<ILogicalExpression>> conjuncts = new ArrayList<>();
+        if (!filterExpression.splitIntoConjuncts(conjuncts)) {
+            conjuncts.add(new MutableObject<>(filterExpression));
         }
-        return new ColumnIterableFilterEvaluatorFactory(evalFactory);
+        IScalarEvaluatorFactory[] conjunctFactories = new IScalarEvaluatorFactory[conjuncts.size()];
+        for (int i = 0; i < conjunctFactories.length; i++) {
+            conjunctFactories[i] = createEvaluator(conjuncts.get(i).getValue());
+            if (conjunctFactories[i] == null) {
+                return NoOpColumnFilterEvaluatorFactory.INSTANCE;
+            }
+        }
+        return new ColumnIterableFilterEvaluatorFactory(conjunctFactories);
     }
 
     @Override

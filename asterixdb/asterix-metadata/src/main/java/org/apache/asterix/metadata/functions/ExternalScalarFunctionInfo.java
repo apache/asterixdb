@@ -33,11 +33,11 @@ public class ExternalScalarFunctionInfo extends ExternalFunctionInfo {
 
     private static final long serialVersionUID = 3L;
 
-    public ExternalScalarFunctionInfo(FunctionIdentifier fid, List<IAType> parameterTypes, IAType returnType,
-            IResultTypeComputer rtc, ExternalFunctionLanguage language, Namespace libraryNamespace, String libraryName,
-            List<String> externalIdentifier, Map<String, String> resources, boolean deterministic, boolean nullCall,
-            boolean batched) {
-        super(fid, FunctionKind.SCALAR, parameterTypes, returnType, rtc, language, libraryNamespace, libraryName,
-                externalIdentifier, resources, deterministic, nullCall, batched);
+    public ExternalScalarFunctionInfo(FunctionIdentifier fid, List<String> parameterNames, List<IAType> parameterTypes,
+            IAType returnType, IResultTypeComputer rtc, ExternalFunctionLanguage language, Namespace libraryNamespace,
+            String libraryName, List<String> externalIdentifier, Map<String, String> resources, boolean deterministic,
+            boolean nullCall, boolean batched) {
+        super(fid, FunctionKind.SCALAR, parameterNames, parameterTypes, returnType, rtc, language, libraryNamespace,
+                libraryName, externalIdentifier, resources, deterministic, nullCall, batched);
     }
 }

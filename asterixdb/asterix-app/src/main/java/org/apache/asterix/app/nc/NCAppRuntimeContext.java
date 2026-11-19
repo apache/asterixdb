@@ -64,6 +64,8 @@ import org.apache.asterix.common.context.DiskWriteRateLimiterProvider;
 import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.external.IExternalStatsTracker;
+import org.apache.asterix.common.functions.IHttpEgressPolicy;
+import org.apache.asterix.common.functions.IHttpEndpointResolver;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
@@ -77,6 +79,8 @@ import org.apache.asterix.common.transactions.IRecoveryManagerFactory;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.utils.Partitions;
 import org.apache.asterix.external.library.ExternalLibraryManager;
+import org.apache.asterix.external.library.HttpFunctionConnectionManager;
+import org.apache.asterix.external.library.InlineHttpEndpointResolver;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataNode;
@@ -91,6 +95,7 @@ import org.apache.asterix.runtime.transaction.GlobalResourceIdFactoryProvider;
 import org.apache.asterix.runtime.utils.NoOpCoordinationService;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -182,6 +187,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final IPersistedResourceRegistry persistedResourceRegistry;
     private volatile HyracksConnection hcc;
     private volatile ResultSet resultSet;
+    private volatile CloseableHttpClient httpFunctionClient;
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private IReplicaManager replicaManager;
     private IReceptionist receptionist;
@@ -300,13 +306,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 this.ncServiceContext);
         receptionist = receptionistFactory.create();
 
-        // On cloud storage the descriptor bound stays off: the cloud read, persist and sweep paths do I/O on a
-        // file's OS handle directly, outside the buffer cache's descriptor lock, so a release could race them.
-        final int maxOpenDescriptors =
-                cloudConfigurator != null ? Integer.MAX_VALUE : storageProperties.getBufferCacheMaxOpenDescriptors();
-        if (cloudConfigurator != null && storageProperties.getBufferCacheMaxOpenDescriptors() != Integer.MAX_VALUE) {
-            LOGGER.info("not bounding open file descriptors on cloud storage");
-        }
+        final int maxOpenDescriptors = storageProperties.getBufferCacheMaxOpenDescriptors();
         Map<Integer, BufferedFileHandle> fileInfoMap = new HashMap<>();
         if (replicationProperties.isReplicationEnabled()) {
             if (LOGGER.isInfoEnabled()) {
@@ -412,6 +412,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         if (metadataNodeStub != null) {
             unexportMetadataNodeStub();
         }
+        NetworkUtil.closeQuietly(httpFunctionClient);
     }
 
     @Override
@@ -780,6 +781,32 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IExternalStatsTracker getExternalStatsTracker() {
         return externalStatsTracker;
+    }
+
+    @Override
+    public IHttpEndpointResolver getHttpEndpointResolver() {
+        return InlineHttpEndpointResolver.INSTANCE;
+    }
+
+    @Override
+    public CloseableHttpClient getHttpFunctionClient() {
+        CloseableHttpClient client = httpFunctionClient;
+        if (client == null) {
+            synchronized (this) {
+                client = httpFunctionClient;
+                if (client == null) {
+                    httpFunctionClient = client = HttpFunctionConnectionManager.createClient(getHttpEgressPolicy());
+                }
+            }
+        }
+        return client;
+    }
+
+    /**
+     * @return the policy that decides which addresses external HTTP functions may connect to. Extensions override it.
+     */
+    protected IHttpEgressPolicy getHttpEgressPolicy() {
+        return IHttpEgressPolicy.ALLOW_ALL;
     }
 
     private int getResourceIdBlockSize() {

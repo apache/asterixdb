@@ -18,17 +18,41 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
+/**
+ * An UPDATE statement. Its query is not built by the parser: the statement rewriter builds it from the change
+ * sequence and condition once the collection has been resolved, so {@link #getQuery()} is {@code null} until then.
+ */
 public class UpdateStatement extends InsertStatement {
 
-    public UpdateStatement(Namespace namespace, String datasetName, Query query, VariableExpr aliasVar, int varCounter,
-            Expression returnExpression) {
-        super(namespace, datasetName, query, varCounter, aliasVar, returnExpression);
+    private final Expression changeSeq;
+    private final Expression condition;
+
+    public UpdateStatement(Namespace namespace, String datasetName, VariableExpr aliasVar, Expression changeSeq,
+            Expression condition, int varCounter, Expression returnExpression) {
+        super(namespace, datasetName, null, varCounter, aliasVar, returnExpression);
+        this.changeSeq = changeSeq;
+        this.condition = condition;
+    }
+
+    public Expression getChangeSeq() {
+        return changeSeq;
+    }
+
+    public Expression getCondition() {
+        return condition;
+    }
+
+    @Override
+    public void setQuery(Query query) {
+        super.setQuery(query);
     }
 
     @Override
@@ -43,13 +67,19 @@ public class UpdateStatement extends InsertStatement {
 
     @Override
     public int hashCode() {
-        return 31 * super.hashCode() + Kind.UPDATE.hashCode();
+        return Objects.hash(super.hashCode(), Kind.UPDATE, changeSeq, condition);
     }
 
     @Override
     @SuppressWarnings("squid:S1067") // expressions should not be too complex
     public boolean equals(Object object) {
-        return this == object || object instanceof UpdateStatement && super.equals(object);
-
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof UpdateStatement) || !super.equals(object)) {
+            return false;
+        }
+        UpdateStatement target = (UpdateStatement) object;
+        return Objects.equals(changeSeq, target.changeSeq) && Objects.equals(condition, target.condition);
     }
 }

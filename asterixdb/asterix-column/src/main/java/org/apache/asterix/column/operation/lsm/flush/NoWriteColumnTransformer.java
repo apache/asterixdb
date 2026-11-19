@@ -23,6 +23,7 @@ import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
+import org.apache.asterix.column.metadata.schema.collection.MapSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.om.lazy.AbstractLazyVisitablePointable;
 import org.apache.asterix.om.lazy.AbstractListLazyVisitablePointable;
@@ -90,7 +91,9 @@ public class NoWriteColumnTransformer
             pointable.nextChild();
             IValueReference fieldName = pointable.getFieldName();
             ATypeTag childTypeTag = pointable.getChildTypeTag();
-            if (childTypeTag != ATypeTag.MISSING) {
+            if (childTypeTag != ATypeTag.MISSING && objectNode.routesToMap(fieldName, columnMetadata)) {
+                newDiscoveredColumns += visitMapEntry(objectNode, pointable.getChildVisitablePointable(), childTypeTag);
+            } else if (childTypeTag != ATypeTag.MISSING) {
                 AbstractSchemaNode childNode = objectNode.getOrCreateChild(fieldName, childTypeTag, columnMetadata);
                 acceptActualNode(pointable.getChildVisitablePointable(), childNode);
                 int childDiscoveredColumns = childNode.getNewDiscoveredColumns();
@@ -204,6 +207,38 @@ public class NoWriteColumnTransformer
         }
 
         return null;
+    }
+
+    /**
+     * Counts a field that goes to its object's collapsed map, as the write stores it: the map's key column and its
+     * shared value node, which mint a column only for a value of a type or shape the map has not held yet. Counted as
+     * a column of its own, every name a collapsed node routes to its map would grow this estimate of the page's columns
+     * as if the node had never collapsed, and close pages early.
+     *
+     * @return the columns of the map this batch had not counted yet
+     */
+    private int visitMapEntry(ObjectSchemaNode objectNode, AbstractLazyVisitablePointable value, ATypeTag typeTag)
+            throws HyracksDataException {
+        MapSchemaNode map = objectNode.getMapNode();
+        AbstractSchemaNestedNode previousParent = currentParent;
+        currentParent = map;
+        if (map.getVisitedBatchVersion() != currentBatchVersion) {
+            map.setVisitedBatchVersion(currentBatchVersion);
+            map.setNumberOfVisitedColumnsInBatch(0);
+            map.setMissingInitiallyInBatch(false);
+            map.needAllColumns(false);
+        }
+        AbstractSchemaNode item = map.getOrCreateItem(typeTag, columnMetadata);
+        acceptActualNode(value, item);
+        item.setNewDiscoveredColumns(0);
+        item.setFormerChildNull(-1);
+        map.incrementColumns(item.getDeltaColumnsChanged());
+        // A map is a repeated group: a batch holding one of its entries needs all of its columns, as a collection's.
+        int newDiscoveredColumns = map.getNumberOfColumns() - map.getNumberOfVisitedColumnsInBatch();
+        map.setNumberOfVisitedColumnsInBatch(map.getNumberOfColumns());
+        currentParent = previousParent;
+        objectNode.incrementColumns(map.getDeltaColumnsChanged());
+        return newDiscoveredColumns;
     }
 
     private void acceptActualNode(AbstractLazyVisitablePointable pointable, AbstractSchemaNode node)

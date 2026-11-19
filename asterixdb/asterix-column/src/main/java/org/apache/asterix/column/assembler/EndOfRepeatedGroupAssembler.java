@@ -27,16 +27,18 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class EndOfRepeatedGroupAssembler extends AbstractPrimitiveValueAssembler {
     private final List<IColumnValuesReader> readers;
-    private final ArrayValueAssembler arrayAssembler;
+    private final AbstractNestedValueAssembler arrayAssembler;
+    private final int firstValueIndex;
     private final int numDelimiters;
     private int delimiterIndex;
     private EndOfRepeatedGroupAssembler previousGroup;
 
-    EndOfRepeatedGroupAssembler(List<IColumnValuesReader> readers, ArrayValueAssembler arrayAssembler,
-            int numDelimiters) {
+    EndOfRepeatedGroupAssembler(List<IColumnValuesReader> readers, AbstractNestedValueAssembler arrayAssembler,
+            int firstValueIndex, int numDelimiters) {
         super(readers.get(0).getLevel(), new AssemblerInfo(), readers.get(0), MissingValueGetter.INSTANCE);
         this.readers = readers;
         this.arrayAssembler = arrayAssembler;
+        this.firstValueIndex = firstValueIndex;
         this.numDelimiters = numDelimiters;
         this.delimiterIndex = readers.get(0).getNumberOfDelimiters() - numDelimiters;
         previousGroup = null;
@@ -96,7 +98,7 @@ public class EndOfRepeatedGroupAssembler extends AbstractPrimitiveValueAssembler
             state.exitRepeatedGroup(previousGroup);
         } else {
             // No, return to the first value of the group
-            nextIndex = arrayAssembler.getFirstValueIndex();
+            nextIndex = firstValueIndex;
             if (!state.isCurrentGroup(this)) {
                 // Set the group delimiterIndex to indicate we are iterating over a group now (i.e., not the first round)
                 previousGroup = state.enterRepeatedGroup(this);

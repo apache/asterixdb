@@ -432,6 +432,7 @@ public final class S3CloudClient implements ICloudClient {
         }
         SdkHttpClient httpClient = apacheBuilder.buildWithDefaults(customHttpConfigBuilder.build());
         builder.httpClient(httpClient);
+        builder.overrideConfiguration(c -> c.addExecutionInterceptor(S3RequestMetricsInterceptor.INSTANCE));
 
         awsClients.setConsumingClient(builder.build());
         awsClients.setCredentialsProvider(credentialsProvider);

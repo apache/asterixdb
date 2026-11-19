@@ -20,6 +20,10 @@ package org.apache.asterix.utils;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.DOTALL;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_BEARER_TOKEN;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_HEADERS;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_OAUTH_CLIENT_SECRET;
+import static org.apache.asterix.common.functions.HttpFunctionConstants.OPTION_PASSWORD;
 import static org.apache.asterix.external.util.aws.AwsConstants.SECRET_ACCESS_KEY_FIELD_NAME;
 
 import java.util.regex.Pattern;
@@ -34,7 +38,8 @@ public class RedactionUtil {
     }
 
     private static final Pattern STATEMENT_PATTERN =
-            Pattern.compile("(" + SECRET_ACCESS_KEY_FIELD_NAME + ").*", CASE_INSENSITIVE | DOTALL);
+            Pattern.compile("(" + String.join("|", SECRET_ACCESS_KEY_FIELD_NAME, OPTION_PASSWORD, OPTION_BEARER_TOKEN,
+                    OPTION_OAUTH_CLIENT_SECRET, OPTION_HEADERS) + ").*", CASE_INSENSITIVE | DOTALL);
     private static final String STATEMENT_REPLACEMENT = "$1...<redacted sensitive data>";
     public static final TextNode REDACTED_SENSITIVE_ENTRY_VALUE = new TextNode("<redacted sensitive entry>");
 

@@ -56,6 +56,11 @@ public class NoOpParallelCacher implements IParallelCacher {
     }
 
     @Override
+    public int getUncachedFileCount() {
+        return 0;
+    }
+
+    @Override
     public boolean createEmptyDataFiles(FileReference indexFile) throws HyracksDataException {
         return false;
     }
