@@ -48,7 +48,7 @@ public class ParserContext {
     private static final int SERIALIZED_FIELDNAME_MAP_MAX_SIZE = 128;
 
     private final IObjectPool<IARecordBuilder> objectBuilderPool;
-    private final ObjectPool<IAsterixListBuilder, ATypeTag> arrayBuilderPool;
+    private final IObjectPool<IAsterixListBuilder> arrayBuilderPool;
 
     /**
      * Parsing nested structure using temporary buffers is expensive.
@@ -66,7 +66,7 @@ public class ParserContext {
     @SuppressWarnings("unchecked")
     public ParserContext() {
         objectBuilderPool = new SoftObjectPool<>(new RecordBuilderFactory());
-        arrayBuilderPool = new ObjectPool<>(new ListBuilderFactory(), ATypeTag.ARRAY);
+        arrayBuilderPool = new SoftObjectPool<>(new ListBuilderFactory(), ATypeTag.ARRAY);
         tempBufferPool = new SoftObjectPool<>(new AbvsBuilderFactory());
         nullBitmapPool = new ObjectPool<>();
         serializedFieldNames = new LRUMap<>(SERIALIZED_FIELDNAME_MAP_MAX_SIZE);

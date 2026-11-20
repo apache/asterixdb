@@ -136,4 +136,10 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
             throw HyracksDataException.create(e);
         }
     }
+
+    @Override
+    public long getCapacity() {
+        return (long) outputStorage.getByteArray().length + (long) Integer.BYTES * offsets.capacity()
+                + (offsetArray == null ? 0 : offsetArray.length);
+    }
 }

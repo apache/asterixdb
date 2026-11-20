@@ -44,4 +44,10 @@ public interface IAsterixListBuilder {
      *            Whether to write the list's type tag before the list data.
      */
     public void write(DataOutput out, boolean writeTypeTag) throws HyracksDataException;
+
+    /**
+     * @return the allocated size in bytes of the arrays holding the list's content and item offsets, which
+     *         {@link #reset} keeps
+     */
+    public long getCapacity();
 }

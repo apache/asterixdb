@@ -19,7 +19,7 @@
 package org.apache.asterix.external.parser.jackson;
 
 import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.Deque;
 
 import org.apache.asterix.om.util.container.IObjectFactory;
 
@@ -29,7 +29,7 @@ import org.apache.asterix.om.util.container.IObjectFactory;
  */
 public abstract class AbstractObjectPool<E, T, Q> implements IObjectPool<E> {
     private final IObjectFactory<E, T> objectFactory;
-    private final Queue<Q> recycledObjects;
+    private final Deque<Q> recycledObjects;
     private final T param;
 
     protected AbstractObjectPool(IObjectFactory<E, T> objectFactory, T param) {
@@ -48,7 +48,8 @@ public abstract class AbstractObjectPool<E, T, Q> implements IObjectPool<E> {
 
     public void recycle(E object) {
         if (object != null) {
-            recycledObjects.add(wrap(object));
+            // LIFO so each nesting level reuses its own instance; FIFO grows every instance to the outermost value
+            recycledObjects.push(wrap(object));
         }
     }
 
