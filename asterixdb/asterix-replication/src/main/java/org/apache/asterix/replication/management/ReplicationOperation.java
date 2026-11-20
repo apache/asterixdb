@@ -84,6 +84,13 @@ public class ReplicationOperation extends AbstractIoOperation {
                     if (destReplica != null) {
                         destReplica.close();
                     }
+                    if (!dest.isRegistered(partitionReplica.get())) {
+                        // the replica was removed (e.g. due to a topology change) while the replication was in
+                        // flight, and it may have already deleted its partition files. Don't treat this as a
+                        // failure of the destination since it would fail its other replicas
+                        LOGGER.info("ignoring replication failure to removed replica {}", partitionReplica.get(), e);
+                        continue;
+                    }
                     indexReplicationManager.handleFailure(dest, e);
                 }
             }
