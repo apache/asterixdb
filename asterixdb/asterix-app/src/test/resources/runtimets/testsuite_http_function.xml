@@ -100,6 +100,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-function-http">
+      <compilation-unit name="transform-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1223: Failed to create transform function. Encountered error: 'Transform function definition can not use external HTTP function test.enrich(1)'</expected-error>
+        <expected-error>ASX1223: Failed to create transform function. Encountered error: 'Transform function definition can not use external HTTP function test.enrich(1)'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-function-http">
       <compilation-unit name="auth">
         <output-dir compare="Text">auth</output-dir>
       </compilation-unit>

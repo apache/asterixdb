@@ -3795,6 +3795,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         throw new CompilationException(ErrorCode.INVALID_TRANSFORM_FUNCTION, sourceLoc,
                                 "Transform function definition can not use collections/views");
                     }
+                    FunctionSignature httpFunction = FeedMetadataUtil.findExternalHttpFunction(dependencies, mdTxnCtx);
+                    if (httpFunction != null) {
+                        throw new CompilationException(ErrorCode.INVALID_TRANSFORM_FUNCTION, sourceLoc,
+                                "Transform function definition can not use external HTTP function " + httpFunction);
+                    }
                     validateTransformFunction(metadataProvider, rewrittenQuery, sourceLoc);
                     boolean generateJobSpec = sessionOutput.config().isGenerateJobSpec();
                     sessionOutput.config().setGenerateJobSpec(false);

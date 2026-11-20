@@ -124,6 +124,25 @@ public class FeedMetadataUtil {
         }
     }
 
+    /**
+     * @param dependencies the dependencies of a function that is not stored yet
+     * @return an external HTTP function that the function calls, however indirectly, or {@code null}
+     */
+    public static FunctionSignature findExternalHttpFunction(List<List<DependencyFullyQualifiedName>> dependencies,
+            MetadataTransactionContext ctx) throws AlgebricksException {
+        int functionDependencies = Function.DEPENDENCIES_SCHEMA.indexOf(DependencyKind.FUNCTION);
+        for (DependencyFullyQualifiedName dependency : dependencies.get(functionDependencies)) {
+            Function callee = MetadataManager.INSTANCE.getFunction(ctx,
+                    new FunctionSignature(dependency.getDatabaseName(), dependency.getDataverseName(),
+                            dependency.getSubName1(), Integer.parseInt(dependency.getSubName2())));
+            FunctionSignature httpFunction = callee == null ? null : findExternalHttpFunction(callee, ctx);
+            if (httpFunction != null) {
+                return httpFunction;
+            }
+        }
+        return null;
+    }
+
     // the function itself or any function it calls, however indirectly
     private static FunctionSignature findExternalHttpFunction(Function function, MetadataTransactionContext ctx)
             throws AlgebricksException {
