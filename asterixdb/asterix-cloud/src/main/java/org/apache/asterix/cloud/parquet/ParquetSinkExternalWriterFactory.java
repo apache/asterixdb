@@ -26,6 +26,7 @@ import org.apache.asterix.runtime.writer.IPathResolverFactory;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.writer.WriterPartitionerFactory;
+import org.apache.hyracks.algebricks.runtime.writers.ExternalWriterStats;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -66,9 +67,9 @@ public class ParquetSinkExternalWriterFactory extends AbstractPushRuntimeFactory
                 (ParquetExternalFilePrinterFactory) printerFactoryProvider.createPrinterFactory();
         ParquetExternalWriterFactory parquetExternalWriterFactory = new ParquetExternalWriterFactory(ctx, writerFactory,
                 maxResult, maxFileSize, printerFactory, pathResolverFactory.createResolver(ctx));
-        ParquetSinkExternalWriterRuntime runtime =
-                new ParquetSinkExternalWriterRuntime(sourceColumn, partitionerFactory.createPartitioner(),
-                        inputRecordDesc, parquetExternalWriterFactory, sourceType, maxSchemas);
+        ParquetSinkExternalWriterRuntime runtime = new ParquetSinkExternalWriterRuntime(sourceColumn,
+                partitionerFactory.createPartitioner(), inputRecordDesc, parquetExternalWriterFactory, sourceType,
+                maxSchemas, ExternalWriterStats.register(ctx));
         return new IPushRuntime[] { runtime };
     }
 }

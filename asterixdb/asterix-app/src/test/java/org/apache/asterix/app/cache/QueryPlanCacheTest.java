@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.asterix.common.cache.IQueryPlanCacheValue;
 import org.apache.asterix.common.cache.QueryPlanCacheKey;
 import org.apache.asterix.common.cache.QueryPlanCacheValue;
+import org.apache.asterix.common.usage.StatementUsage;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -113,6 +114,6 @@ public class QueryPlanCacheTest {
     }
 
     private static QueryPlanCacheValue value() {
-        return new QueryPlanCacheValue(null, Set.of(), null, null);
+        return new QueryPlanCacheValue(null, Set.of(), null, null, new StatementUsage());
     }
 }

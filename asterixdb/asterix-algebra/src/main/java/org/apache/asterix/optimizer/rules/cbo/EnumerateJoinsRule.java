@@ -33,9 +33,12 @@ import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionA
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.usage.QueryOptimizer.RboReason;
+import org.apache.asterix.common.usage.StatementUsage;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.IIndexProvider;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -167,6 +170,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         boolean cboTestMode = OperatorUtils.getCBOTestMode(context);
 
         if (!(cboMode || cboTestMode)) {
+            // recorded once, at the root, and only for a plan that reads a collection, as one planned by CBO would be
+            if (opRef.getValue().getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT
+                    && readsCollection(opRef.getValue())) {
+                statementUsage(context).recordRbo(RboReason.CBO_DISABLED);
+            }
             return false;
         }
 
@@ -243,11 +251,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                     if (adviseIndex) {
                         errorOutIndexAdvisorSamplesNotFound(leafInputs, context);
                     }
-                    return cleanUp();
+                    return fallBackToRbo(context, RboReason.MISSING_SAMPLES);
                 }
             }
             if (unnestOpsInfo.size() != realLeafInputs.size()) {
-                return cleanUp(); // this should never happen; But if it does, bail
+                return fallBackToRbo(context, RboReason.OTHER); // this should never happen; But if it does, bail
             }
             // Here on, we expect that changes can be made to the incoming plan and that optimization will proceed
             // without any hitch. Basically, we cannot go back now!!
@@ -299,7 +307,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // the memory needed to enumerate the join order grows as 2^numberOfFromTerms; leave the plan to the
             // rule based optimizer instead.
             LOGGER.info("Skipping CBO; number of joins {} exceeds the maximum of {}", numberOfJoins, maxJoins);
-            return cleanUp();
+            return fallBackToRbo(context, RboReason.TOO_MANY_JOINS);
         }
 
         if (LOGGER.isTraceEnabled()) {
@@ -322,7 +330,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 if (adviseIndex) {
                     errorOutIndexAdvisorSamplesNotFound(leafInputs, context);
                 }
-                return cleanUp();
+                return fallBackToRbo(context, RboReason.MISSING_SAMPLES);
             }
         }
         if (LOGGER.isTraceEnabled()) {
@@ -344,7 +352,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
         AbstractPlanNode cheapestPlanNode = joinEnum.enumerateJoins(); // MAIN CALL INTO CBO
         if (cheapestPlanNode == DummyPlanNode.INSTANCE) {
-            return cleanUp();
+            return fallBackToRbo(context, RboReason.OTHER);
         }
 
         generateHintWarnings();
@@ -352,7 +360,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (numberOfFromTerms > 1) {
             getNewJoinOps(cheapestPlanNode, allJoinOps);
             if (allJoinOps.size() != newJoinOps.size()) {
-                return cleanUp(); // there are some cases such as R OJ S on true. Here there is an OJ predicate but the code in findJoinConditions
+                return fallBackToRbo(context, RboReason.OTHER); // there are some cases such as R OJ S on true. Here there is an OJ predicate but the code in findJoinConditions
                 // in JoinEnum does not capture this. Will fix later. Just bail for now.
             }
             if (LOGGER.isTraceEnabled()) {
@@ -426,6 +434,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (LOGGER.isTraceEnabled()) {
             String finalPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
         }
+        statementUsage(context).recordCbo();
         return true;
     }
 
@@ -441,6 +450,34 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private boolean cleanUp() {
         removeTrueFromAllLeafInputs();
+        return false;
+    }
+
+    /**
+     * Leaves a plan that reads collections to the rule-based optimizer, recording why. The bails before a plan's
+     * collections are known, such as a join shape this rule does not take, record nothing: the joins beneath it are
+     * offered to this rule in turn.
+     */
+    private boolean fallBackToRbo(IOptimizationContext context, RboReason reason) {
+        statementUsage(context).recordRbo(reason);
+        return cleanUp();
+    }
+
+    private static StatementUsage statementUsage(IOptimizationContext context) {
+        // a provider of another kind serves no statement, so what is recorded on its behalf is dropped
+        return context.getMetadataProvider() instanceof MetadataProvider mp ? mp.getStatementUsage()
+                : new StatementUsage();
+    }
+
+    private static boolean readsCollection(ILogicalOperator op) {
+        if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+            return true;
+        }
+        for (Mutable<ILogicalOperator> input : op.getInputs()) {
+            if (readsCollection(input.getValue())) {
+                return true;
+            }
+        }
         return false;
     }
 

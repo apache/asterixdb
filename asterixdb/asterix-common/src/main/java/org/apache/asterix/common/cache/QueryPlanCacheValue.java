@@ -20,6 +20,7 @@ package org.apache.asterix.common.cache;
 
 import java.util.Set;
 
+import org.apache.asterix.common.usage.StatementUsage;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -33,8 +34,9 @@ import org.apache.hyracks.api.result.IResultMetadata;
  * @param warnings
  * @param optContext
  * @param resultMetadata
+ * @param usage what compiling the plan recorded, to be recorded again for each statement that reuses it
  */
 public record QueryPlanCacheValue(ILogicalPlan plan, Set<Warning> warnings, IOptimizationContext optContext,
-                                  IResultMetadata resultMetadata)
+                                  IResultMetadata resultMetadata, StatementUsage usage)
         implements IQueryPlanCacheValue {
 }

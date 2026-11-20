@@ -40,9 +40,11 @@ import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.usage.QueryFeature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -187,6 +189,11 @@ abstract class LangExpressionToPlanTranslator
     protected final TranslationContext context;
     private static final AtomicLong outputFileID = new AtomicLong(0);
     private static final String OUTPUT_FILE_PREFIX = "OUTPUT_";
+    /** The functions whose use marks a statement as a vector search, with or without a vector index to answer it */
+    private static final Set<FunctionIdentifier> VECTOR_SEARCH_FUNCTIONS =
+            Set.of(BuiltinFunctions.EUCLIDEAN_DISTANCE, BuiltinFunctions.EUCLIDEAN_SQUARED_DISTANCE,
+                    BuiltinFunctions.COSINE_SIMILARITY, BuiltinFunctions.COSINE_DISTANCE, BuiltinFunctions.DOT_PRODUCT,
+                    BuiltinFunctions.DOT_DISTANCE, BuiltinFunctions.VECTOR_DISTANCE, BuiltinFunctions.ANN_DISTANCE);
 
     public LangExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounterValue)
             throws AlgebricksException {
@@ -1175,6 +1182,9 @@ abstract class LangExpressionToPlanTranslator
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
                         "UDF not inlined: " + signature);
             }
+            if (ExternalFunctionLanguage.PYTHON.name().equalsIgnoreCase(function.getLanguage())) {
+                metadataProvider.getStatementUsage().mark(QueryFeature.PYTHON_UDF);
+            }
             IFunctionInfo finfo = ExternalFunctionCompilerUtil.getExternalFunctionInfo(metadataProvider, function);
             AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(finfo, args);
             f.setSourceLocation(sourceLoc);
@@ -1190,6 +1200,9 @@ abstract class LangExpressionToPlanTranslator
             List<Mutable<ILogicalExpression>> args, SourceLocation sourceLoc) throws CompilationException {
         AbstractFunctionCallExpression f;
         FunctionIdentifier fi = signature.createFunctionIdentifier();
+        if (VECTOR_SEARCH_FUNCTIONS.contains(fi)) {
+            metadataProvider.getStatementUsage().mark(QueryFeature.VECTOR_SEARCH);
+        }
         if (BuiltinFunctions.isBuiltinAggregateFunction(fi)) {
             f = BuiltinFunctions.makeAggregateFunctionExpression(fi, args);
         } else if (BuiltinFunctions.isBuiltinUnnestingFunction(fi)) {

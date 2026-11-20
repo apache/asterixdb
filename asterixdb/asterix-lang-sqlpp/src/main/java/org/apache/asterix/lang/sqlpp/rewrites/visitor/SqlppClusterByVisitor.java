@@ -37,6 +37,7 @@ import org.apache.asterix.common.clustering.ClusterByOptions;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.usage.QueryFeature;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -167,6 +168,7 @@ public class SqlppClusterByVisitor extends AbstractSqlppSimpleExpressionVisitor 
             if (checkOnly) {
                 rejectEnclosingVariables(selectExpression, clusterBlock);
             } else {
+                context.getMetadataProvider().getStatementUsage().mark(QueryFeature.CLUSTER_BY);
                 resolveClusterBy(selectExpression, clusterBlock);
             }
         }

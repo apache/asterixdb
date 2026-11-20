@@ -117,6 +117,8 @@ import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.storage.IndexCompletionMode;
+import org.apache.asterix.common.usage.QueryFeature;
+import org.apache.asterix.common.usage.StatementUsage;
 import org.apache.asterix.common.utils.AsterixJobProperty;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
@@ -301,6 +303,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import org.apache.hyracks.algebricks.runtime.writers.ExternalWriterStats;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -317,7 +320,11 @@ import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.IJobManager;
+import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
+import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
@@ -447,6 +454,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 IStatementRewriter stmtRewriter = rewriterFactory.createStatementRewriter();
                 rewriteStatement(stmt, stmtRewriter, metadataProvider); // Rewrite the statement's AST.
                 Statement.Kind kind = stmt.getKind();
+                markStatementFeatures(stmt, metadataProvider.getStatementUsage());
                 statementProperties.setKind(kind);
                 statementProperties.setQueryFlags(stmt);
                 boolean synthetic = stmt == syntheticStatement;
@@ -460,6 +468,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // statement each of its jobs ran
                 ((ClientRequest) clientRequest).setStatementPosition(synthetic ? 0 : statementPosition);
                 final Stats statsBeforeStatement = stats.snapshot();
+                final int jobsBeforeStatement = ((ClientRequest) clientRequest).getJobIds().size();
                 try {
                     validateStatement(stmt, requestParameters);
                     switch (kind) {
@@ -665,12 +674,22 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
                                     stmt.getSourceLocation(), "Unexpected statement: " + kind);
                     }
+                    if (kind == Statement.Kind.COPY_FROM || kind == Statement.Kind.COPY_TO) {
+                        recordCopiedDocuments(kind, (ClientRequest) clientRequest, jobsBeforeStatement,
+                                metadataProvider.getStatementUsage());
+                    }
                 } catch (Exception e) {
                     Exception failure = asCancellation(e, clientRequest, reqId);
                     endStatement(statementInfo, statsBeforeStatement, stats, failure);
+                    if (!synthetic) {
+                        statementEnded(stmt, metadataProvider, failure);
+                    }
                     throw failure;
                 }
                 endStatement(statementInfo, statsBeforeStatement, stats, null);
+                if (!synthetic) {
+                    statementEnded(stmt, metadataProvider, null);
+                }
                 if (shouldInvalidateQueryPlanCache(stmt)) {
                     queryPlanCache.clear();
                 }
@@ -764,6 +783,68 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         statementInfo.addWarnings(
                 warningsNow.subList(Math.min(warningsBeforeStatement.size(), warningsNow.size()), warningsNow.size()));
         statementInfo.setStats(statementStats);
+    }
+
+    /**
+     * Called once each of the client's statements has run, whether it succeeded or failed, but not for a statement the
+     * request added of its own, such as the declaration of its query context. By then the statement's
+     * {@link MetadataProvider#getStatementUsage() usage} holds what compiling and running it recorded.
+     *
+     * @param failure what the statement failed with, null when it succeeded
+     */
+    protected void statementEnded(Statement stmt, MetadataProvider metadataProvider, Exception failure) {
+        // nothing to do in AsterixDB
+    }
+
+    /** Marks the features a statement uses by its kind; those found in its body are marked as it is compiled. */
+    private static void markStatementFeatures(Statement stmt, StatementUsage usage) {
+        switch (stmt.getKind()) {
+            case ANALYZE:
+                usage.mark(QueryFeature.ANALYZE);
+                break;
+            case COPY_FROM:
+                usage.mark(QueryFeature.COPY_FROM);
+                break;
+            case COPY_TO:
+                usage.mark(QueryFeature.COPY_TO);
+                break;
+            case QUERY:
+                if (IStatementExecutor.isAdviseQuery(stmt)) {
+                    usage.mark(QueryFeature.ADVISE);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Records the documents a COPY statement read or wrote, from the profile of the job it ran: those its external
+     * scan read for a COPY FROM, and those its sink wrote for a COPY TO. Its job has finished by now, every path that
+     * runs one waiting for it, and it ran none when the request only compiled it.
+     */
+    private void recordCopiedDocuments(Statement.Kind kind, ClientRequest clientRequest, int jobsBeforeStatement,
+            StatementUsage usage) {
+        List<JobId> jobIds = clientRequest.getJobIds();
+        if (jobIds.size() <= jobsBeforeStatement) {
+            return;
+        }
+        IJobManager jobManager =
+                ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobManager();
+        JobRun run = jobManager.get(jobIds.get(jobIds.size() - 1));
+        if (run == null) {
+            // no longer in the job history, which can be configured to keep none
+            return;
+        }
+        long documents = 0;
+        for (JobletProfile joblet : run.getJobProfile().getJobletProfiles().values()) {
+            for (TaskProfile task : joblet.getTaskProfiles().values()) {
+                documents += kind == Statement.Kind.COPY_FROM
+                        ? task.getStatsCollector().getAggregatedStats().getInputTupleCounter().get()
+                        : ExternalWriterStats.getWrittenRecords(task.getStatsCollector());
+            }
+        }
+        usage.setDocuments(documents);
     }
 
     /**
@@ -6190,7 +6271,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // warnings, so drop the pre-existing ones and cache only this statement's own
         warnings.removeIf(preJobGenWarnings::contains);
         final IQueryPlanCacheValue cacheableValue = buildQueryPlanCacheValue(
-                new QueryPlanCacheValue(compiledPlan.plan(), warnings, compiledPlan.optContext(), resultMetadata));
+                new QueryPlanCacheValue(compiledPlan.plan(), warnings, compiledPlan.optContext(), resultMetadata,
+                        metadataProvider.getStatementUsage().compiledCopy()));
         return new CacheMissResult(jobSpec, new CachedPlan(cacheKey, cacheableValue));
     }
 
@@ -6200,6 +6282,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws AlgebricksException, ACIDException {
         final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams,
                 requestParameters, resultMetadata, cacheValue);
+        // the cached plan was not optimized again, so what optimizing it recorded is recorded from the cache
+        metadataProvider.getStatementUsage().addCompiled(cacheValue.usage());
         for (Warning warning : cacheValue.warnings()) { //replaying its cached compile-time warnings.
             if (warningCollector.shouldWarn()) {
                 warningCollector.warn(warning);

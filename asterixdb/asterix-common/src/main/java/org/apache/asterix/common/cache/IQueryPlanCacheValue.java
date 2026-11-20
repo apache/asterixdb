@@ -20,6 +20,7 @@ package org.apache.asterix.common.cache;
 
 import java.util.Set;
 
+import org.apache.asterix.common.usage.StatementUsage;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -50,4 +51,9 @@ public interface IQueryPlanCacheValue {
      * @return the result metadata captured when the plan was compiled, used to repopulate output types on a hit
      */
     IResultMetadata resultMetadata();
+
+    /**
+     * @return what compiling the plan recorded about the statement: its features and the optimizer that planned it
+     */
+    StatementUsage usage();
 }

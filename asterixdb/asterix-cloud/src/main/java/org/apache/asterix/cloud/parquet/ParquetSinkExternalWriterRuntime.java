@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.runtime.operators.writer.IWriterPartitioner
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -52,10 +53,11 @@ public class ParquetSinkExternalWriterRuntime extends AbstractOneInputSinkPushRu
     private final int maxSchemas;
     private final IAType sourceType;
     private ParquetSchemaInferPoolWriter poolWriter;
+    private final IOperatorStats stats;
 
     public ParquetSinkExternalWriterRuntime(int sourceColumn, IWriterPartitioner partitioner,
             RecordDescriptor inputRecordDesc, ParquetExternalWriterFactory writerFactory, IAType sourceType,
-            int maxSchemas) {
+            int maxSchemas, IOperatorStats stats) {
         this.sourceColumn = sourceColumn;
         this.partitioner = partitioner;
         this.sourceValue = new VoidPointable();
@@ -63,6 +65,7 @@ public class ParquetSinkExternalWriterRuntime extends AbstractOneInputSinkPushRu
         this.writerFactory = writerFactory;
         this.sourceType = sourceType;
         this.maxSchemas = maxSchemas;
+        this.stats = stats;
     }
 
     @Override
@@ -105,6 +108,7 @@ public class ParquetSinkExternalWriterRuntime extends AbstractOneInputSinkPushRu
             // New files are created on the fly.
             poolWriter.write(sourceValue, tupleRef);
         }
+        stats.getTupleCounter().update(tupleAccessor.getTupleCount());
     }
 
     @Override

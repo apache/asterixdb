@@ -57,6 +57,7 @@ import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.TxnId;
+import org.apache.asterix.common.usage.StatementUsage;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.common.vector.VectorSimilarityMetric;
@@ -217,6 +218,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private IDataFormat dataFormat = FormatUtils.getDefaultFormat();
 
     private final Set<EntityDetails> accessedEntities;
+    private final StatementUsage statementUsage = new StatementUsage();
     public static final long DEFAULT_MAX_RESULT_READS = 1; // keep in sync with ResultProperties.DEFAULT_MAX_READS
 
     public static MetadataProvider createWithDefaultNamespace(ICcApplicationContext appCtx) {
@@ -249,6 +251,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         // Initialize a safe default for result reads. Some statement paths (e.g., INSERT without RETURNING,
         // invoked by test) can build plans that include a ResultWriter on the NC.
         maxResultReads = DEFAULT_MAX_RESULT_READS;
+    }
+
+    /**
+     * @return what the statement this provider serves has used, recorded by its compilation and its run
+     */
+    public StatementUsage getStatementUsage() {
+        return statementUsage;
     }
 
     @SuppressWarnings("unchecked")

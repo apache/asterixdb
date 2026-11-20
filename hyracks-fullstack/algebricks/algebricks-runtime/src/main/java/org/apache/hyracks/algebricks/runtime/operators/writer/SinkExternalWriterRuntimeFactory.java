@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.runtime.operators.writer;
 
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.writers.ExternalWriterStats;
 import org.apache.hyracks.algebricks.runtime.writers.IExternalWriter;
 import org.apache.hyracks.algebricks.runtime.writers.IExternalWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -57,8 +58,9 @@ public final class SinkExternalWriterRuntimeFactory extends AbstractPushRuntimeF
     @Override
     public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
         IExternalWriter writer = writerFactory.createWriter(ctx);
-        SinkExternalWriterRuntime runtime = new SinkExternalWriterRuntime(sourceColumn,
-                partitionerFactory.createPartitioner(), inputRecordDescriptor, writer);
+        SinkExternalWriterRuntime runtime =
+                new SinkExternalWriterRuntime(sourceColumn, partitionerFactory.createPartitioner(),
+                        inputRecordDescriptor, writer, ExternalWriterStats.register(ctx));
         return new IPushRuntime[] { runtime };
     }
 }

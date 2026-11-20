@@ -25,6 +25,7 @@ import org.apache.hyracks.algebricks.runtime.writers.IExternalWriter;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -36,17 +37,19 @@ final class SinkExternalWriterRuntime extends AbstractOneInputSinkPushRuntime {
     private final IWriterPartitioner partitioner;
     private final IPointable sourceValue;
     private final IExternalWriter writer;
+    private final IOperatorStats stats;
     private FrameTupleAccessor tupleAccessor;
     private FrameTupleReference tupleRef;
     private IFrameWriter frameWriter;
 
     SinkExternalWriterRuntime(int sourceColumn, IWriterPartitioner partitioner, RecordDescriptor inputRecordDesc,
-            IExternalWriter writer) {
+            IExternalWriter writer, IOperatorStats stats) {
         this.sourceColumn = sourceColumn;
         this.partitioner = partitioner;
         this.sourceValue = new VoidPointable();
         this.inputRecordDesc = inputRecordDesc;
         this.writer = writer;
+        this.stats = stats;
     }
 
     @Override
@@ -70,6 +73,7 @@ final class SinkExternalWriterRuntime extends AbstractOneInputSinkPushRuntime {
             setValue(tupleRef, sourceColumn, sourceValue);
             writer.write(sourceValue);
         }
+        stats.getTupleCounter().update(tupleAccessor.getTupleCount());
     }
 
     @Override
