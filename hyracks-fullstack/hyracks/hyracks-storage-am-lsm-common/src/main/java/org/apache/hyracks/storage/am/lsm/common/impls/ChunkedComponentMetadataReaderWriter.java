@@ -107,7 +107,10 @@ public final class ChunkedComponentMetadataReaderWriter {
         while (position < totalLength) {
             int remaining = totalLength - position;
             int freeSpace = componentMetadata.getAvailableSpace() - keyLength;
-            int chunkLength = Math.min(remaining, freeSpace);
+            // The reader expects the whole header in chunk 0. If the page has less room than the header, chunk 0 is
+            // just the header, and put() moves it to a new page.
+            int chunkLength =
+                    chunkId == 0 && freeSpace < CHUNK_HEADER_SIZE ? CHUNK_HEADER_SIZE : Math.min(remaining, freeSpace);
             chunk.set(compressed.getByteArray(), position, chunkLength);
             componentMetadata.put(getChunkKey(chunkId++, key), chunk);
             position += chunkLength;
