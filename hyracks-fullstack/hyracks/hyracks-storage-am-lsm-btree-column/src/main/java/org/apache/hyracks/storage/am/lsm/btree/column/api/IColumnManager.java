@@ -49,12 +49,15 @@ public interface IColumnManager {
     /**
      * Create merge column metadata for a newly created merge component
      *
-     * @param metadata         latest column metadata value stored in the metadata page
-     * @param componentsTuples tuples of the merging components
+     * @param metadata          latest column metadata value stored in the metadata page
+     * @param inputsAnnotations each merging component's extra data, newest first; null entries for components
+     *                          without it
+     * @param componentsTuples  tuples of the merging components
      * @return column metadata for a new merged component
+     * @see IColumnMetadata#serializeColumnsAnnotations()
      */
-    IColumnMetadata createMergeColumnMetadata(IValueReference metadata, List<IColumnTupleIterator> componentsTuples)
-            throws HyracksDataException;
+    IColumnMetadata createMergeColumnMetadata(IValueReference metadata, List<IValueReference> inputsAnnotations,
+            List<IColumnTupleIterator> componentsTuples) throws HyracksDataException;
 
     /**
      * Create tuple projector for reading the merging components. The merge tuple projector will return all columns

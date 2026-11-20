@@ -39,7 +39,7 @@ import org.apache.asterix.column.common.buffer.DummyPage;
 import org.apache.asterix.column.common.buffer.TestWriteMultiPageOp;
 import org.apache.asterix.column.common.row.DummyLSMBTreeTupleReference;
 import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
-import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
+import org.apache.asterix.column.metadata.PromotionBoundaries.Boundary;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleWriter;
 import org.apache.asterix.column.operation.query.ColumnAssembler;
@@ -50,6 +50,7 @@ import org.apache.asterix.column.values.IColumnValuesWriterFactory;
 import org.apache.asterix.column.values.reader.ColumnValueReaderFactory;
 import org.apache.asterix.column.values.writer.ColumnValuesWriterFactory;
 import org.apache.asterix.column.zero.writers.DefaultColumnPageZeroWriter;
+import org.apache.asterix.common.config.StorageProperties.Option;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
@@ -74,6 +75,8 @@ import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.IColumnPageZer
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 /**
  * Writes columnar components through the flush path and reads them back, so a test can follow a schema across flushes
@@ -151,16 +154,36 @@ public class ColumnFlushHarness {
 
     /** Reads a component back as whole records, through {@link QueryColumnMetadata} over ALL_FIELDS. */
     public List<IValueReference> assembleRecords(Component component) throws Exception {
-        return assemble(component, DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, 0);
+        return assemble(component, DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, 0,
+                ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE, null);
     }
 
-    private List<IValueReference> assemble(Component component, ARecordType datasetType, int numberOfPrimaryKeys)
+    /** Reads {@code requested} of a component back, given the promotion boundaries of the components being read. */
+    public List<IValueReference> assembleProjected(Component component, ARecordType requested,
+            Int2ObjectMap<Boundary> promotionBoundaries) throws Exception {
+        return assemble(component, DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, 0, requested, promotionBoundaries);
+    }
+
+    /** The columns a read of {@code requested} projects, given the components' promotion boundaries. */
+    public static int projectedColumns(Component component, ARecordType requested,
+            Int2ObjectMap<Boundary> promotionBoundaries) throws Exception {
+        return readMetadata(component, DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, 0, requested, promotionBoundaries)
+                .getNumberOfColumns();
+    }
+
+    private static QueryColumnMetadata readMetadata(Component component, ARecordType datasetType,
+            int numberOfPrimaryKeys, ARecordType requested, Int2ObjectMap<Boundary> promotionBoundaries)
             throws Exception {
-        QueryColumnMetadata readMetadata = QueryColumnMetadata.create(datasetType, numberOfPrimaryKeys,
-                component.serializedMetadata, new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE,
-                ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE, Collections.emptyMap(),
+        return QueryColumnMetadata.create(datasetType, numberOfPrimaryKeys, component.serializedMetadata,
+                new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE, requested, Collections.emptyMap(),
                 NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpColumnFilterEvaluatorFactory.INSTANCE,
-                NoOpWarningCollector.INSTANCE, null, ColumnProjectorType.QUERY);
+                NoOpWarningCollector.INSTANCE, null, ColumnProjectorType.QUERY, () -> promotionBoundaries);
+    }
+
+    private List<IValueReference> assemble(Component component, ARecordType datasetType, int numberOfPrimaryKeys,
+            ARecordType requested, Int2ObjectMap<Boundary> promotionBoundaries) throws Exception {
+        QueryColumnMetadata readMetadata =
+                readMetadata(component, datasetType, numberOfPrimaryKeys, requested, promotionBoundaries);
         ColumnAssembler assembler = readMetadata.getAssembler();
         int columns = readMetadata.getNumberOfColumns();
 
@@ -207,9 +230,9 @@ public class ColumnFlushHarness {
     }
 
     /**
-     * Carries an existing schema forward into the next flush, which is what a real index does: every flush
-     * deserializes the index-level schema, adds to it, and writes it back. {@link #freshMetadata} starts from nothing
-     * instead.
+     * Carries an existing schema forward into new flush metadata, which is what a real index does when it activates:
+     * it deserializes the newest component's schema. Between activations a real index keeps that one metadata for
+     * every flush, as {@link #writeNextComponent} does. {@link #freshMetadata} starts from nothing instead.
      * <p>
      * Deserializing also rebuilds the schema nodes, so each flush's nodes read the collapse-detector settings as they
      * stand at that moment -- which is the only way a test can have the detector off for one component and on for the
@@ -408,12 +431,12 @@ public class ColumnFlushHarness {
      * documents, four new names making a window fast.
      */
     static void withDetector(int minChildren, int growingWindows, ThrowingRunnable body) throws Exception {
-        CollapseDetectorSettings previous = CollapseSettings.current();
+        Map<Option, Object> previous = CollapseSettings.saved();
         CollapseSettings.install(CollapseSettings.lowered(minChildren, growingWindows));
         try {
             body.run();
         } finally {
-            CollapseSettings.install(previous);
+            CollapseSettings.restore(previous);
         }
     }
 

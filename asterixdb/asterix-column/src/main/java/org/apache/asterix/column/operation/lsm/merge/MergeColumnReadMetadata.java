@@ -25,12 +25,15 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.asterix.column.metadata.AbstractColumnImmutableReadMetadata;
+import org.apache.asterix.column.metadata.PromotedKeys;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
@@ -44,6 +47,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
  */
 public final class MergeColumnReadMetadata extends AbstractColumnImmutableReadMetadata {
     private final IColumnValuesReader[] columnReaders;
+    private final IColumnValuesReaderFactory readerFactory;
+    /** Column index -> offset of its reader's description in the path info. See {@link #createColumnReader}. */
+    private final int[] pathInfoOffsets;
+    private List<PromotedKeys.Key> movableKeys;
     /**
      * How many of {@link #columnReaders} are actually projected: {@code columnReaders.length} normally, and
      * {@code 0} for the existence-only view produced by {@link #createExistenceOnlyProjectionInfo()}.
@@ -51,16 +58,19 @@ public final class MergeColumnReadMetadata extends AbstractColumnImmutableReadMe
     private final int numberOfProjectedColumns;
 
     private MergeColumnReadMetadata(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
-            IColumnValuesReader[] columnReaders, IValueReference serializedMetadata) {
-        this(datasetType, metaType, numberOfPrimaryKeys, columnReaders, serializedMetadata, columnReaders.length,
-                MERGE);
+            IColumnValuesReader[] columnReaders, IValueReference serializedMetadata,
+            IColumnValuesReaderFactory readerFactory, int[] pathInfoOffsets) {
+        this(datasetType, metaType, numberOfPrimaryKeys, columnReaders, serializedMetadata, columnReaders.length, MERGE,
+                readerFactory, pathInfoOffsets);
     }
 
     private MergeColumnReadMetadata(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             IColumnValuesReader[] columnReaders, IValueReference serializedMetadata, int numberOfProjectedColumns,
-            ColumnProjectorType projectorType) {
+            ColumnProjectorType projectorType, IColumnValuesReaderFactory readerFactory, int[] pathInfoOffsets) {
         super(datasetType, metaType, numberOfPrimaryKeys, serializedMetadata, columnReaders.length, projectorType);
         this.columnReaders = columnReaders;
+        this.readerFactory = readerFactory;
+        this.pathInfoOffsets = pathInfoOffsets;
         this.numberOfProjectedColumns = numberOfProjectedColumns;
     }
 
@@ -78,21 +88,52 @@ public final class MergeColumnReadMetadata extends AbstractColumnImmutableReadMe
         int length = serializedMetadata.getLength();
 
         int pathInfoStart = offset + IntegerPointable.getInteger(bytes, offset + PATH_INFO_POINTER);
-        DataInput input = new DataInputStream(new ByteArrayInputStream(bytes, pathInfoStart, length));
+        ByteArrayInputStream stream = new ByteArrayInputStream(bytes, pathInfoStart, length);
+        int end = Math.min(pathInfoStart + length, bytes.length);
+        DataInput input = new DataInputStream(stream);
         int numberOfColumns = input.readInt();
         IColumnValuesReader[] columnReaders = new IColumnValuesReader[numberOfColumns];
+        int[] pathInfoOffsets = new int[numberOfColumns];
         for (int i = 0; i < numberOfColumns; i++) {
+            int readerOffset = end - stream.available();
             IColumnValuesReader columnReader = readerFactory.createValueReader(input);
             //The order at which the path info was written is not ordered by the column index
             columnReaders[columnReader.getColumnIndex()] = columnReader;
+            pathInfoOffsets[columnReader.getColumnIndex()] = readerOffset;
         }
 
         return new MergeColumnReadMetadata(datasetType, metaType, numberOfPrimaryKeys, columnReaders,
-                serializedMetadata);
+                serializedMetadata, readerFactory, pathInfoOffsets);
     }
 
     public IColumnValuesReader[] getColumnReaders() {
         return columnReaders;
+    }
+
+    /** The promoted keys a merge can move out of its inputs' maps; see {@link PromotedKeys}. */
+    public List<PromotedKeys.Key> getMovableKeys() throws HyracksDataException {
+        if (getProjectorType() == EXISTENCE) {
+            // Liveness probe: reads primary keys only and never writes a merged component.
+            return List.of();
+        }
+        if (movableKeys == null) {
+            movableKeys = PromotedKeys.movable(PromotedKeys.of(serializedMetadata));
+        }
+        return movableKeys;
+    }
+
+    /** Creates another reader for column {@code columnIndex}, set up like the main one. */
+    public IColumnValuesReader createColumnReader(int columnIndex) throws HyracksDataException {
+        // Cached: a merge asks for two readers per movable key, and re-parsing for each would be slow.
+        byte[] bytes = serializedMetadata.getByteArray();
+        int readerOffset = pathInfoOffsets[columnIndex];
+        DataInput input =
+                new DataInputStream(new ByteArrayInputStream(bytes, readerOffset, bytes.length - readerOffset));
+        try {
+            return readerFactory.createValueReader(input);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     @Override
@@ -123,7 +164,7 @@ public final class MergeColumnReadMetadata extends AbstractColumnImmutableReadMe
     public static MergeColumnReadMetadata createExistenceOnly(ARecordType datasetType, ARecordType metaType,
             IValueReference serializedMetadata, IColumnValuesReader[] primaryKeyReaders) {
         return new MergeColumnReadMetadata(datasetType, metaType, primaryKeyReaders.length, primaryKeyReaders,
-                serializedMetadata, 0, EXISTENCE);
+                serializedMetadata, 0, EXISTENCE, null, null);
     }
 
     @Override

@@ -89,8 +89,8 @@ public class SlowParentCollapseTest {
         FlushColumnMetadata md = WideValueCollapseTest.schemaOf(lines);
         ObjectSchemaNode byDay = (ObjectSchemaNode) child(md.getRoot(), 1);
         assertTrue("by_day must collapse once a second day grows", byDay.isCollapsed());
-        // The first two days keep their columns; every later day is an entry of by_day's map.
-        assertEquals("days with a column of their own", 3, byDay.getChildren().size());
+        // The first two days keep their columns; every later day is an entry of by_day's map, or promoted after it.
+        assertEquals("days before the map", 2, byDay.getChildren().indexOf(byDay.getMapNode()));
 
         ColumnFlushHarness harness = new ColumnFlushHarness();
         ColumnFlushHarness.Component component = harness.writeComponent(lines);
@@ -128,7 +128,7 @@ public class SlowParentCollapseTest {
         ObjectSchemaNode byDay =
                 (ObjectSchemaNode) child(harness.continueMetadata(harness.createFile(), schema).getRoot(), 1);
         assertTrue("by_day must collapse once a second day grows", byDay.isCollapsed());
-        assertEquals("days with a column of their own", 3, byDay.getChildren().size());
+        assertEquals("days before the map", 2, byDay.getChildren().indexOf(byDay.getMapNode()));
     }
 
     /**

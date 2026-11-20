@@ -20,12 +20,14 @@ package org.apache.asterix.column.operation.query;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.column.assembler.value.MissingValueGetter;
 import org.apache.asterix.column.assembler.value.ValueGetterFactory;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
+import org.apache.asterix.column.metadata.PromotionBoundaries;
 import org.apache.asterix.column.tuple.AssembledTupleReference;
 import org.apache.asterix.column.tuple.QueryColumnTupleReference;
 import org.apache.asterix.column.values.reader.ColumnValueReaderFactory;
@@ -40,6 +42,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 
 public class QueryColumnTupleProjector implements IColumnTupleProjector {
     protected final ARecordType datasetType;
@@ -72,11 +75,22 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
 
     @Override
     public IColumnProjectionInfo createProjectionInfo(IValueReference serializedMetadata) throws HyracksDataException {
+        return createProjectionInfo(serializedMetadata, (PromotionBoundaries.Source) null);
+    }
+
+    @Override
+    public IColumnProjectionInfo createProjectionInfo(IValueReference serializedMetadata,
+            List<ILSMComponent> components) throws HyracksDataException {
+        return createProjectionInfo(serializedMetadata, () -> PromotionBoundaries.ofComponents(components));
+    }
+
+    private IColumnProjectionInfo createProjectionInfo(IValueReference serializedMetadata,
+            PromotionBoundaries.Source promotionBoundaries) throws HyracksDataException {
         try {
             return QueryColumnMetadata.create(datasetType, numberOfPrimaryKeys, serializedMetadata,
                     new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE, requestedType, functionCallInfoMap,
                     normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector, context,
-                    projectorType);
+                    projectorType, promotionBoundaries);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

@@ -34,6 +34,14 @@ public interface IColumnMetadata {
     IValueReference serializeColumnsMetadata() throws HyracksDataException;
 
     /**
+     * @return extra per-component data that doesn't fit in the column metadata (e.g. promotion boundaries). Stored
+     *         under its own key, which older binaries ignore. Null if none.
+     */
+    default IValueReference serializeColumnsAnnotations() throws HyracksDataException {
+        return null;
+    }
+
+    /**
      * @return number of columns
      */
     int getNumberOfColumns();

@@ -44,7 +44,7 @@ public class LSMColumnSampleLivenessSearchCursor extends LSMColumnBatchPointSear
         }
         ColumnBTree columnBTree = (ColumnBTree) btree;
         LSMColumnBTreeOpContext columnOpCtx = (LSMColumnBTreeOpContext) opCtx;
-        IColumnProjectionInfo projectionInfo = columnOpCtx.createProjectionInfo();
+        IColumnProjectionInfo projectionInfo = columnOpCtx.createProjectionInfo(operationalComponents.get(index));
         if (projectionInfo != null) {
             projectionInfo = projectionInfo.createExistenceOnlyProjectionInfo();
         }

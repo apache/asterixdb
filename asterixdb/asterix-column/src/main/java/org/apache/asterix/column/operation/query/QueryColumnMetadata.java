@@ -41,6 +41,7 @@ import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorF
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.metadata.AbstractColumnImmutableReadMetadata;
+import org.apache.asterix.column.metadata.PromotionBoundaries;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
@@ -188,6 +189,22 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
             IColumnRangeFilterEvaluatorFactory normalizedEvaluatorFactory,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
             IHyracksTaskContext context, ColumnProjectorType projectorType) throws IOException {
+        return create(datasetType, numberOfPrimaryKeys, serializedMetadata, readerFactory, valueGetterFactory,
+                requestedType, functionCallInfoMap, normalizedEvaluatorFactory, columnFilterEvaluatorFactory,
+                warningCollector, context, projectorType, null);
+    }
+
+    /**
+     * @param promotionBoundaries promotion boundaries of the components being read; null if unknown
+     */
+    public static QueryColumnMetadata create(ARecordType datasetType, int numberOfPrimaryKeys,
+            IValueReference serializedMetadata, IColumnValuesReaderFactory readerFactory,
+            IValueGetterFactory valueGetterFactory, ARecordType requestedType,
+            Map<String, FunctionCallInformation> functionCallInfoMap,
+            IColumnRangeFilterEvaluatorFactory normalizedEvaluatorFactory,
+            IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
+            IHyracksTaskContext context, ColumnProjectorType projectorType,
+            PromotionBoundaries.Source promotionBoundaries) throws IOException {
         byte[] bytes = serializedMetadata.getByteArray();
         int offset = serializedMetadata.getStartOffset();
         int length = serializedMetadata.getLength();
@@ -209,6 +226,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         //Clip schema
         SchemaClipperVisitor clipperVisitor =
                 new SchemaClipperVisitor(fieldNamesDictionary, functionCallInfoMap, warningCollector);
+        clipperVisitor.setPromotionBoundaries(promotionBoundaries);
         ObjectSchemaNode clippedRoot = clip(requestedType, root, clipperVisitor);
 
         IColumnFilterEvaluator normalizedFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
@@ -251,7 +269,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         if (ALL_FIELDS_TYPE.getTypeName().equals(requestedType.getTypeName())) {
             clippedRoot = root;
         } else {
-            clippedRoot = (ObjectSchemaNode) requestedType.accept(clipperVisitor, root);
+            clippedRoot = clipperVisitor.clipProjection(requestedType, root);
         }
         return clippedRoot;
     }

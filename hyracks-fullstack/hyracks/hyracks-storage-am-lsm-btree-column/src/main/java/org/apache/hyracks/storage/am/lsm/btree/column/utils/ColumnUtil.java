@@ -23,13 +23,21 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
+import org.apache.hyracks.storage.am.lsm.common.impls.ChunkedComponentMetadataReaderWriter;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.storage.common.compression.SnappyCompressorDecompressor;
 
 public class ColumnUtil {
     // Currently, ColumnMetadataReaderWriter is thread safe as the snappy compressor/decompressor is thread safe
     private static final ColumnMetadataReaderWriter READER_WRITER = new ColumnMetadataReaderWriter();
+    private static final ChunkedComponentMetadataReaderWriter ANNOTATIONS_READER_WRITER =
+            new ChunkedComponentMetadataReaderWriter(new MutableArrayValueReference("COLUMNS_ANNOTATIONS".getBytes()),
+                    SnappyCompressorDecompressor.INSTANCE);
 
     private ColumnUtil() {
     }
@@ -41,6 +49,18 @@ public class ColumnUtil {
     public static void putColumnsMetadataValue(IValueReference columnsMetadataValue, IComponentMetadata dest)
             throws HyracksDataException {
         READER_WRITER.writeMetadata(columnsMetadataValue, dest);
+    }
+
+    /** @see IColumnMetadata#serializeColumnsAnnotations() */
+    public static IValueReference getColumnsAnnotationsCopy(IComponentMetadata src) throws HyracksDataException {
+        ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
+        return ANNOTATIONS_READER_WRITER.readMetadata(src, storage) ? storage : null;
+    }
+
+    /** @see IColumnMetadata#serializeColumnsAnnotations() */
+    public static void putColumnsAnnotationsValue(IValueReference annotations, IComponentMetadata dest)
+            throws HyracksDataException {
+        ANNOTATIONS_READER_WRITER.writeMetadata(annotations, dest);
     }
 
     public static int getColumnPageIndex(int columnOffset, int pageSize) {

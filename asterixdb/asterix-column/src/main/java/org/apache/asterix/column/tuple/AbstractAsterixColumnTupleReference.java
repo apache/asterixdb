@@ -251,7 +251,7 @@ public abstract class AbstractAsterixColumnTupleReference extends AbstractColumn
         // Returns the number of encountered anti-matters
         int numberOfSkippedAntiMatters = reader.reset(index, skipCount);
         primaryKeys[i].set(primaryKeysValueGetters[i].getValue(reader));
-        // include the current key if the current key is an anti-matter
-        return numberOfSkippedAntiMatters + (isAntimatter() ? 1 : 0);
+        // The count includes the current tuple, but only the ones before it were skipped
+        return numberOfSkippedAntiMatters - (isAntimatter() ? 1 : 0);
     }
 }

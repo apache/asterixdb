@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.column.metadata.PromotionBoundaries;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
@@ -50,11 +51,17 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringReader;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+
 public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, AbstractSchemaNode> {
     private final IFieldNamesDictionary fieldNamesDictionary;
     private final IWarningCollector warningCollector;
     private final Map<String, FunctionCallInformation> functionCallInfoMap;
+    private PromotionBoundaries.Source promotionBoundariesSource;
+    private Int2ObjectMap<PromotionBoundaries.Boundary> promotionBoundaries;
     private boolean ignoreFlatType;
+    private boolean readNullAncestors;
+    private int depth;
     private final AMutableString mutableString = new AMutableString("");
     private final AStringSerializerDeserializer stringSerDer =
             new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader());
@@ -67,6 +74,37 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
         ignoreFlatType = false;
     }
 
+    /**
+     * Promotion boundaries of the components being read, so a promoted field fully in its column skips the map. Null
+     * if unknown. Fetched on the first promoted field.
+     */
+    public void setPromotionBoundaries(PromotionBoundaries.Source promotionBoundariesSource) {
+        this.promotionBoundariesSource = promotionBoundariesSource;
+        promotionBoundaries = null;
+    }
+
+    private Int2ObjectMap<PromotionBoundaries.Boundary> promotionBoundaries() throws HyracksDataException {
+        if (promotionBoundariesSource != null) {
+            promotionBoundaries = promotionBoundariesSource.get();
+            promotionBoundariesSource = null;
+        }
+        return promotionBoundaries;
+    }
+
+    /**
+     * Clips the schema for a projection. Unlike a filter, it keeps one column of each object on a requested path, even
+     * if the requested field isn't there: that column is the only way to see the object was null, and {@code a.b.c}
+     * of a null {@code b} must read null, not missing.
+     */
+    public ObjectSchemaNode clipProjection(ARecordType requestedType, ObjectSchemaNode root) {
+        readNullAncestors = true;
+        try {
+            return (ObjectSchemaNode) requestedType.accept(this, root);
+        } finally {
+            readNullAncestors = false;
+        }
+    }
+
     public void setIgnoreFlatType(boolean ignoreFlatType) {
         this.ignoreFlatType = ignoreFlatType;
     }
@@ -74,9 +112,25 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
     @Override
     public AbstractSchemaNode visit(ARecordType recordType, AbstractSchemaNode arg) {
         if (isNotCompatible(recordType, arg)) {
-            return MissingFieldSchemaNode.INSTANCE;
+            // A value of another type (e.g. null) may be here; null must answer the requested field with null
+            return readNullAncestors && arg.getTypeTag() != ATypeTag.MISSING ? anyColumn(arg)
+                    : MissingFieldSchemaNode.INSTANCE;
         }
+        depth++;
+        try {
+            AbstractSchemaNode clipped = clipObject(recordType, arg);
+            if (readNullAncestors && arg instanceof UnionSchemaNode union
+                    && union.getOriginalType().getTypeTag() != ATypeTag.OBJECT) {
+                // A union keeps its nulls in its original type, e.g. b is null in {"b": null} but missing in {}
+                return new UnionSchemaNode(anyColumn(union.getOriginalType()), clipped);
+            }
+            return clipped;
+        } finally {
+            depth--;
+        }
+    }
 
+    private AbstractSchemaNode clipObject(ARecordType recordType, AbstractSchemaNode arg) {
         String[] fieldNames = recordType.getFieldNames();
         IAType[] fieldTypes = recordType.getFieldTypes();
         ObjectSchemaNode objectNode = getActualNode(arg, ATypeTag.OBJECT, ObjectSchemaNode.class);
@@ -110,23 +164,65 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
                     collapsedLookups.add(serializeName(fieldNames[i]));
                     continue;
                 }
+                if (objectNode.isPromoted(fieldNameIndex)
+                        && !objectNode.holdsEveryValueOfItsKey(fieldNameIndex, promotionBoundaries())) {
+                    // Older components may still hold this field in the map: read both.
+                    if (collapsedLookups == null) {
+                        collapsedLookups = new ArrayList<>();
+                    }
+                    collapsedLookups.add(serializeName(fieldNames[i]));
+                }
                 AbstractSchemaNode child = objectNode.getChild(fieldNameIndex);
                 clippedObjectNode.addChild(fieldNameIndex, fieldTypes[i].accept(this, child));
             }
             if (collapsedLookups != null) {
                 /*
-                 * A requested name that resolved to nothing may still live in the collapsed map, so the map has to be
+                 * A requested name with no column, or a promoted one, may be in the collapsed map, so the map has to be
                  * read to answer the query — returning without it would silently answer "missing" for a field that is
                  * present. The requested names travel with the clipped node so the assembler can drop entries the
                  * query never asked for, rather than rebuilding the entire object and leaving the caller to select.
                  */
                 clippedObjectNode.addChild(MAP_FIELD_NAME_INDEX, objectNode.getMapNode().clip(collapsedLookups));
+            } else if (readNullAncestors && depth > 1 && !readsAColumn(clippedObjectNode)) {
+                // No requested field here, but the object itself may be null
+                return anyColumn(objectNode);
             }
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
 
         return clippedObjectNode;
+    }
+
+    private static boolean readsAColumn(ObjectSchemaNode clippedObjectNode) {
+        for (AbstractSchemaNode child : clippedObjectNode.getChildren()) {
+            if (child != MissingFieldSchemaNode.INSTANCE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** One column of {@code node}: enough to tell whether it or a parent is null or missing. */
+    private static AbstractSchemaNode anyColumn(AbstractSchemaNode node) {
+        if (node instanceof ObjectSchemaNode object) {
+            ObjectSchemaNode clipped = new ObjectSchemaNode();
+            for (int fieldNameIndex : object.getChildrenFieldNameIndexes()) {
+                if (fieldNameIndex != MAP_FIELD_NAME_INDEX) {
+                    clipped.addChild(fieldNameIndex, anyColumn(object.getChild(fieldNameIndex)));
+                    return clipped;
+                }
+            }
+            clipped.addChild(MAP_FIELD_NAME_INDEX, object.getMapNode().clip(List.of()));
+            return clipped;
+        }
+        if (node instanceof AbstractCollectionSchemaNode collection) {
+            AbstractCollectionSchemaNode clipped = AbstractCollectionSchemaNode.create(collection.getTypeTag());
+            clipped.setItemNode(anyColumn(collection.getItemNode()));
+            return clipped;
+        }
+        // ponytail: a union is read whole, all of its types' columns; one of them would do
+        return node;
     }
 
     @Override

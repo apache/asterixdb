@@ -105,7 +105,9 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_COLUMN_COLLAPSE_GROWING_CHILDREN(POSITIVE_INTEGER, 8),
         STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_ABSENT(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.9d),
         STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_FRESH(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.5d),
-        STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_VISITS(POSITIVE_INTEGER, 8);
+        STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_VISITS(POSITIVE_INTEGER, 8),
+        STORAGE_COLUMN_COLLAPSE_PROMOTE_MIN_DENSITY(getRangedDoubleType(Double.MIN_VALUE, 1.0), 0.3d),
+        STORAGE_COLUMN_COLLAPSE_PROMOTE_MAX_TOTAL(POSITIVE_INTEGER, 256);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -231,9 +233,10 @@ public class StorageProperties extends AbstractProperties {
                             + "tuples the sample contains.";
                 case STORAGE_COLUMN_COLLAPSE_ENABLED:
                     return "Whether flushes may collapse an object whose field names keep arriving (ids, timestamps "
-                            + "used as keys) into a map node. Disabling it stops new collapses; a node that has "
-                            + "collapsed stays collapsed, as its components hold its map. A collapsed schema cannot be "
-                            + "read by an older version, so once a node collapses, downgrading is no longer possible";
+                            + "used as keys) into a map node, and promote its dense keys back to columns. Disabling it "
+                            + "stops new collapses and promotions; a node that has collapsed stays collapsed, as its "
+                            + "components hold its map. A collapsed schema cannot be read by an older version, so "
+                            + "once a node collapses, downgrading is no longer possible";
                 case STORAGE_COLUMN_COLLAPSE_MIN_CHILDREN:
                     return "The number of fields an object needs before it may collapse, unless it already has "
                             + "storage.column.collapse.min.columns columns";
@@ -264,6 +267,11 @@ public class StorageProperties extends AbstractProperties {
                             + "trigger";
                 case STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_VISITS:
                     return "The number of visits of an object a batch needs before its sparsity is judged";
+                case STORAGE_COLUMN_COLLAPSE_PROMOTE_MIN_DENSITY:
+                    return "The fraction of a batch's visits of a collapsed object a key must appear in to be "
+                            + "given a column of its own again";
+                case STORAGE_COLUMN_COLLAPSE_PROMOTE_MAX_TOTAL:
+                    return "The number of keys that may ever be promoted out of one collapsed object";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }

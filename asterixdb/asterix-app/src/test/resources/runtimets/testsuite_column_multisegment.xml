@@ -28,5 +28,10 @@
         <output-dir compare="Text">map-union-values</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="promote-collapsed-key">
+        <output-dir compare="Text">promote-collapsed-key</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

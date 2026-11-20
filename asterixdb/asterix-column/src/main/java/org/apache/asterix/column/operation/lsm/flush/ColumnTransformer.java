@@ -142,6 +142,7 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
                         mapMissingLevel = columnMetadata.getLevel();
                         mapNode.needAllColumns(true);
                     }
+                    objectNode.recordCollapsedKey(fieldName, childTypeTag, columnMetadata);
                     writeMapEntry(objectNode.getMapNode(), fieldName, pointable.getChildVisitablePointable(),
                             objectNode);
                     mapDefLevels.add(mapMissingLevel);
@@ -149,7 +150,7 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
                 } else {
                     /*
                      * Once a map entry of this record has been written, the map's repeated group stays open until the
-                     * record ends. A column field from before the collapse that follows it in the
+                     * record ends. A column field (promoted, or from before the collapse) that follows it in the
                      * document must step back out to the object's level: written inside the group, the column would
                      * record the map's level and repetition, and its level stream would no longer match its place in
                      * the schema.
@@ -160,7 +161,11 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
                     int childrenBefore = objectNode.getChildren().size();
                     int columnsBefore = columnMetadata.getNumberOfColumns();
                     AbstractSchemaNode childNode = objectNode.getOrCreateChild(fieldName, childTypeTag, columnMetadata);
-                    boolean childWasGrowing = columnMetadata.isCollapseDetectorEnabled() && isGrowingObject(childNode);
+                    // A child counts towards collapsing this node when this visit starts it growing. Check before the
+                    // visit: a child created by it may be born collapsed (from its template), and checked afterwards
+                    // it would wrongly look like it was already growing.
+                    boolean childWasGrowing = columnMetadata.isCollapseDetectorEnabled()
+                            && objectNode.getChildren().size() == childrenBefore && isGrowingObject(childNode);
                     acceptActualNode(pointable.getChildVisitablePointable(), childNode);
                     if (columnMetadata.isCollapseDetectorEnabled() && !childWasGrowing && isGrowingObject(childNode)) {
                         objectNode.onChildGrowing(fieldName, columnMetadata);
@@ -320,7 +325,11 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
         valuesEstimatedSize += keyWriter.getEstimatedSize() - sizeBeforeWrite;
         columnMetadata.exitNode(keyNode);
 
+        AbstractSchemaNode itemBefore = mapNode.getItemNode();
         AbstractSchemaNode itemNode = mapNode.getOrCreateItem(value.getTypeTag(), columnMetadata);
+        if (itemNode != itemBefore) {
+            objectNode.onMapValueCreated(itemNode, columnMetadata);
+        }
         acceptActualNode(value, itemNode);
         objectNode.incrementColumns(itemNode.getDeltaColumnsChanged());
 

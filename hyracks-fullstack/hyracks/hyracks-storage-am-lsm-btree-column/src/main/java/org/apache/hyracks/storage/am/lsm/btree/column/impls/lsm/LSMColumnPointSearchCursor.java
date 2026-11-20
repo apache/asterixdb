@@ -42,7 +42,7 @@ public class LSMColumnPointSearchCursor extends LSMBTreePointSearchCursor {
         }
         ColumnBTree columnBTree = (ColumnBTree) btree;
         LSMColumnBTreeOpContext columnOpCtx = (LSMColumnBTreeOpContext) opCtx;
-        IColumnProjectionInfo projectionInfo = columnOpCtx.createProjectionInfo();
+        IColumnProjectionInfo projectionInfo = columnOpCtx.createProjectionInfo(operationalComponents.get(index));
         IColumnReadContext context = columnOpCtx.createPageZeroContext(projectionInfo);
         return columnBTree.createAccessor(NoOpIndexAccessParameters.INSTANCE, index, projectionInfo, context);
     }

@@ -128,8 +128,9 @@ public class MapMergeTest {
         }
 
         // the merge writer must be able to write every column the newest schema declares
-        MergeColumnWriteMetadata mergeWrite = MergeColumnWriteMetadata.create(
-                DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, null, 0, new MutableObject<>(), newer, new ArrayList<>());
+        MergeColumnWriteMetadata mergeWrite =
+                MergeColumnWriteMetadata.create(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, null, 0,
+                        new MutableObject<>(), newer, new ArrayList<>(), new ArrayList<>());
         assertEquals("merge must allocate one writer per column in the newest schema", newerColumns,
                 mergeWrite.getNumberOfColumns());
 

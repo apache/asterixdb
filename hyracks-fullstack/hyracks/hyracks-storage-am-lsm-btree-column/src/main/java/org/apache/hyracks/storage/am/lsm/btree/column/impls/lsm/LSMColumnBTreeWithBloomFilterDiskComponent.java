@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -87,8 +88,12 @@ public class LSMColumnBTreeWithBloomFilterDiskComponent extends LSMBTreeWithBloo
             List<ILSMComponent> mergingComponents = mergeOp.getMergingComponents();
             IComponentMetadata componentMetadata = mergingComponents.get(0).getMetadata();
             IValueReference columnMetadataValue = ColumnUtil.getColumnMetadataCopy(componentMetadata);
+            List<IValueReference> inputsAnnotations = new ArrayList<>(mergingComponents.size());
+            for (ILSMComponent mergingComponent : mergingComponents) {
+                inputsAnnotations.add(ColumnUtil.getColumnsAnnotationsCopy(mergingComponent.getMetadata()));
+            }
             columnMetadata = lsmColumnBTree.getColumnManager().createMergeColumnMetadata(columnMetadataValue,
-                    cursor.getComponentTupleList());
+                    inputsAnnotations, cursor.getComponentTupleList());
         }
         int numberOfColumns = columnMetadata.getNumberOfColumns();
         IColumnIndexDiskCacheManager diskCacheManager = lsmColumnBTree.getDiskCacheManager();

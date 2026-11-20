@@ -196,6 +196,16 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
     }
 
     @Override
+    public int getMaxLevel() {
+        return maxLevel;
+    }
+
+    @Override
+    public boolean isAbsent() {
+        return allMissing;
+    }
+
+    @Override
     public final boolean isMissing() {
         // After clearing the nullBitMask, a level less than maxLevel may incorrectly be considered missing.
         // This is because the nullBitMask can affect the interpretation of the level value.

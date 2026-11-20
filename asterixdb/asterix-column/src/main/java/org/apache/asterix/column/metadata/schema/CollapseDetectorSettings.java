@@ -30,10 +30,9 @@ import org.apache.hyracks.api.config.IOption;
  */
 public final class CollapseDetectorSettings {
     /**
-     * Whether flushes may collapse a node. On by default: a node that collapses writes a schema an older binary
-     * cannot read, so it can no longer be downgraded; turning it off keeps a node that never collapsed downgradable.
-     * A node collapsed while it was on stays collapsed when it is turned off: its schema is already on disk, and every
-     * later flush keeps routing its keys to the map.
+     * Whether flushes may collapse a node or promote a key out of one. On by default. A collapsed schema can't be read
+     * by older binaries, so collapsing blocks downgrade. Turning this off stops new collapses and promotions; nodes
+     * already collapsed stay collapsed.
      */
     public final boolean enabled;
     /**
@@ -105,6 +104,23 @@ public final class CollapseDetectorSettings {
     /** Visits of the node a batch must contain before its absence figure means anything. */
     public final int sparsityMinVisits;
 
+    /** Share of a collapsed node's visits a key must appear in to be promoted back to its own column. */
+    public final double promoteMinDensity;
+    /** Most keys one node may ever promote. */
+    public final int promoteMaxTotal;
+    /**
+     * Two uses:
+     * <ul>
+     * <li>A promoted column with no value for this many visits in a row is cold. Chosen so a key at
+     * {@link #promoteMinDensity} misses that many in a row only about once in 10^12 visits.</li>
+     * <li>The minimum sample before deciding a promotion. This gives yesterday's date column time to look cold before
+     * today's date key can be promoted. Counted across batches, so small flushes still reach it.</li>
+     * </ul>
+     */
+    public final int coldVisits;
+    /** Lower bound for {@link #coldVisits}: smaller samples are too noisy for a permanent decision. */
+    private static final int MIN_COLD_VISITS = 32;
+
     /** Every option at its default: for schemas written outside an index -- tests, tools. */
     public static final CollapseDetectorSettings DEFAULT = new CollapseDetectorSettings(IOption::defaultValue);
 
@@ -123,5 +139,8 @@ public final class CollapseDetectorSettings {
         sparsityMinAbsent = (Double) config.apply(Option.STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_ABSENT);
         sparsityMinFresh = (Double) config.apply(Option.STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_FRESH);
         sparsityMinVisits = (Integer) config.apply(Option.STORAGE_COLUMN_COLLAPSE_SPARSITY_MIN_VISITS);
+        promoteMinDensity = (Double) config.apply(Option.STORAGE_COLUMN_COLLAPSE_PROMOTE_MIN_DENSITY);
+        promoteMaxTotal = (Integer) config.apply(Option.STORAGE_COLUMN_COLLAPSE_PROMOTE_MAX_TOTAL);
+        coldVisits = Math.max(MIN_COLD_VISITS, (int) Math.ceil(Math.log(1e-12) / Math.log(1 - promoteMinDensity)));
     }
 }

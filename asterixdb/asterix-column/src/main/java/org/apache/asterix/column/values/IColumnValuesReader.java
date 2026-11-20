@@ -63,6 +63,17 @@ public interface IColumnValuesReader extends Comparable<IColumnValuesReader> {
     int getLevel();
 
     /**
+     * @return the nesting level at which this column holds a value (a null is one level up, with the null bit)
+     */
+    int getMaxLevel();
+
+    /**
+     * @return whether this column is absent from the current page. Every tuple then reads as missing at level 0, which
+     *         says nothing about its parents.
+     */
+    boolean isAbsent();
+
+    /**
      * @return is the current value MISSING
      */
     boolean isMissing();

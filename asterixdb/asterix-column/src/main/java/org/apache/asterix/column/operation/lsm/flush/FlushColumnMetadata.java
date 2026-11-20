@@ -34,6 +34,7 @@ import java.util.Map;
 
 import org.apache.asterix.column.metadata.AbstractColumnMetadata;
 import org.apache.asterix.column.metadata.PathInfoSerializer;
+import org.apache.asterix.column.metadata.PromotionBoundaries;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNestedNode;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
@@ -97,6 +98,8 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
     private int routingChanges;
     /** The collapse detector's thresholds for this index; see {@link CollapseDetectorSettings}. */
     private final CollapseDetectorSettings collapseDetectorSettings;
+    /** Number of components written so far. Schema nodes live across flushes and use it to detect a new flush. */
+    private int flushNumber;
     protected int level;
     protected int repeated;
     protected int requiredTemporaryBuffersCount;
@@ -189,6 +192,11 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
 
     public Mutable<IColumnWriteMultiPageOp> getMultiPageOpRef() {
         return multiPageOpRef;
+    }
+
+    @Override
+    public IValueReference serializeColumnsAnnotations() throws HyracksDataException {
+        return PromotionBoundaries.collect(flushNumber, root, metaRoot);
     }
 
     @Override
@@ -363,6 +371,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
      * @param multiPageOp multi-buffer allocator
      */
     public void init(IColumnWriteMultiPageOp multiPageOp) throws HyracksDataException {
+        flushNumber++;
         multiPageOpRef.setValue(multiPageOp);
 
         //Reset writer for the first write
@@ -387,6 +396,11 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
 
     public int getRoutingChanges() {
         return routingChanges;
+    }
+
+    /** The current flush's number; see {@link #flushNumber}. */
+    public int getFlushNumber() {
+        return flushNumber;
     }
 
     public int getLevel() {

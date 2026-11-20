@@ -47,14 +47,14 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * The column collapse cases with collapse turned on, and page zero forced into many segments.
+ * The column collapse and promotion cases with collapse turned on, and page zero forced into many segments.
  * <p>
  * Page zero spills into further segments once a component has more columns than
  * {@code storage.max.columns.in.zeroth.segment} -- 5000 in production -- and a wide index is exactly the component
  * that does. A zeroth segment of eight columns puts every component these cases build across several segments.
  * <p>
- * The cases alone cannot show that a node collapsed, or that a merge succeeded: a failed merge
- * leaves the original components in place, so every query still answers correctly. So after the cases run, the
+ * The cases alone cannot show that a node collapsed or a key was promoted, or that a merge succeeded: a failed
+ * merge leaves the original components in place, so every query still answers correctly. So after the cases run, the
  * storage log is checked: the NCs run in this JVM and storage loggers write {@code target/storage_debug.log}
  * (log4j2-asterixdb-test.xml), which records every merge's outcome.
  */
@@ -63,6 +63,7 @@ public class ColumnMultiSegmentPageZeroTest extends SqlppExecutionTest {
     private static final String CONFIG_FILE_NAME = "src/test/resources/cc-multisegment.conf";
     private static final Path STORAGE_LOG = Paths.get("target", "storage_debug.log");
     private static final String COLLAPSE = "collapsing an object node";
+    private static final String PROMOTION = "promoting a key out of a collapsed object node";
     private static final Pattern FINISHED_MERGE =
             Pattern.compile("\\[MERGE:[^\\]]*\\].*Finished columnar bulkloader.*maxPageZeroSegments: (\\d+)");
     private static final Pattern FAILED_MERGE = Pattern.compile("MERGE operation .* failed");
@@ -101,11 +102,13 @@ public class ColumnMultiSegmentPageZeroTest extends SqlppExecutionTest {
         assertTrue("merges must have written page zero across more than one segment, or this suite tested the "
                 + "single-segment path again", widest >= 1);
 
-        // The same blind spot, for the write side: a case that never collapses its node still answers every query
-        // correctly. org.apache.asterix.column logs to the storage log too, without additivity, so the same text
-        // holds it.
+        // The same blind spot, for the write side: a case that never collapses its node, or never promotes, still
+        // answers every query correctly. org.apache.asterix.column logs to the storage log too, without additivity, so
+        // the same text holds them.
         assertTrue("no object node collapsed, so these cases tested nothing about the collapsed representation",
                 count(log, COLLAPSE) > 0);
+        assertTrue("no key was promoted, so promote-collapsed-key tested reads of a key that never moved",
+                count(log, PROMOTION) > 0);
     }
 
     private static String readLogSince(Path log, long offset) throws Exception {

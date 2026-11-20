@@ -18,7 +18,10 @@
  */
 package org.apache.asterix.column.tuple;
 
+import java.io.IOException;
+
 import org.apache.asterix.column.bytes.stream.in.MultiByteBufferInputStream;
+import org.apache.asterix.column.metadata.PromotedKeys;
 import org.apache.asterix.column.operation.lsm.merge.IEndOfPageCallBack;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnReadMetadata;
 import org.apache.asterix.column.values.IColumnValuesReader;
@@ -29,10 +32,20 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleReference {
     // NoOP callback is for empty pages only
     private static final IEndOfPageCallBack EMPTY_PAGE_CALLBACK = createNoOpCallBack();
     private final IColumnValuesReader[] columnReaders;
+    /**
+     * Second readers ("lookups") for the columns a merge reads map values from: each node's map key column and its map
+     * value column per key type. They read the same pages as the main readers, one per column, shared by all keys of
+     * a node. Created here because the first page loads before the merge writer exists, and advanced on every page.
+     * See {@link #getLookup}.
+     */
+    private final Int2ObjectMap<Lookup> lookups = new Int2ObjectOpenHashMap<>();
     private int skipCount;
     private IEndOfPageCallBack endOfPageCallBack;
     private int mergingLength;
@@ -42,6 +55,20 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
         super(componentIndex, frame, columnMetadata, multiPageOp);
         this.columnReaders = columnMetadata.getColumnReaders();
         endOfPageCallBack = EMPTY_PAGE_CALLBACK;
+        try {
+            for (PromotedKeys.Key key : columnMetadata.getMovableKeys()) {
+                addLookup(columnMetadata, key.node.mapKeyColumn);
+                addLookup(columnMetadata, key.valueColumn);
+            }
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void addLookup(MergeColumnReadMetadata columnMetadata, int columnIndex) throws HyracksDataException {
+        if (!lookups.containsKey(columnIndex)) {
+            lookups.put(columnIndex, new Lookup(columnMetadata.createColumnReader(columnIndex)));
+        }
     }
 
     @Override
@@ -81,6 +108,11 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
         }
         MultiByteBufferInputStream columnStream = (MultiByteBufferInputStream) columnStreams[ordinal];
         columnStream.reset(buffersProvider);
+        Lookup lookup = lookups.get(ordinal);
+        if (lookup != null) {
+            // Must happen before the main reader consumes the stream header.
+            lookup.reset(columnStream, numberOfTuples);
+        }
         IColumnValuesReader reader = columnReaders[ordinal];
         reader.reset(columnStream, numberOfTuples);
         mergingLength += buffersProvider.getLength();
@@ -124,6 +156,34 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
 
     public IColumnValuesReader getReader(int columnIndex) {
         return columnReaders[columnIndex];
+    }
+
+    /** The lookup reader for column {@code columnIndex} (a map key or map value column). */
+    public IColumnValuesReader getLookup(int columnIndex) {
+        return lookups.get(columnIndex).reader;
+    }
+
+    private static final class Lookup {
+        private final MultiByteBufferInputStream stream = new MultiByteBufferInputStream();
+        private final IColumnValuesReader reader;
+
+        private Lookup(IColumnValuesReader reader) {
+            this.reader = reader;
+        }
+
+        private void reset(MultiByteBufferInputStream columnStream, int numberOfTuples) throws HyracksDataException {
+            if (columnStream.available() == 0) {
+                // Column absent from this page: the reader reads it as missing.
+                stream.reset();
+            } else {
+                try {
+                    stream.resetAt(0, columnStream);
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
+            }
+            reader.reset(stream, numberOfTuples);
+        }
     }
 
     public void registerEndOfPageCallBack(IEndOfPageCallBack endOfPageCallBack) {

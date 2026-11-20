@@ -128,8 +128,8 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
             }
             /*
              * The collapsed child must be the delegate — the delegate is whichever child ends the parent record — and
-             * so it must also be visited last: were it visited before another child, it would end the record, and
-             * that child's start() would then reset the record builder and drop everything already assembled.
+             * so it must also be visited last. Child order doesn't guarantee that: promoted keys come after the map.
+             * If the map ended the record first, the promoted child's start() would reset it and lose what was built.
              */
             MapSchemaNode mapNode = objectNode.getMapNode();
             if (mapNode != null) {

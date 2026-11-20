@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
 import org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
@@ -38,6 +39,10 @@ public class LSMColumnIndexBulkloader extends LSMIndexBulkLoader {
     @Override
     public void end() throws HyracksDataException {
         ColumnUtil.putColumnsMetadataValue(columnMetadata.serializeColumnsMetadata(), componentMetadata);
+        IValueReference annotations = columnMetadata.serializeColumnsAnnotations();
+        if (annotations != null) {
+            ColumnUtil.putColumnsAnnotationsValue(annotations, componentMetadata);
+        }
         super.end();
         columnMetadata.swapSerializedColumnsMetadata();
     }

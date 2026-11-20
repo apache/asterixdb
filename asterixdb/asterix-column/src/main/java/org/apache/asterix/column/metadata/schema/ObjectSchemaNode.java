@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.column.metadata.PathInfoSerializer;
+import org.apache.asterix.column.metadata.PromotionBoundaries.Boundary;
 import org.apache.asterix.column.metadata.schema.collection.MapSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
@@ -45,6 +46,7 @@ import org.apache.logging.log4j.Logger;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntImmutableList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntUnaryOperator;
@@ -71,6 +73,19 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
      * otherwise carry over. See {@link CollapseDetector}.
      */
     private CollapseDetector detector;
+    /** Promotes frequent keys out of this node's map once it has collapsed. Flush-only; null otherwise. */
+    private KeyPromoter promoter;
+    /**
+     * True between {@link #routesToMap} granting a promotion and the new child being added. Boundaries rely on promoted
+     * keys being the children after the map, so nothing else may add a child to a collapsed node.
+     */
+    private boolean promotionGranted;
+    /**
+     * Node whose shape this one copies: for a promoted key, the map's value node; below that, the template's child of
+     * the same name. If the template collapsed, this node starts collapsed, so a promoted key doesn't recreate columns
+     * its map values had already collapsed. Not serialized; only used while the subtree is built.
+     */
+    private ObjectSchemaNode template;
 
     public ObjectSchemaNode() {
         fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
@@ -111,11 +126,22 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         if (collapseDetector != null) {
             collapseDetector.onChildPresent(childIndex, currentChild != null);
         }
+        if (promoter != null && mapNode != null && childIndex > getMapChildIndex()) {
+            promoter.onPromotedChildSeen(childIndex);
+        }
         if (currentChild == null) {
+            assert mapNode == null || promotionGranted : "only a promotion adds a child to a collapsed node";
+            promotionGranted = false;
             children.add(childIndex, newChild);
             fieldNameIndexToChildIndexMap.put(fieldNameIndex, childIndex);
             if (collapseDetector != null) {
                 collapseDetector.onNewName(columnMetadata);
+            }
+            if (columnMetadata.isCollapseDetectorEnabled() && newChild instanceof ObjectSchemaNode object) {
+                // After collapse, only a promotion adds a child; it copies the shape of the map's values.
+                AbstractSchemaNode shape = mapNode != null ? mapNode.getItemNode()
+                        : template == null ? null : template.getChild(fieldNameIndex);
+                object.inheritShape(objectOf(shape));
             }
         } else if (currentChild != newChild) {
             numberOfColumns -= currentChild.getNumberOfColumns();
@@ -173,12 +199,107 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         return isCollapsed() ? null : detector;
     }
 
-    /** Called once per document that contains this node; see {@link CollapseDetector#onDocumentVisited}. */
+    /** This node's promoter, created on first use once the node has collapsed; else null. */
+    private KeyPromoter promoter(FlushColumnMetadata columnMetadata) {
+        if (promoter == null && isCollapsed() && columnMetadata.isCollapseDetectorEnabled()) {
+            promoter = new KeyPromoter(this, columnMetadata.getCollapseDetectorSettings());
+        }
+        return promoter;
+    }
+
+    /** Called once per document containing this node. Goes to the detector before collapse, the promoter after. */
     public void onDocumentVisited(FlushColumnMetadata columnMetadata) throws HyracksDataException {
+        KeyPromoter keyPromoter = promoter(columnMetadata);
+        if (keyPromoter != null) {
+            keyPromoter.onDocumentVisited(columnMetadata);
+            return;
+        }
         CollapseDetector collapseDetector = detector(columnMetadata);
         if (collapseDetector != null) {
             collapseDetector.onDocumentVisited(columnMetadata);
         }
+    }
+
+    /** Counts a key written into this node's map, for promotion. */
+    public void recordCollapsedKey(IValueReference fieldName, ATypeTag valueTypeTag,
+            FlushColumnMetadata columnMetadata) {
+        KeyPromoter keyPromoter = promoter(columnMetadata);
+        if (keyPromoter != null) {
+            keyPromoter.recordKey(fieldName, valueTypeTag);
+        }
+    }
+
+    /** Called when a batch closes; see {@link KeyPromoter#evaluateBatch}. */
+    public void evaluatePromotions() {
+        if (promoter != null) {
+            promoter.evaluateBatch();
+        }
+    }
+
+    /**
+     * Whether this child was promoted out of the map (it comes after the map in the child list). Older components may
+     * still hold the key in the map.
+     */
+    public boolean isPromoted(int fieldNameIndex) {
+        return mapNode != null && fieldNameIndexToChildIndexMap.getOrDefault(fieldNameIndex, -1) > getMapChildIndex();
+    }
+
+    /** See {@link KeyPromoter#getBoundary}. All children if this node has no promoter. */
+    public int getPromotionBoundary(int flushNumber) {
+        return promoter == null ? children.size() : promoter.getBoundary(flushNumber);
+    }
+
+    /**
+     * Whether this promoted child has all its values in its column in the components {@code boundaries} describes, so
+     * their maps can be skipped. False if {@code boundaries} is null.
+     */
+    public boolean holdsEveryValueOfItsKey(int fieldNameIndex, Int2ObjectMap<Boundary> boundaries) {
+        if (boundaries == null) {
+            return false;
+        }
+        Boundary boundary = boundaries.get(mapNode.getKeyColumnIndex());
+        // No entry for this node: the component predates its map, so nothing is in a map.
+        return boundary == null || boundary.holds(fieldNameIndexToChildIndexMap.get(fieldNameIndex));
+    }
+
+    /** The map's index among this node's children. Only valid once the map exists. */
+    int getMapChildIndex() {
+        return fieldNameIndexToChildIndexMap.get(MAP_FIELD_NAME_INDEX);
+    }
+
+    /**
+     * Sets this node's template and, if the template collapsed, collapses this node now. Otherwise a promoted key
+     * whose values are keyed by IDs would create those IDs as columns again before its own detector caught up.
+     */
+    private void inheritShape(ObjectSchemaNode shape) {
+        if (shape == null) {
+            return;
+        }
+        template = shape;
+        if (shape.isCollapsed()) {
+            markCollapsed(null, "shape of the map's values");
+        }
+    }
+
+    /**
+     * Called when this node's map creates its value node. An object value copies the shape of the template's map
+     * values, so it doesn't have to detect growth again from scratch.
+     */
+    public void onMapValueCreated(AbstractSchemaNode valueNode, FlushColumnMetadata columnMetadata) {
+        ObjectSchemaNode value = objectOf(valueNode);
+        if (value != null && value.template == null && value.children.isEmpty()
+                && columnMetadata.isCollapseDetectorEnabled()) {
+            value.inheritShape(
+                    template == null || template.mapNode == null ? null : objectOf(template.mapNode.getItemNode()));
+        }
+    }
+
+    /** The node as an object, or a union's object branch; else null. */
+    private static ObjectSchemaNode objectOf(AbstractSchemaNode node) {
+        if (node instanceof UnionSchemaNode union) {
+            node = union.getChild(ATypeTag.OBJECT);
+        }
+        return node instanceof ObjectSchemaNode object ? object : null;
     }
 
     /** Called with the columns the subtree of a name this node has just minted created. */
@@ -229,11 +350,16 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         return false;
     }
 
-    /** Called by the detector once it decides this node collapses. */
+    /**
+     * Collapses this node: called by the detector, or with null metadata when the node is born collapsed from its
+     * template (the promotion that created it already recorded the routing change).
+     */
     void markCollapsed(FlushColumnMetadata columnMetadata, String trigger) {
         collapsePending = true;
         detector = null;
-        columnMetadata.onRoutingChanged();
+        if (columnMetadata != null) {
+            columnMetadata.onRoutingChanged();
+        }
         // Logged above trace: a collapse is permanent, and changes the node's storage format. Key names are user data.
         LOGGER.info("collapsing an object node with {} children ({} trigger); names first seen from now on route to "
                 + "its map", children.size(), trigger);
@@ -249,7 +375,17 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
             return false;
         }
         int fieldNameIndex = columnMetadata.getFieldNamesDictionary().getFieldNameIndex(fieldName);
-        return fieldNameIndex < 0 || !fieldNameIndexToChildIndexMap.containsKey(fieldNameIndex);
+        if (fieldNameIndex >= 0 && fieldNameIndexToChildIndexMap.containsKey(fieldNameIndex)) {
+            return false;
+        }
+        if (promoter != null && promoter.takePending(fieldName)) {
+            promotionGranted = true;
+            columnMetadata.onRoutingChanged();
+            // INFO: a promotion is permanent. Key names are not logged; they are often user data.
+            LOGGER.info("promoting a key out of a collapsed object node into a column of its own");
+            return false;
+        }
+        return true;
     }
 
     public void addChild(int fieldNameIndex, AbstractSchemaNode child) {
@@ -351,6 +487,7 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         restoreCollapsedChild();
         collapsePending = false;
         detector = null;
+        promoter = null;
     }
 
     /** Restores the collapsed-child cache after the children have been read back. */

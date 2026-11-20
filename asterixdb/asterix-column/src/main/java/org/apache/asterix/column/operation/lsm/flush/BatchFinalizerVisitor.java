@@ -88,7 +88,9 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
         objectNode.setCounter(0);
         objectNode.setNumberOfVisitedColumnsInBatch(0);
         columnSchemaMetadata.clearDefinitionLevels(objectNode);
+        // A key promoted here gets its column from its next write; this batch's values are already in the map.
         if (columnSchemaMetadata.isCollapseDetectorEnabled()) {
+            objectNode.evaluatePromotions();
             objectNode.resetBatchStatistics();
         }
         objectNode.needAllColumns(false);

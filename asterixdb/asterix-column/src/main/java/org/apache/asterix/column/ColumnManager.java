@@ -86,11 +86,11 @@ public final class ColumnManager implements IColumnManager {
     }
 
     @Override
-    public IColumnMetadata createMergeColumnMetadata(IValueReference metadata,
+    public IColumnMetadata createMergeColumnMetadata(IValueReference metadata, List<IValueReference> inputsAnnotations,
             List<IColumnTupleIterator> componentsTuples) throws HyracksDataException {
         try {
             return MergeColumnWriteMetadata.create(datasetType, metaType, primaryKeys.size(), new MutableObject<>(),
-                    metadata, componentsTuples);
+                    metadata, inputsAnnotations, componentsTuples);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

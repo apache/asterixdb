@@ -60,7 +60,7 @@ public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
 
         ColumnBTree columnBTree = (ColumnBTree) component.getIndex();
         LSMColumnBTreeOpContext columnOpCtx = (LSMColumnBTreeOpContext) opCtx;
-        IColumnProjectionInfo projectionInfo = columnOpCtx.createProjectionInfo();
+        IColumnProjectionInfo projectionInfo = columnOpCtx.createProjectionInfo(component);
         IColumnReadContext context = columnOpCtx.createPageZeroContext(projectionInfo);
         return columnBTree.createAccessor(NoOpIndexAccessParameters.INSTANCE, index, projectionInfo, context);
     }

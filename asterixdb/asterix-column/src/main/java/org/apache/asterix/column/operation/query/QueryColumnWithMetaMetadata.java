@@ -38,6 +38,7 @@ import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
+import org.apache.asterix.column.metadata.PromotionBoundaries;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
@@ -120,13 +121,17 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
      * @param requestedType       the requested schema
      * @return query metadata
      */
+    /**
+     * @param promotionBoundaries promotion boundaries of the components being read; null if unknown
+     */
     public static QueryColumnWithMetaMetadata create(ARecordType datasetType, ARecordType metaType,
             int numberOfPrimaryKeys, IValueReference serializedMetadata, IColumnValuesReaderFactory readerFactory,
             IValueGetterFactory valueGetterFactory, ARecordType requestedType,
             Map<String, FunctionCallInformation> functionCallInfo, ARecordType metaRequestedType,
             IColumnRangeFilterEvaluatorFactory normalizedEvaluatorFactory,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
-            IHyracksTaskContext context, ColumnProjectorType projectorType) throws IOException {
+            IHyracksTaskContext context, ColumnProjectorType projectorType,
+            PromotionBoundaries.Source promotionBoundaries) throws IOException {
         byte[] bytes = serializedMetadata.getByteArray();
         int offset = serializedMetadata.getStartOffset();
         int length = serializedMetadata.getLength();
@@ -143,6 +148,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
 
         SchemaClipperVisitor clipperVisitor =
                 new SchemaClipperVisitor(fieldNamesDictionary, functionCallInfo, warningCollector);
+        clipperVisitor.setPromotionBoundaries(promotionBoundaries);
         //Clip dataset schema
         ObjectSchemaNode clippedRoot = clip(requestedType, root, clipperVisitor);
 

@@ -23,21 +23,33 @@ import java.util.Map;
 
 import org.apache.asterix.column.metadata.schema.CollapseDetectorSettings;
 import org.apache.asterix.common.config.StorageProperties.Option;
+import org.apache.hyracks.api.config.IOption;
+import org.apache.hyracks.control.common.config.ConfigManager;
 
-/** Installs collapse-detector settings for a test, as a node does from its storage options at startup. */
+/** Installs collapse-detector settings for a test, as a node's storage options set them for its indexes. */
 public final class CollapseSettings {
-    /** What the harness hands the schemas it builds, as an index's column manager would. */
-    private static CollapseDetectorSettings current = CollapseDetectorSettings.DEFAULT;
+    /** The installed option values; null for every option at its default. */
+    private static Map<Option, Object> values;
 
     private CollapseSettings() {
     }
 
+    /** The installed settings, for the schemas a test builds itself, as an index's column manager hands them out. */
     public static CollapseDetectorSettings current() {
-        return current;
+        return new CollapseDetectorSettings(CollapseSettings::value);
     }
 
-    public static void install(CollapseDetectorSettings settings) {
-        current = settings;
+    /**
+     * Sets the installed values on {@code configManager}, registering the storage options as a node does, for an index
+     * a test builds through {@code LSMColumnBTreeUtil}, which reads its settings from the node's configuration.
+     */
+    public static void configure(ConfigManager configManager) {
+        configManager.register(Option.values());
+        for (Option option : Option.values()) {
+            if (option.name().startsWith("STORAGE_COLUMN_COLLAPSE_")) {
+                configManager.set(option, value(option));
+            }
+        }
     }
 
     /** Collapse enabled, every threshold at its default. */
@@ -47,16 +59,31 @@ public final class CollapseSettings {
 
     /** Collapse enabled, {@code overrides} on top of the defaults. */
     public static void install(Map<Option, Object> overrides) {
-        Map<Option, Object> values = new HashMap<>(overrides);
-        values.putIfAbsent(Option.STORAGE_COLUMN_COLLAPSE_ENABLED, true);
-        installKeepingFlag(values);
+        Map<Option, Object> installed = new HashMap<>(overrides);
+        installed.putIfAbsent(Option.STORAGE_COLUMN_COLLAPSE_ENABLED, true);
+        values = installed;
     }
 
     /** {@code overrides} on top of the defaults, the flag included: at its default unless they set it. */
     public static void installKeepingFlag(Map<Option, Object> overrides) {
-        Map<Option, Object> values = Map.copyOf(overrides);
-        current = new CollapseDetectorSettings(
-                option -> values.containsKey(option) ? values.get(option) : option.defaultValue());
+        values = new HashMap<>(overrides);
+    }
+
+    /**
+     * Collapse off, every threshold at its default: tests that do not exercise collapse expect the schema they wrote,
+     * whatever the node default.
+     */
+    public static void reset() {
+        values = Map.of(Option.STORAGE_COLUMN_COLLAPSE_ENABLED, false);
+    }
+
+    /** The installed values, for {@link #restore}. */
+    static Map<Option, Object> saved() {
+        return values;
+    }
+
+    static void restore(Map<Option, Object> saved) {
+        values = saved;
     }
 
     /**
@@ -69,11 +96,7 @@ public final class CollapseSettings {
                 Option.STORAGE_COLUMN_COLLAPSE_GROWING_WINDOWS, growingWindows);
     }
 
-    /**
-     * Collapse off, every threshold at its default: tests that do not exercise collapse expect the schema they wrote,
-     * whatever the node default.
-     */
-    public static void reset() {
-        installKeepingFlag(Map.of(Option.STORAGE_COLUMN_COLLAPSE_ENABLED, false));
+    private static Object value(IOption option) {
+        return values != null && values.containsKey(option) ? values.get(option) : option.defaultValue();
     }
 }

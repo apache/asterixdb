@@ -1,0 +1,36 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+USE test;
+
+-- One new name per visit under EVENT_DATA.linked_users -- which only half the documents reach -- collapses that node
+-- long before document 2400 in every partition. Only then does "hot" appear: a real value in one shape, an explicit
+-- null in the other, so the null and the value both enter the collapsed child before promotion.
+UPSERT INTO NestedDataset (
+    SELECT VALUE CASE x % 4
+        WHEN 0 THEN {"id": x}
+        WHEN 1 THEN {"id": x, "EVENT_DATA": null}
+        WHEN 2 THEN {"id": x, "EVENT_DATA": {"channel": "web", "linked_users":
+                        object_add_fields(CASE WHEN x > 2400 THEN {"hot": x} ELSE {} END,
+                                          [{"field-name": "k" || to_string(x), "field-value": x}])}}
+        ELSE {"id": x, "EVENT_DATA": {"channel": "web", "linked_users":
+                        object_add_fields(CASE WHEN x > 2400 THEN {"hot": null} ELSE {} END,
+                                          [{"field-name": "k" || to_string(x), "field-value": x}])}}
+    END
+    FROM RANGE(1, 3200) x
+);

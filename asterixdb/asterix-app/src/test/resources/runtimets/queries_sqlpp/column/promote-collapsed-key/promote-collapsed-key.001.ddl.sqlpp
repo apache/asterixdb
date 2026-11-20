@@ -1,0 +1,41 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+-- A key that lands inside a collapsed node and then turns out to be dense is promoted to a column of its own. The
+-- values written before the promotion stay inside the collapsed child, so reading the key back has to consult both
+-- representations -- which is the whole point of the test.
+--
+-- The .get.http steps to /connector are what write components: ConnectorApiServlet flushes the dataset before it
+-- reports splits. COMPACT does not flush, so with only COMPACT every document stayed in the memory component, no
+-- flush ever saw "hot" dense, and nothing was ever promoted. Each era is flushed on its own, so the flush that makes
+-- "hot" dense promotes it, and the queries read one component with "hot" inside the collapsed child and one with it
+-- in a column of its own; 028/029 then merge the two.
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+
+USE test;
+
+CREATE TYPE OpenType AS {
+    id: int
+};
+
+CREATE DATASET ColumnDataset(OpenType)
+PRIMARY KEY id WITH {
+    "storage-format": {"format" : "column"}
+};

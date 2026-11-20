@@ -18,9 +18,12 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.column.api.projection;
 
+import java.util.List;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.common.projection.ITupleProjector;
 
 /**
@@ -34,4 +37,17 @@ public interface IColumnTupleProjector extends ITupleProjector {
      * @return projection information
      */
     IColumnProjectionInfo createProjectionInfo(IValueReference columnMetadata) throws HyracksDataException;
+
+    /**
+     * Create projection information for reading {@code components}. A projector may use them for what the newest
+     * schema can't say (e.g. where promoted keys' values are).
+     *
+     * @param columnMetadata the latest component's raw column metadata as stored in {@link IComponentMetadata}
+     * @param components     the components the projection will read
+     * @return projection information
+     */
+    default IColumnProjectionInfo createProjectionInfo(IValueReference columnMetadata, List<ILSMComponent> components)
+            throws HyracksDataException {
+        return createProjectionInfo(columnMetadata);
+    }
 }

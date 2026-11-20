@@ -57,6 +57,18 @@ public class LSMColumnBTreeOpContext extends LSMBTreeOpContext {
     }
 
     public IColumnProjectionInfo createProjectionInfo() throws HyracksDataException {
+        return createProjectionInfo(getComponentHolder());
+    }
+
+    /**
+     * Projection for reading {@code component} alone. Lets a component whose promoted keys are fully in their columns
+     * skip the map, even if older components can't.
+     */
+    public IColumnProjectionInfo createProjectionInfo(ILSMComponent component) throws HyracksDataException {
+        return createProjectionInfo(List.of(component));
+    }
+
+    private IColumnProjectionInfo createProjectionInfo(List<ILSMComponent> readComponents) throws HyracksDataException {
         List<ILSMComponent> operationalComponents = getComponentHolder();
         IComponentMetadata componentMetadata = null;
         for (int i = 0; i < operationalComponents.size() && componentMetadata == null; i++) {
@@ -68,7 +80,7 @@ public class LSMColumnBTreeOpContext extends LSMBTreeOpContext {
         }
         if (componentMetadata != null) {
             IValueReference columnMetadata = ColumnUtil.getColumnMetadataCopy(componentMetadata);
-            return projector.createProjectionInfo(columnMetadata);
+            return projector.createProjectionInfo(columnMetadata, readComponents);
         }
         //In-memory components only
         return null;
