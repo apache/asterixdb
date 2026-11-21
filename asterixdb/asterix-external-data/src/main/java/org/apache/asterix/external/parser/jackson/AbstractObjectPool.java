@@ -20,6 +20,7 @@ package org.apache.asterix.external.parser.jackson;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.function.ToLongFunction;
 
 import org.apache.asterix.om.util.container.IObjectFactory;
 
@@ -31,11 +32,20 @@ public abstract class AbstractObjectPool<E, T, Q> implements IObjectPool<E> {
     private final IObjectFactory<E, T> objectFactory;
     private final Deque<Q> recycledObjects;
     private final T param;
+    private final ToLongFunction<E> sizer;
+    // kept by the owning thread alone, so that borrowing and recycling cost no synchronization
+    private long pooledBytes;
+    private volatile long publishedBytes;
 
-    protected AbstractObjectPool(IObjectFactory<E, T> objectFactory, T param) {
+    /**
+     * @param sizer
+     *            measures a pooled object in bytes, or {@code null} to leave the pool unmeasured
+     */
+    protected AbstractObjectPool(IObjectFactory<E, T> objectFactory, T param, ToLongFunction<E> sizer) {
         this.objectFactory = objectFactory;
         recycledObjects = new ArrayDeque<>();
         this.param = param;
+        this.sizer = sizer;
     }
 
     public E getInstance() {
@@ -48,14 +58,52 @@ public abstract class AbstractObjectPool<E, T, Q> implements IObjectPool<E> {
 
     public void recycle(E object) {
         if (object != null) {
+            int size = sizeOf(object);
+            pooledBytes += size;
             // LIFO so each nesting level reuses its own instance; FIFO grows every instance to the outermost value
-            recycledObjects.push(wrap(object));
+            recycledObjects.push(wrap(object, size));
         }
     }
 
+    @Override
+    public void publishPooledBytes() {
+        publishedBytes = pooledBytes;
+    }
+
+    @Override
+    public long getPooledBytes() {
+        return publishedBytes;
+    }
+
+    protected final boolean isMeasured() {
+        return sizer != null;
+    }
+
+    /**
+     * @return the size of {@code element} in bytes, capped at {@link Integer#MAX_VALUE}
+     */
+    protected final int sizeOf(E element) {
+        return sizer == null ? 0 : (int) Math.min(sizer.applyAsLong(element), Integer.MAX_VALUE);
+    }
+
+    /**
+     * Removes {@code size} bytes from the pool's total, for an object that was borrowed.
+     */
+    protected final void borrowed(int size) {
+        pooledBytes -= size;
+    }
+
+    Iterable<Q> pooledEntries() {
+        return recycledObjects;
+    }
+
+    /**
+     * @return the object held by {@code element}, or {@code null}; the object has left the pool and must be reported
+     *         as {@link #borrowed(int) borrowed}
+     */
     protected abstract E unwrap(Q element);
 
-    protected abstract Q wrap(E element);
+    protected abstract Q wrap(E element, int size);
 
     @Override
     public String toString() {
