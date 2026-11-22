@@ -76,8 +76,7 @@
     <jackson.version>2.23.0</jackson.version>
     <jackson-annotations.version>2.23</jackson-annotations.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
-    <!-- 4.2 is a new netty generation; stay on the 4.1.x line (patch updates only) -->
-    <netty.version>4.1.141.Final</netty.version>
+    <netty.version>4.2.21.Final</netty.version>
     <netty.tcnative.version>2.0.86.Final</netty.tcnative.version>
     <asm.version>9.11.1</asm.version>
     <!-- keep in sync with asterixdb/pom.xml -->
@@ -89,7 +88,7 @@
     <google-cloud-core.version>2.81.0</google-cloud-core.version>
 
     <!-- keep in sync with asterixdb/pom.xml -->
-    <azurecore.version>1.60.0</azurecore.version>
+    <azurecore.version>1.61.0</azurecore.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
@@ -175,6 +174,49 @@
           <exclusion>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-stomp</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http3</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-classes-quic</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-native-quic</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-classes-io_uring</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-io_uring</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-marshalling</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-protobuf</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec</artifactId>
+        <version>${netty.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-marshalling</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-protobuf</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

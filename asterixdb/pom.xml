@@ -109,12 +109,12 @@
     <!-- @derived-from: software.amazon.awssdk:aws-sdk-java-pom:${awsjavasdk.version}#awscrt.version -->
     <awsjavasdk.crt.version>0.50.0</awsjavasdk.crt.version>
 
-    <azureblobjavasdk.version>12.35.2</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.34.2</azurecommonjavasdk.version>
-    <azureidentity.version>1.18.7</azureidentity.version>
-    <azuredatalakejavasdk.version>12.28.2</azuredatalakejavasdk.version>
-    <azurecore.version>1.60.0</azurecore.version>
-    <azurecorehttpnetty.version>1.16.8</azurecorehttpnetty.version>
+    <azureblobjavasdk.version>12.37.2</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.36.2</azurecommonjavasdk.version>
+    <azureidentity.version>1.19.0</azureidentity.version>
+    <azuredatalakejavasdk.version>12.30.2</azuredatalakejavasdk.version>
+    <azurecore.version>1.61.0</azurecore.version>
+    <azurecorehttpnetty.version>1.17.0</azurecorehttpnetty.version>
 
     <!-- keep in sync with hyracks-fullstack/pom.xml -->
     <google-cloud-storage.version>2.79.0</google-cloud-storage.version>
@@ -1708,6 +1708,10 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-resolver-dns-native-macos</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-native-quic</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <!-- reactor-netty is pulled in transitively by azure-core-http-netty above at compile scope.
@@ -1718,19 +1722,19 @@
       <dependency>
         <groupId>io.projectreactor.netty</groupId>
         <artifactId>reactor-netty</artifactId>
-        <version>1.2.18</version>
+        <version>1.3.7</version>
       </dependency>
       <!-- @pinned-with: ${azurecorehttpnetty.version} -->
       <dependency>
         <groupId>io.projectreactor.netty</groupId>
         <artifactId>reactor-netty-core</artifactId>
-        <version>1.2.18</version>
+        <version>1.3.7</version>
       </dependency>
       <!-- @pinned-with: ${azurecorehttpnetty.version} -->
       <dependency>
         <groupId>io.projectreactor.netty</groupId>
         <artifactId>reactor-netty-http</artifactId>
-        <version>1.2.18</version>
+        <version>1.3.7</version>
       </dependency>
       <!-- Azure Blob Storage end -->
       <!-- Google Cloud Storage start -->
