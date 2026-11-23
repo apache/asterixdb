@@ -119,6 +119,14 @@ if ps -ef | grep 'java.*org\.apache\.hyracks\.control\.[cn]c\.\([CN]CDriver\|ser
 fi
 
 rm /tmp/$$_pids
+
+CREDDIR="$CLUSTERDIR/conf"
+if [ ! -f "$CREDDIR/passwd" ]; then
+  echo "INFO: Generating default credentials..."
+  GENERATED_PASSWORD=$("$INSTALLDIR/bin/${HELPER_COMMAND}" generate_default_credential -credentialpath "$CREDDIR")
+  echo "INFO: Default admin password: $GENERATED_PASSWORD"
+fi
+
 (
   echo "--------------------------"
   date

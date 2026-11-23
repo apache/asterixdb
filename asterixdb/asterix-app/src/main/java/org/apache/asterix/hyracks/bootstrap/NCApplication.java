@@ -28,9 +28,7 @@ import static org.apache.asterix.common.utils.Servlets.UDF_RECOVERY;
 import static org.apache.hyracks.api.util.JavaSerializationUtils.registerReplacement;
 import static org.apache.hyracks.control.common.controllers.ControllerConfig.Option.CLOUD_DEPLOYMENT;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
@@ -39,13 +37,14 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExtension;
-import org.apache.asterix.api.http.server.BasicAuthServlet;
+import org.apache.asterix.api.http.server.BasicAuthServletFactory;
+import org.apache.asterix.api.http.server.CredentialFileUtil;
+import org.apache.asterix.api.http.server.IDelegatingServletFactory;
 import org.apache.asterix.api.http.server.NCQueryResultApiServlet;
 import org.apache.asterix.api.http.server.NCQueryServiceServlet;
 import org.apache.asterix.api.http.server.NCQueryStatusApiServlet;
@@ -99,9 +98,6 @@ import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
 import org.apache.asterix.utils.RedactionUtil;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -116,6 +112,8 @@ import org.apache.hyracks.api.util.JavaSerializationUtils.SerializableExceptionP
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.http.server.BasicAuthServlet;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.HttpServerConfig;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
@@ -280,36 +278,62 @@ public class NCApplication extends BaseNCApplication {
         LogRedactionUtil.setRedactor(RedactionUtil.LOG_REDACTOR);
     }
 
+    private void addWrappedServlet(IServlet delegate, IDelegatingServletFactory fact) {
+        if (fact != null && !ncExtensionManager.hasExtensions()) {
+            apiServer.addServlet(fact.wrap(delegate));
+        } else {
+            apiServer.addServlet(delegate);
+        }
+    }
+
     protected void configureServers() throws Exception {
         final ExternalProperties externalProperties = getApplicationContext().getExternalProperties();
         final HttpServerConfig config =
                 HttpServerConfigBuilder.custom().setMaxRequestSize(externalProperties.getMaxWebRequestSize()).build();
         apiServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getNcApiPort(),
                 config);
+        boolean authEnabled = externalProperties.isApiAuthenticationEnabled();
+        Map<String, String> storedCredentials =
+                CredentialFileUtil.load(((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration()
+                        .getCredentialFilePath(), authEnabled);
+        apiServer.setAttribute(ServletConstants.CREDENTIAL_MAP, storedCredentials);
+        // the system credentials are needed even with authentication off: the UDF endpoints, which other nodes
+        // call with them, stay authenticated regardless
+        Pair<String, Map<String, String>> sysCredential = BasicAuthServlet.generateSystemCredential(storedCredentials);
+        apiServer.setAttribute(SYS_AUTH_HEADER, sysCredential.getLeft());
+        IDelegatingServletFactory udfAuthFactory =
+                new BasicAuthServletFactory(storedCredentials, sysCredential.getRight());
+        IDelegatingServletFactory authFactory = authEnabled ? udfAuthFactory : null;
         apiServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ncServiceCtx);
         apiServer.setAttribute(HYRACKS_CONNECTION_ATTR, getApplicationContext().getHcc());
-        apiServer.addServlet(new StorageApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.STORAGE));
-        apiServer.addServlet(
-                new NetDiagnosticsApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.NET_DIAGNOSTICS));
+        addWrappedServlet(new StorageApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.STORAGE),
+                authFactory);
+        addWrappedServlet(
+                new NetDiagnosticsApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.NET_DIAGNOSTICS),
+                authFactory);
         final ILangCompilationProvider sqlppCompilationProvider =
                 ncExtensionManager.getCompilationProvider(ILangExtension.Language.SQLPP);
-        apiServer.addServlet(new NCQueryServiceServlet(apiServer.ctx(), new String[] { QUERY_SERVICE },
-                getApplicationContext(), sqlppCompilationProvider.getLanguage(), sqlppCompilationProvider, null));
-        apiServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
-                parseCredentialMap(((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration()
-                        .getCredentialFilePath()));
+        addWrappedServlet(new NCQueryServiceServlet(apiServer.ctx(), new String[] { QUERY_SERVICE },
+                getApplicationContext(), sqlppCompilationProvider.getLanguage(), sqlppCompilationProvider, null),
+                authFactory);
+        createUDFServlet(externalProperties, udfAuthFactory, config);
+        addWrappedServlet(new NCQueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS),
+                authFactory);
+        addWrappedServlet(new NCQueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT),
+                authFactory);
+        webManager.add(apiServer);
+
+    }
+
+    private void createUDFServlet(ExternalProperties externalProperties, IDelegatingServletFactory authFactory,
+            HttpServerConfig config) throws IOException {
         if (!getApplicationContext().isCloudDeployment()) {
-            Pair<Map<String, String>, Map<String, String>> auth =
-                    BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
-            apiServer.addServlet((new BasicAuthServlet(apiServer.ctx(),
-                    new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
-                            apiServer.getScheme(), externalProperties.getNcApiPort()),
-                    auth.getLeft(), auth.getRight())));
-            apiServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
+            addWrappedServlet(new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
+                    apiServer.getScheme(), externalProperties.getNcApiPort()), authFactory);
+            addWrappedServlet(
                     new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY }, getApplicationContext()),
-                    auth.getLeft(), auth.getRight()));
+                    authFactory);
         } else {
-            //UDF deployment server
             IApplicationConfig appCfg = getApplicationContext().getServiceContext().getAppConfig();
             Path udfSockPath = Path.of(appCfg.getString(NCConfig.Option.UDF_API_DS_PATH)).toAbsolutePath();
             if (!Files.exists(udfSockPath.getParent())) {
@@ -318,18 +342,11 @@ public class NCApplication extends BaseNCApplication {
                 Files.createDirectories(udfSockPath.getParent(), permissions);
             }
             udfServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), udfSockPath, config);
-            Pair<Map<String, String>, Map<String, String>> auth =
-                    BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
-            udfServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
-                    new NCUdfDSApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext()),
-                    auth.getLeft(), auth.getRight()));
+            udfServer.addServlet(authFactory
+                    .wrap(new NCUdfDSApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext())));
             webManager.add(udfServer);
 
         }
-        apiServer.addServlet(new NCQueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
-        apiServer.addServlet(new NCQueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
-        webManager.add(apiServer);
-
     }
 
     protected List<AsterixExtension> getExtensions() throws Exception {
@@ -460,25 +477,5 @@ public class NCApplication extends BaseNCApplication {
 
     protected void configurePersistedResourceRegistry() {
         ncServiceCtx.setPersistedResourceRegistry(new PersistedResourceRegistry());
-    }
-
-    private Map<String, String> parseCredentialMap(String credPath) {
-        File credentialFile = new File(credPath);
-        Map<String, String> storedCredentials = new HashMap<>();
-        if (credentialFile.exists()) {
-            try (CSVParser p =
-                    CSVParser.parse(credentialFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withDelimiter(':'))) {
-                List<CSVRecord> recs = p.getRecords();
-                for (CSVRecord r : recs) {
-                    if (r.size() != 2) {
-                        throw new IOException("Passwd file must have exactly two fields.");
-                    }
-                    storedCredentials.put(r.get(0), r.get(1));
-                }
-            } catch (IOException e) {
-                LOGGER.error("Malformed credential file", e);
-            }
-        }
-        return storedCredentials;
     }
 }

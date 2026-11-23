@@ -26,6 +26,7 @@
 * [Building the Image](#build)
 * [Pulling the Image](#pull)
 * [Running AsterixDB](#run)
+* [Authentication](#auth)
 * [Using Detached Mode](#detached)
 * [Stopping the Container](#stop)
 * [Using a Custom Config](#config)
@@ -81,6 +82,39 @@ podman run \
 ```
 
 This will start AsterixDB with a default configuration exposing the Web UI, REST API, Node Controller etc. The Web interface will be available at: [http://localhost:19006](http://localhost:19006)
+
+# <a id="auth">Authentication</a>
+
+The APIs and the Web interface require a login. On its first start, the container generates a password for the user `admin` and prints it once in its log:
+
+```bash
+podman logs <container-name-or-id> | grep 'Generated password'
+curl -u admin:<password> http://localhost:19002/query/service --data-urlencode 'statement=SELECT VALUE 1;'
+```
+
+These environment variables change that:
+
+| Variable | Effect |
+|---|---|
+| `ASTERIX_PASSWORD` | The password to log in with, instead of a generated one |
+| `ASTERIX_PASSWORD_FILE` | A file to read the password from, such as a mounted [Podman secret](https://docs.podman.io/en/latest/markdown/podman-secret-create.1.html). It cannot be combined with `ASTERIX_PASSWORD` |
+| `ASTERIX_USER` | The user to log in as, instead of `admin`. It needs one of the password variables |
+| `ASTERIX_AUTH` | Set to `none` to turn authentication off for throwaway containers: anyone who can reach the API ports can then run any statement |
+
+```bash
+podman secret create asterix-password ./password.txt
+podman run \
+  --secret asterix-password \
+  -e ASTERIX_PASSWORD_FILE=/run/secrets/asterix-password \
+  -p 19002:19002 \
+  apache/asterixdb
+```
+
+Neither the user nor the password can contain `:`.
+
+The credentials are stored in `/var/lib/asterix/passwd`, alongside the data, so mount a volume on `/var/lib/asterix` to keep both when the container is replaced. To change the password, start the container with one of the password variables: unlike a generated password, these replace the stored credentials on every start.
+
+These variables only apply to the default configuration. A [custom config](#config) must provide its own credential file through `credential.file`, or set `api.authentication.enabled=false`.
 
 # <a id="detached">Using Detached Mode</a>
 

@@ -53,6 +53,7 @@ public class ActiveRequestsServlet extends AbstractRequestsServlet {
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) throws IOException {
+        setAccessControlHeaders(request, response);
         String uuid = request.getParameter(REQUEST_UUID_PARAM_NAME);
         String clientCtxId = request.getParameter(Parameter.CLIENT_ID.str());
         LOGGER.info("received cancel request, uuid={}, clientContextId={}", uuid, clientCtxId);

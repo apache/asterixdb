@@ -298,12 +298,7 @@ public final class OptimizedScalarQuantizationCodec {
                         + " bits, but got a " + quantizedBytes.getClass().getName());
             }
             byte[] bytes = (byte[]) quantizedBytes;
-            if (bytes.length != dims) {
-                throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, bytes.length);
-            }
-            for (int i = 0; i < dims; i++) {
-                result[i] = VTreeScalarQuantization.decodeDimension(bytes[i] & 0xFF, params.alpha, params.minQuantile);
-            }
+            decodeBytes(bytes, 0, bytes.length, params, result);
         } else if (bits <= 16) {
             // short[] - treat as unsigned
             if (!(quantizedBytes instanceof short[])) {
@@ -338,5 +333,47 @@ public final class OptimizedScalarQuantizationCodec {
         }
 
         return result;
+    }
+
+    /**
+     * Allocation-free counterpart of {@link #dequantizeToDoubleArray} for byte-sized codes (bits &lt;= 8): decodes
+     * {@code data[offset, offset + length)} into {@code dst}, so a scan can read codes in place from a page and
+     * reuse one destination array for every candidate.
+     *
+     * @param data   buffer holding the code, with any length prefix already skipped
+     * @param offset start of the code in {@code data}
+     * @param length code length in bytes; must equal {@code params.vectorDimensions}
+     * @param params quantization parameters; {@code params.bits} must be at most 8
+     * @param dst    receives the dequantized values; must hold at least {@code params.vectorDimensions} elements
+     * @throws HyracksDataException if an input is null, the bit width is not byte-sized, or a length does not match
+     */
+    public static void dequantizeInto(byte[] data, int offset, int length, Params params, double[] dst)
+            throws HyracksDataException {
+        if (data == null || dst == null) {
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "A null quantized vector reached the dequantizer");
+        }
+        if (params == null) {
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "Null quantization params reached the dequantizer");
+        }
+        if (params.bits > 8) {
+            throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE,
+                    "Expected a byte-sized quantization bit width, but the index uses " + params.bits + " bits");
+        }
+        decodeBytes(data, offset, length, params, dst);
+    }
+
+    /** The one byte-code decode loop, shared so the allocating and in-place paths cannot drift apart. */
+    private static void decodeBytes(byte[] data, int offset, int length, Params params, double[] dst)
+            throws HyracksDataException {
+        final int dims = params.vectorDimensions;
+        if (length != dims) {
+            throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, length);
+        }
+        if (dst.length < dims) {
+            throw new RuntimeDataException(ErrorCode.VECTOR_DIMENSION_MISMATCH, dims, dst.length);
+        }
+        for (int i = 0; i < dims; i++) {
+            dst[i] = VTreeScalarQuantization.decodeDimension(data[offset + i] & 0xFF, params.alpha, params.minQuantile);
+        }
     }
 }

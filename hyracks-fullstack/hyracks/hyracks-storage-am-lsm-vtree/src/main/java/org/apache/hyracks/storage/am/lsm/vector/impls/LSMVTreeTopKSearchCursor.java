@@ -124,6 +124,9 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
     // Decodes stored SQ codes. The heap scores those against the original query, so the
     // quantized query is not kept here.
     private IVTreeQuantizer quantizer;
+    // One decode target reused for every candidate; a fresh double[dim] per candidate was the largest
+    // per-candidate allocation of the scan.
+    private double[] dequantizedScratch;
 
     // Data-tuple layout authority. This cursor is quantized-only (see class javadoc), so the layout
     // is the quantized one.
@@ -272,6 +275,9 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
                 throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
                         "LSMVTreeTopKSearchCursor requires a quantizer; none was supplied through the index access "
                                 + "parameters");
+            }
+            if (dequantizedScratch == null || dequantizedScratch.length != queryVector.length) {
+                dequantizedScratch = new double[queryVector.length];
             }
 
             // Initialize strategy with first component's tree (candidateLimit so we collect 2*K for reranking)
@@ -653,9 +659,11 @@ public class LSMVTreeTopKSearchCursor extends EnforcedIndexCursor implements IVe
      * second rounding reordered neighbors. The stored code is still decoded; the query is not.
      */
     private double computeApproximateDistance(ITupleReference tuple) throws HyracksDataException {
-        byte[] qBytes = dataAccessor.getQuantizedEmbedding(tuple);
-        double[] dequantized = quantizer.dequantize(qBytes);
-        return distanceFunction.apply(queryVector, dequantized);
+        // Read the code in place: copying it out of the page cost a byte[dim] per candidate.
+        quantizer.dequantize(tuple.getFieldData(dataAccessor.quantizedEmbeddingField()),
+                dataAccessor.getQuantizedEmbeddingStart(tuple), dataAccessor.getQuantizedEmbeddingLength(tuple),
+                dequantizedScratch);
+        return distanceFunction.apply(queryVector, dequantizedScratch);
     }
 
     // ==================== IIndexCursor Interface (EnforcedIndexCursor template methods) ====================

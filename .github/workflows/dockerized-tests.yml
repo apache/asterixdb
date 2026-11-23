@@ -40,3 +40,21 @@ jobs:
         **/*.log
         **/*.log.gz
         asterixdb/asterix-app/target/rttest/results/feeds/change-feed-with-filter-on-meta/*.adm
+
+  # Follows dockerized-tests rather than running beside it, as ci is already at the ASF limit of 15 concurrent jobs.
+  helm-chart:
+    needs: dockerized-tests
+    if: ${{ !cancelled() }}
+    uses: ./.github/workflows/maven-job.yml
+    with:
+      build: >-
+        mvn -pl asterixdb/asterix-podman -am clean install -DskipTests -Dskip.npm=true
+        -Dpython.path=/usr/bin/python3
+      test: mvn -pl asterixdb/asterix-podman verify -Phelm.tests
+      timeout-minutes: 60
+      artifact-name: logs-helm-chart
+      artifacts: |
+        target/threaddumps/**
+        **/*.log
+        **/*.log.gz
+        asterixdb/asterix-podman/target/failsafe-reports/**

@@ -38,6 +38,7 @@ public class Servlets {
     public static final String NET_DIAGNOSTICS = "/admin/net/*";
     public static final String UDF = "/admin/udf/*";
     public static final String UDF_RECOVERY = "/admin/libraryrecovery/*";
+    public static final String PING = "/admin/ping";
 
     private Servlets() {
     }

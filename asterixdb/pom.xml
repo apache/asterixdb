@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.asterix</groupId>
   <artifactId>apache-asterixdb</artifactId>
-  <version>0.9.10-SNAPSHOT</version>
+  <version>1.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>${implementation.url}</url>
 
@@ -91,8 +91,8 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <!-- @locked: keep in sync across all testcontainers modules; 2.x not yet available for kafka/postgresql/azure -->
     <testcontainers.version>1.21.4</testcontainers.version>
-    <algebricks.version>0.3.10-SNAPSHOT</algebricks.version>
-    <hyracks.version>0.3.10-SNAPSHOT</hyracks.version>
+    <algebricks.version>1.1.0-SNAPSHOT</algebricks.version>
+    <hyracks.version>1.1.0-SNAPSHOT</hyracks.version>
     <!-- When moving past 3.5.0, check whether the release includes HADOOP-19906 (fixed in 3.4.4,
          3.5.1 and 3.6.0), which restores Subject propagation to child threads on JDK 22+. The
          single-threaded input listing forced in HDFSUtils#configureHadoopAuthentication is a
@@ -1018,6 +1018,7 @@
     <module>asterix-maven-plugins</module>
     <module>asterix-server</module>
     <module>asterix-podman</module>
+    <module>asterix-helm</module>
     <module>asterix-doc</module>
     <module>asterix-fuzzyjoin</module>
     <module>asterix-replication</module>
@@ -1774,6 +1775,11 @@
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>k3s</artifactId>
         <version>${testcontainers.version}</version>
       </dependency>
       <dependency>

@@ -93,8 +93,8 @@ public class NodeControllerRemoteProxy implements INodeController {
     }
 
     @Override
-    public void deployBinary(DeploymentId deploymentId, List<URL> binaryURLs) throws Exception {
-        DeployBinaryFunction rpaf = new DeployBinaryFunction(deploymentId, binaryURLs, ccId);
+    public void deployBinary(DeploymentId deploymentId, List<URL> binaryURLs, String authHeader) throws Exception {
+        DeployBinaryFunction rpaf = new DeployBinaryFunction(deploymentId, binaryURLs, authHeader, ccId);
         ipcHandle.send(-1, rpaf, null);
     }
 

@@ -20,6 +20,7 @@ package org.apache.hyracks.tests.integration;
 
 import static org.apache.hyracks.util.TestUtil.uri;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -34,6 +35,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -55,6 +57,22 @@ public class ApplicationDeploymentAPIIntegrationTest extends AbstractIntegration
     public void testApplicationDeploymentLg() throws Exception {
         final int dataSize = 50 * 1024 * 1024;
         deployApplicationFile(dataSize, "large");
+    }
+
+    @Test
+    public void testApplicationDeploymentRejectsPathsOutsideDeployment() throws Exception {
+        File root = cc.getServerContext().getBaseDir();
+        // an escape needs the deployment root to exist, as it does after any earlier deployment
+        Assert.assertTrue(new File(root, "applications").isDirectory() || new File(root, "applications").mkdirs());
+        HttpClient client = HttpClients.createMinimal();
+        for (String path : new String[] { "/applications/..&escaped", "/applications/testApp&.." }) {
+            HttpPut put = new HttpPut(uri(path));
+            put.setEntity(new ByteArrayEntity(new byte[] { 1 }, ContentType.APPLICATION_OCTET_STREAM));
+            HttpResponse response = client.execute(put);
+            EntityUtils.consume(response.getEntity());
+            Assert.assertEquals(path, 400, response.getStatusLine().getStatusCode());
+        }
+        Assert.assertFalse(new File(root, "escaped").exists());
     }
 
     protected void deployApplicationFile(int dataSize, String fileName) throws URISyntaxException, IOException {

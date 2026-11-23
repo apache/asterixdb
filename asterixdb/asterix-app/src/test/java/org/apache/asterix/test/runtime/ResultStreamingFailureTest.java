@@ -26,9 +26,18 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIUtils;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -70,12 +79,18 @@ public class ResultStreamingFailureTest {
     }
 
     private void queryAndDropConnection() throws IOException {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();) {
+        CredentialsProvider cp = new BasicCredentialsProvider();
+        cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("admin", "admin"));
+        try (CloseableHttpClient httpClient = HttpClients.custom().setDefaultCredentialsProvider(cp).build();) {
             final List<NameValuePair> params = new ArrayList<>();
             params.add(new BasicNameValuePair("statement", "select * from range(1, 10000000) r;"));
             HttpPost request = new HttpPost("http://localhost:19004/query/service");
             request.setEntity(new UrlEncodedFormEntity(params, StandardCharsets.UTF_8));
-            CloseableHttpResponse response = httpClient.execute(request);
+            HttpClientContext hcCtx = HttpClientContext.create();
+            AuthCache ac = new BasicAuthCache();
+            ac.put(URIUtils.extractHost(request.getURI()), new BasicScheme());
+            hcCtx.setAuthCache(ac);
+            CloseableHttpResponse response = httpClient.execute(request, hcCtx);
             Assert.assertEquals(200, response.getStatusLine().getStatusCode());
             // close connection without streaming the result
         }

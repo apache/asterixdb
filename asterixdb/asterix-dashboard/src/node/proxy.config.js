@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 const PROXY_CONFIG = {
-    "/query-service/*": {
+    "/query-service": {
         "target": "http://localhost:19002",
         "secure": false,
         logLevel: "debug",

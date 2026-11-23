@@ -230,12 +230,13 @@ public class ClusterControllerService implements IControllerService {
                         new JavaSerializationBasedPayloadSerializerDeserializer(), executor);
         clusterIPC.start();
         clientIPC.start();
-        startWebServers();
         info = new ClusterControllerInfo(ccId, ccConfig.getClientPublicAddress(), ccConfig.getClientPublicPort(),
                 ccConfig.getConsolePublicPort());
         timer.schedule(sweeper, 0, ccConfig.getDeadNodeSweepThreshold());
         jobLog.open();
         startApplication();
+        // after the application, which decides whether the console requires authentication
+        startWebServers();
 
         resultDirectoryService.init(executor, application.getJobResultCallback());
         workQueue.start();
@@ -245,7 +246,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     protected void startWebServers() throws Exception {
-        webServer = new WebServer(this, ccConfig.getConsoleListenPort());
+        webServer = new WebServer(this, ccConfig.getConsoleListenPort(), application.getConsoleCredentials());
         webServer.start();
     }
 
@@ -349,7 +350,13 @@ public class ClusterControllerService implements IControllerService {
     }
 
     protected void stopWebServers() throws Exception {
-        webServer.stop();
+        if (webServer != null) {
+            webServer.stop();
+        }
+    }
+
+    public WebServer getWebServer() {
+        return webServer;
     }
 
     private void stopApplication() throws Exception {

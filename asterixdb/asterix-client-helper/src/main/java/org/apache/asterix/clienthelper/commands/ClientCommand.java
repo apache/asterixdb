@@ -35,7 +35,10 @@ public abstract class ClientCommand {
         SLEEP("Sleep for specified -timeout seconds (-timeout must be set and greater than zero)"),
         ADD_CREDENTIAL(
                 "Generate passwd file for API endpoints that require authentication. "
-                        + "-username and -password must be specified.");
+                        + "-username and -password must be specified."),
+        GENERATE_DEFAULT_CREDENTIAL(
+                "Generate a passwd file with a random default password. "
+                        + "The generated password is printed to stdout.");
 
         private final String usage;
         private static final Map<String, Command> nameMap = new HashMap<>();

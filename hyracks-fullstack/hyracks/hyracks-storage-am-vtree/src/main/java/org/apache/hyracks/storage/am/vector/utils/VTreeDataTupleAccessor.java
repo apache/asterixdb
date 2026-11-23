@@ -165,13 +165,32 @@ public final class VTreeDataTupleAccessor {
      * length prefix stripped. Only valid on a quantized layout.
      */
     public byte[] getQuantizedEmbedding(ITupleReference tuple) {
+        int contentLength = getQuantizedEmbeddingLength(tuple);
+        byte[] content = new byte[contentLength];
+        System.arraycopy(tuple.getFieldData(quantizedEmbeddingField()), getQuantizedEmbeddingStart(tuple), content, 0,
+                contentLength);
+        return content;
+    }
+
+    /**
+     * Start, within {@code tuple.getFieldData(quantizedEmbeddingField())}, of the quantized embedding's content
+     * bytes (length prefix skipped). Lets a scan read the code in place rather than copy it per candidate with
+     * {@link #getQuantizedEmbedding}. Only valid on a quantized layout.
+     */
+    public int getQuantizedEmbeddingStart(ITupleReference tuple) {
         int f = quantizedEmbeddingField();
         byte[] data = tuple.getFieldData(f);
         int offset = tuple.getFieldStart(f);
         int contentLength = ByteArrayPointable.getContentLength(data, offset);
-        int prefixSize = ByteArrayPointable.getNumberBytesToStoreMeta(contentLength);
-        byte[] content = new byte[contentLength];
-        System.arraycopy(data, offset + prefixSize, content, 0, contentLength);
-        return content;
+        return offset + ByteArrayPointable.getNumberBytesToStoreMeta(contentLength);
+    }
+
+    /**
+     * Length in bytes of the quantized embedding's content (length prefix excluded). Only valid on a quantized
+     * layout.
+     */
+    public int getQuantizedEmbeddingLength(ITupleReference tuple) {
+        int f = quantizedEmbeddingField();
+        return ByteArrayPointable.getContentLength(tuple.getFieldData(f), tuple.getFieldStart(f));
     }
 }

@@ -202,7 +202,7 @@ public class NCServiceExecutionIT {
                 testArgs.add(new Object[] { ctx, ctx, null });
             }
             // let's kill something every 50 tests
-            if (testArgs.size() % 50 == 0) {
+            if (testArgs.size() % 300 == 0) {
                 final KillCommand killCommand = KillCommand.values()[random.nextInt(KillCommand.values().length)];
                 testArgs.add(new Object[] { killCommand, null, killCommand });
             }

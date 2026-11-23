@@ -21,6 +21,7 @@ package org.apache.asterix.test.server;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -114,8 +115,21 @@ public class SampleLocalClusterIT {
         Process process =
                 new ProcessBuilder(joinPath(localSamplesDir, "bin/stop-sample-cluster.sh"), "-f").inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
+        writeTestPasswdFile();
         process = new ProcessBuilder(joinPath(localSamplesDir, "bin/start-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
+    }
+
+    private static void writeTestPasswdFile() throws IOException {
+        File passwdFile = new File(joinPath(localSamplesDir, "conf", "passwd"));
+        try (FileWriter fw = new FileWriter(passwdFile, false)) {
+            // admin:admin (bcrypt hash of "admin")
+            fw.write("admin:$2a$12$JxgDzf/uOn1NS2Y3exhrDOf7JY/eUHQH7HeH90s5Ye2gALoO0FsQy\n");
+        }
+        File adminPasswordFile = new File(joinPath(localSamplesDir, "conf", ".admin_password"));
+        try (FileWriter fw = new FileWriter(adminPasswordFile, false)) {
+            fw.write("admin\n");
+        }
     }
 
     @Test

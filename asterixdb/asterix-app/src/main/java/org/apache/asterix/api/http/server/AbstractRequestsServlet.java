@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.api.http.server;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentMap;
 
@@ -45,6 +46,7 @@ public abstract class AbstractRequestsServlet extends AbstractServlet {
 
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
+        setAccessControlHeaders(request, response);
         ArrayNode requestsJson = JSONUtil.createArray();
         Collection<IClientRequest> requests = getRequests();
         String redact = request.getParameter(REDACT_PARAM);
@@ -61,6 +63,24 @@ public abstract class AbstractRequestsServlet extends AbstractServlet {
         response.setStatus(HttpResponseStatus.OK);
         JSONUtil.writeNode(response.writer(), requestsJson);
         response.writer().flush();
+    }
+
+    @Override
+    protected void options(IServletRequest request, IServletResponse response) throws Exception {
+        setAccessControlHeaders(request, response);
+        response.setStatus(HttpResponseStatus.OK);
+    }
+
+    protected void setAccessControlHeaders(IServletRequest request, IServletResponse response) throws IOException {
+        if (request.getHeader("Origin") != null) {
+            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Vary", "Origin");
+        }
+        response.setHeader("Access-Control-Allow-Headers",
+                "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+        response.setHeader("Access-Control-Allow-Methods", "GET, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Max-Age", "600");
     }
 
     abstract Collection<IClientRequest> getRequests();

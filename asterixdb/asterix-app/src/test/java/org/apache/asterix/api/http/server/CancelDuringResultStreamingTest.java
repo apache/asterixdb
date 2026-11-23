@@ -30,10 +30,10 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.test.common.TestHelper;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -98,14 +98,14 @@ public class CancelDuringResultStreamingTest {
                 + URLEncoder.encode(clientContextId, StandardCharsets.UTF_8);
         OutputStream out = socket.getOutputStream();
         out.write(("POST " + org.apache.asterix.common.utils.Servlets.QUERY_SERVICE + " HTTP/1.1\r\n"
-                + "Host: localhost:" + API_PORT + "\r\n" + "Content-Type: application/x-www-form-urlencoded\r\n"
-                + "Connection: close\r\n" + "Content-Length: " + form.getBytes(StandardCharsets.UTF_8).length
-                + "\r\n\r\n" + form).getBytes(StandardCharsets.UTF_8));
+                + "Host: localhost:" + API_PORT + "\r\n" + "Authorization: " + TestHelper.ADMIN_AUTH_HEADER + "\r\n"
+                + "Content-Type: application/x-www-form-urlencoded\r\n" + "Connection: close\r\n" + "Content-Length: "
+                + form.getBytes(StandardCharsets.UTF_8).length + "\r\n\r\n" + form).getBytes(StandardCharsets.UTF_8));
         out.flush();
     }
 
     private static int cancel(String clientContextId) throws Exception {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = TestHelper.createAuthenticatedHttpClient()) {
             HttpDelete delete = new HttpDelete(
                     "http://localhost:" + API_PORT + "/admin/requests/running?client_context_id=" + clientContextId);
             try (CloseableHttpResponse response = httpClient.execute(delete)) {
