@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobKind;
@@ -98,13 +99,14 @@ public class TestJobletContext implements IHyracksJobletContext {
     }
 
     @Override
-    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
-        return fileFactory.createManagedWorkspaceFile(prefix);
+    public FileReference createManagedWorkspaceFile(String prefix, WorkspaceFileKind kind) throws HyracksDataException {
+        return fileFactory.createManagedWorkspaceFile(prefix, kind);
     }
 
     @Override
-    public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
-        return fileFactory.createUnmanagedWorkspaceFile(prefix);
+    public FileReference createUnmanagedWorkspaceFile(String prefix, WorkspaceFileKind kind)
+            throws HyracksDataException {
+        return fileFactory.createUnmanagedWorkspaceFile(prefix, kind);
     }
 
     @Override

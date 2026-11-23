@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
@@ -144,8 +145,8 @@ public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSi
 
     @Override
     public RunFileWriter getRunFileWriter() throws HyracksDataException {
-        FileReference file = ctx.getJobletContext()
-                .createManagedWorkspaceFile(ExternalGroupOperatorDescriptor.class.getSimpleName());
+        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
+                ExternalGroupOperatorDescriptor.class.getSimpleName(), WorkspaceFileKind.GROUP);
         return new RunFileWriter(file, ctx.getIoManager());
     }
 }

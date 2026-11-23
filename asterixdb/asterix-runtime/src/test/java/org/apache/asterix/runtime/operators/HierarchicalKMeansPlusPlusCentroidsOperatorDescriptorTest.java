@@ -439,8 +439,8 @@ public class HierarchicalKMeansPlusPlusCentroidsOperatorDescriptorTest {
         IHyracksJobletContext jobletContext = Mockito.mock(IHyracksJobletContext.class);
         Mockito.when(jobletContext.getJobId()).thenReturn(new JobId(0));
         Mockito.when(jobletContext.getServiceContext()).thenReturn(Mockito.mock(INCServiceContext.class));
-        Mockito.when(jobletContext.createManagedWorkspaceFile(Mockito.anyString()))
-                .thenAnswer(invocation -> ioManager.createWorkspaceFile((String) invocation.getArguments()[0]));
+        Mockito.when(jobletContext.createManagedWorkspaceFile(Mockito.anyString(), Mockito.any())).thenAnswer(
+                invocation -> ioManager.createWorkspaceFile(invocation.getArgument(0), invocation.getArgument(1)));
 
         IHyracksTaskContext ctx = Mockito.mock(IHyracksTaskContext.class);
         Mockito.when(ctx.getJobletContext()).thenReturn(jobletContext);

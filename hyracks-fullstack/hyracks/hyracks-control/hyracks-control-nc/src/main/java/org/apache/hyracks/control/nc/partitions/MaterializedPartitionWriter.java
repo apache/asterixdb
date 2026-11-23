@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.logging.log4j.LogManager;
@@ -74,7 +75,7 @@ public class MaterializedPartitionWriter implements IFrameWriter {
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         if (handle == null) {
-            fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString());
+            fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString(), WorkspaceFileKind.EXCHANGE);
             handle = ctx.getIoManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                     IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
             size = 0;

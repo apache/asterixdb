@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
@@ -69,7 +70,7 @@ public class SqlMedianAggregateFunction extends AbstractLocalMedianAggregateFunc
         readers.clear();
         if (runs.isEmpty()) {
             //TODO: no need to write memory to run file, should just read the sorted data out of the sorter
-            FileReference managedFile = taskCtx.createManagedWorkspaceFile(MEDIAN);
+            FileReference managedFile = taskCtx.createManagedWorkspaceFile(MEDIAN, WorkspaceFileKind.AGGREGATE);
             RunFileWriter runFileWriter = writeMemoryDataToRunFile(managedFile, taskCtx);
             GeneratedRunFileReader deleteOnCloseReader = runFileWriter.createDeleteOnCloseReader();
             readers.add(deleteOnCloseReader);

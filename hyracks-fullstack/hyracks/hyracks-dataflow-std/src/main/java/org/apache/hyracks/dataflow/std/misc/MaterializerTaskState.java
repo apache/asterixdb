@@ -30,6 +30,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
@@ -64,8 +65,8 @@ public class MaterializerTaskState extends AbstractStateObject {
     }
 
     public void open(IHyracksTaskContext ctx) throws HyracksDataException {
-        FileReference file =
-                ctx.getJobletContext().createManagedWorkspaceFile(MaterializerTaskState.class.getSimpleName());
+        FileReference file = ctx.getJobletContext()
+                .createManagedWorkspaceFile(MaterializerTaskState.class.getSimpleName(), WorkspaceFileKind.MATERIALIZE);
         out = new RunFileWriter(file, ctx.getIoManager());
         out.open();
     }

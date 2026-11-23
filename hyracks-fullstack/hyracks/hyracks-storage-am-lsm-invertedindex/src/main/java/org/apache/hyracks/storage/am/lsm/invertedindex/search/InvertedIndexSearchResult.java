@@ -31,6 +31,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
@@ -424,7 +425,8 @@ public class InvertedIndexSearchResult {
             return;
         }
         if (searchResultWriter == null) {
-            FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(FILE_PREFIX);
+            FileReference file =
+                    ctx.getJobletContext().createManagedWorkspaceFile(FILE_PREFIX, WorkspaceFileKind.INDEX_SEARCH);
             searchResultWriter = new RunFileWriter(file, ctx.getIoManager());
             searchResultWriter.open();
             isFileOpened = true;

@@ -31,6 +31,7 @@ import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -115,8 +116,8 @@ public class NestedLoopJoin {
         }
         this.isReversed = isReversed;
 
-        FileReference file =
-                jobletContext.createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString());
+        FileReference file = jobletContext.createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString(),
+                WorkspaceFileKind.JOIN);
         runFileWriter = new RunFileWriter(file, jobletContext.getIoManager());
         runFileWriter.open();
     }

@@ -27,6 +27,7 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
@@ -95,7 +96,8 @@ public class ExternalSortGroupByRunMerger extends AbstractExternalSortRunMerger 
 
     @Override
     protected RunFileWriter prepareIntermediateMergeRunFile() throws HyracksDataException {
-        FileReference newRun = ctx.createManagedWorkspaceFile(ExternalSortGroupByRunMerger.class.getSimpleName());
+        FileReference newRun = ctx.createManagedWorkspaceFile(ExternalSortGroupByRunMerger.class.getSimpleName(),
+                WorkspaceFileKind.GROUP);
         return new RunFileWriter(newRun, ctx.getIoManager());
     }
 

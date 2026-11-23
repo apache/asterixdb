@@ -28,8 +28,10 @@ public interface IWorkspaceFileFactory {
      * Creates an unmanaged file. Unmanaged files are not automatically deleted. The caller has to delete them.
      *
      * @param prefix a meaningful string to start the file name with.
+     * @param kind what the file will hold
      */
-    public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException;
+    public FileReference createUnmanagedWorkspaceFile(String prefix, WorkspaceFileKind kind)
+            throws HyracksDataException;
 
     /**
      * Creates a managed file. Managed files are automatically deleted at a certain point. This depends on which
@@ -38,6 +40,7 @@ public interface IWorkspaceFileFactory {
      * soon as the task is done.
      *
      * @param prefix a meaningful string to start the file name with.
+     * @param kind what the file will hold
      */
-    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException;
+    public FileReference createManagedWorkspaceFile(String prefix, WorkspaceFileKind kind) throws HyracksDataException;
 }

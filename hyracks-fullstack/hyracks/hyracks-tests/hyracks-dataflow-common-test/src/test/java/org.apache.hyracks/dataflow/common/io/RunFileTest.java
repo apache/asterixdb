@@ -28,6 +28,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -62,7 +63,7 @@ public class RunFileTest {
 
     @Before
     public void setup() throws HyracksDataException {
-        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile("RunFileTest");
+        FileReference file = ctx.getJobletContext().createManagedWorkspaceFile("RunFileTest", WorkspaceFileKind.OTHER);
         IIOManager ioManager = ctx.getIoManager();
         writer = new RunFileWriter(file, ioManager);
     }

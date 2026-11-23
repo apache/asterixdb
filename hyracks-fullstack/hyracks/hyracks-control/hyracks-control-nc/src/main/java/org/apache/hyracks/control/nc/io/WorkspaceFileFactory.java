@@ -23,6 +23,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.api.resources.IDeallocatableRegistry;
 
@@ -36,8 +37,8 @@ public final class WorkspaceFileFactory implements IWorkspaceFileFactory {
     }
 
     @Override
-    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
-        final FileReference fRef = ioManager.createWorkspaceFile(prefix);
+    public FileReference createManagedWorkspaceFile(String prefix, WorkspaceFileKind kind) throws HyracksDataException {
+        final FileReference fRef = ioManager.createWorkspaceFile(prefix, kind);
         registry.registerDeallocatable(new IDeallocatable() {
             @Override
             public void deallocate() {
@@ -49,7 +50,8 @@ public final class WorkspaceFileFactory implements IWorkspaceFileFactory {
     }
 
     @Override
-    public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
-        return ioManager.createWorkspaceFile(prefix);
+    public FileReference createUnmanagedWorkspaceFile(String prefix, WorkspaceFileKind kind)
+            throws HyracksDataException {
+        return ioManager.createWorkspaceFile(prefix, kind);
     }
 }

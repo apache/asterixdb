@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.partitions.IPartition;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.util.ExceptionUtils;
@@ -190,7 +191,8 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     private void checkOrCreateFile() throws HyracksDataException {
         if (fRef == null) {
-            fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString().replace(":", "$"));
+            fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString().replace(":", "$"),
+                    WorkspaceFileKind.EXCHANGE);
             writeHandle = ioManager.open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
                     IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         }

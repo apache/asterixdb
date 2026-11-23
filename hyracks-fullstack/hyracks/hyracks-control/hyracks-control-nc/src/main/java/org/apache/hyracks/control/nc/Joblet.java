@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -41,6 +42,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.IGlobalJobDataFactory;
 import org.apache.hyracks.api.job.IJobletEventListener;
@@ -122,6 +124,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     private final AtomicLong uniqueIds;
 
     private final IVSizeFrameFactory vSizeFrameFactory;
+
+    /**
+     * The kinds of workspace file this job has created on this node, as a mask of {@code 1 << kind.ordinal()}
+     */
+    private final AtomicInteger spilledKinds = new AtomicInteger();
 
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
             INCServiceContext serviceCtx, ActivityClusterGraph acg,
@@ -268,6 +275,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     public void close() {
+        int kinds = spilledKinds.getAndSet(0);
+        if (kinds != 0) {
+            nodeController.getIoManager().getWorkspaceFileStats().jobSpilled(kinds);
+        }
         long stillAllocated = memoryAllocation.get();
         if (stillAllocated > 0) {
             LOGGER.trace(() -> "Freeing leaked " + stillAllocated + " bytes");
@@ -344,13 +355,29 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     @Override
-    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
-        return fileFactory.createManagedWorkspaceFile(prefix);
+    public FileReference createManagedWorkspaceFile(String prefix, WorkspaceFileKind kind) throws HyracksDataException {
+        FileReference fileRef = fileFactory.createManagedWorkspaceFile(prefix, kind);
+        workspaceFileCreated(kind);
+        return fileRef;
     }
 
     @Override
-    public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
-        return fileFactory.createUnmanagedWorkspaceFile(prefix);
+    public FileReference createUnmanagedWorkspaceFile(String prefix, WorkspaceFileKind kind)
+            throws HyracksDataException {
+        FileReference fileRef = fileFactory.createUnmanagedWorkspaceFile(prefix, kind);
+        workspaceFileCreated(kind);
+        return fileRef;
+    }
+
+    /**
+     * Notes that a task of this job created a workspace file, so that the job is counted as having spilled when it
+     * ends.
+     */
+    void workspaceFileCreated(WorkspaceFileKind kind) {
+        int bit = 1 << kind.ordinal();
+        if ((spilledKinds.get() & bit) == 0) {
+            spilledKinds.getAndUpdate(kinds -> kinds | bit);
+        }
     }
 
     @Override

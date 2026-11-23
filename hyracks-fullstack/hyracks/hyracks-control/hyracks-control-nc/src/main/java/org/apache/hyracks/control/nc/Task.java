@@ -55,6 +55,7 @@ import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.job.IOperatorEnvironment;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
@@ -210,13 +211,18 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
-        return fileFactory.createUnmanagedWorkspaceFile(prefix);
+    public FileReference createUnmanagedWorkspaceFile(String prefix, WorkspaceFileKind kind)
+            throws HyracksDataException {
+        FileReference fileRef = fileFactory.createUnmanagedWorkspaceFile(prefix, kind);
+        joblet.workspaceFileCreated(kind);
+        return fileRef;
     }
 
     @Override
-    public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
-        return fileFactory.createManagedWorkspaceFile(prefix);
+    public FileReference createManagedWorkspaceFile(String prefix, WorkspaceFileKind kind) throws HyracksDataException {
+        FileReference fileRef = fileFactory.createManagedWorkspaceFile(prefix, kind);
+        joblet.workspaceFileCreated(kind);
+        return fileRef;
     }
 
     @Override

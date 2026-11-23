@@ -51,6 +51,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
@@ -712,12 +713,14 @@ public class LSMInvertedIndexTestUtils {
         }
 
         @Override
-        public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
+        public FileReference createUnmanagedWorkspaceFile(String prefix, WorkspaceFileKind kind)
+                throws HyracksDataException {
             return null;
         }
 
         @Override
-        public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
+        public FileReference createManagedWorkspaceFile(String prefix, WorkspaceFileKind kind)
+                throws HyracksDataException {
             return null;
         }
 

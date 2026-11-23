@@ -52,6 +52,7 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IoRequest.State;
@@ -80,6 +81,7 @@ public class IOManager implements IIOManager {
     private final BlockingQueue<IoRequest> freeRequests;
     protected final List<IODeviceHandle> ioDevices;
     private final List<IODeviceHandle> workspaces;
+    private final WorkspaceFileStats workspaceFileStats = new WorkspaceFileStats();
     private final IFileDeviceResolver deviceComputer;
     /*
      * Mutables
@@ -196,7 +198,9 @@ public class IOManager implements IIOManager {
         InvokeUtil.doUninterruptibly(req);
         try {
             if (req.getState() == State.OPERATION_SUCCEEDED) {
-                return req.getWrite();
+                int written = req.getWrite();
+                countWorkspaceWrite(fHandle, written);
+                return written;
             } else if (req.getState() == State.OPERATION_FAILED) {
                 throw req.getFailure();
             } else {
@@ -213,7 +217,9 @@ public class IOManager implements IIOManager {
         InvokeUtil.doUninterruptibly(req);
         try {
             if (req.getState() == State.OPERATION_SUCCEEDED) {
-                return req.getWrites();
+                long written = req.getWrites();
+                countWorkspaceWrite(fHandle, written);
+                return written;
             } else if (req.getState() == State.OPERATION_FAILED) {
                 throw req.getFailure();
             } else {
@@ -221,6 +227,13 @@ public class IOManager implements IIOManager {
             }
         } finally {
             req.recycle();
+        }
+    }
+
+    private void countWorkspaceWrite(IFileHandle fHandle, long written) {
+        WorkspaceFileKind kind = fHandle.getFileReference().getWorkspaceKind();
+        if (kind != null) {
+            workspaceFileStats.written(kind, written);
         }
     }
 
@@ -312,7 +325,12 @@ public class IOManager implements IIOManager {
         InvokeUtil.doUninterruptibly(req);
         try {
             if (req.getState() == State.OPERATION_SUCCEEDED) {
-                return req.getRead();
+                int read = req.getRead();
+                WorkspaceFileKind kind = fHandle.getFileReference().getWorkspaceKind();
+                if (kind != null) {
+                    workspaceFileStats.read(kind, read);
+                }
+                return read;
             } else if (req.getState() == State.OPERATION_FAILED) {
                 throw req.getFailure();
             } else {
@@ -395,7 +413,8 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public synchronized FileReference createWorkspaceFile(String prefix) throws HyracksDataException {
+    public synchronized FileReference createWorkspaceFile(String prefix, WorkspaceFileKind kind)
+            throws HyracksDataException {
         IODeviceHandle dev = workspaces.get(workspaceIndex);
         workspaceIndex = (workspaceIndex + 1) % workspaces.size();
         String waPath = dev.getWorkspace();
@@ -405,7 +424,38 @@ public class IOManager implements IIOManager {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-        return dev.createFileRef(waPath + File.separator + waf.getName());
+        FileReference fileRef = dev.createFileRef(waPath + File.separator + waf.getName());
+        fileRef.setWorkspaceKind(kind);
+        workspaceFileStats.fileCreated(kind);
+        return fileRef;
+    }
+
+    /**
+     * @return the cumulative counts of the workspace files this manager has created and the I/O on them. Only the
+     * synchronous reads and writes are counted, which are the ones operators use on workspace files.
+     */
+    public WorkspaceFileStats getWorkspaceFileStats() {
+        return workspaceFileStats;
+    }
+
+    /**
+     * Lists the workspace folders to find the workspace files present now and their total size. This touches every
+     * workspace file, so call it at a monitoring interval rather than per operation.
+     */
+    public WorkspaceFileStats.Usage getWorkspaceUsage() {
+        long files = 0;
+        long bytes = 0;
+        for (IODeviceHandle ioDevice : workspaces) {
+            File[] workspaceFiles = getWorkspaceFolder(ioDevice).listFiles(WORKSPACE_FILES_FILTER);
+            if (workspaceFiles != null) {
+                for (File workspaceFile : workspaceFiles) {
+                    files++;
+                    // a file deleted since it was listed reads as 0
+                    bytes += workspaceFile.length();
+                }
+            }
+        }
+        return new WorkspaceFileStats.Usage(files, bytes);
     }
 
     public File getWorkspacePath(int index) {

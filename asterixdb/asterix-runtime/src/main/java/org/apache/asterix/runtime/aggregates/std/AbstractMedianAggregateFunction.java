@@ -69,6 +69,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.comm.channels.FileNetworkInputChannel;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.net.NetworkManager;
@@ -192,7 +193,7 @@ public abstract class AbstractMedianAggregateFunction extends AbstractAggregateF
         IHyracksTaskContext taskCtx = ctx.getTaskContext();
         IHyracksJobletContext jobletCtx = taskCtx.getJobletContext();
         RunMergingFrameReader merger = createRunsMergingFrameReader();
-        FileReference managedFile = jobletCtx.createManagedWorkspaceFile(MEDIAN);
+        FileReference managedFile = jobletCtx.createManagedWorkspaceFile(MEDIAN, WorkspaceFileKind.AGGREGATE);
         RunFileWriter runFileWriter = new RunFileWriter(managedFile, taskCtx.getIoManager());
         merger.open();
         runFileWriter.open();

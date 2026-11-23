@@ -38,6 +38,7 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.partitions.JobFileState;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -123,12 +124,12 @@ public abstract class AbstractLocalMedianAggregateFunction extends AbstractMedia
         List<GeneratedRunFileReader> runs = runsGenerator.getRuns();
         FileReference managedFile;
         if (runs.isEmpty()) {
-            managedFile = jobletCtx.createManagedWorkspaceFile(MEDIAN);
+            managedFile = jobletCtx.createManagedWorkspaceFile(MEDIAN, WorkspaceFileKind.AGGREGATE);
             writeMemoryDataToRunFile(managedFile, taskCtx);
         } else if (runs.size() == 1) {
             managedFile = runs.get(0).getFile();
         } else {
-            managedFile = jobletCtx.createManagedWorkspaceFile(MEDIAN);
+            managedFile = jobletCtx.createManagedWorkspaceFile(MEDIAN, WorkspaceFileKind.AGGREGATE);
             mergeRunsToRunFile(managedFile, taskCtx, runs);
         }
         return managedFile;

@@ -197,9 +197,10 @@ public interface IIOManager extends Closeable {
      * Create a workspace file with the given prefix
      *
      * @param prefix of workspace file
+     * @param kind what the workspace file will hold
      * @return A FileReference for the created workspace file
      */
-    FileReference createWorkspaceFile(String prefix) throws HyracksDataException;
+    FileReference createWorkspaceFile(String prefix, WorkspaceFileKind kind) throws HyracksDataException;
 
     /**
      * Gets the total disk usage in bytes of this {@link IIOManager} io devices handles.

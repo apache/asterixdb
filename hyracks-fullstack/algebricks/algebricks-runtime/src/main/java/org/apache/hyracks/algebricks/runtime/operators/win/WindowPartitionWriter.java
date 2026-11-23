@@ -28,6 +28,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
@@ -103,7 +104,7 @@ final class WindowPartitionWriter {
             copyToFrame(frameBuffer, writerFrame);
         } else {
             if (fileWriter == null) {
-                FileReference file = ctx.createManagedWorkspaceFile(fileNamePrefix);
+                FileReference file = ctx.createManagedWorkspaceFile(fileNamePrefix, WorkspaceFileKind.WINDOW);
                 fileWriter = new RunFileWriter(file, ctx.getIoManager());
                 fileWriter.open();
             }

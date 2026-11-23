@@ -37,6 +37,10 @@ public class FileReference implements Serializable {
      * Used to determine if holes can exist in this file
      */
     private boolean holesAllowed;
+    /**
+     * Set when this file was created in a workspace, to say what it holds
+     */
+    private WorkspaceFileKind workspaceKind;
 
     public FileReference(IODeviceHandle dev, String path) {
         file = new File(dev.getMount(), path);
@@ -147,5 +151,20 @@ public class FileReference implements Serializable {
      */
     public void setHolesAllowed() {
         this.holesAllowed = true;
+    }
+
+    /**
+     * @return what this file holds if it was created as a workspace file, or {@code null} if it was not
+     */
+    public WorkspaceFileKind getWorkspaceKind() {
+        return workspaceKind;
+    }
+
+    /**
+     * Marks this file as a workspace file holding the given kind of data. Only the {@link IIOManager} creating the
+     * workspace file should call this.
+     */
+    public void setWorkspaceKind(WorkspaceFileKind workspaceKind) {
+        this.workspaceKind = workspaceKind;
     }
 }

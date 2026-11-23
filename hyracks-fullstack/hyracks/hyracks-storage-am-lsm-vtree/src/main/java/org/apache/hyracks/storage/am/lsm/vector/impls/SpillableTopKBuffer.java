@@ -33,6 +33,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -269,7 +270,8 @@ public class SpillableTopKBuffer {
         int spillCount = n - keepCount;
 
         // Create run file
-        FileReference spillFile = ctx.getJobletContext().createManagedWorkspaceFile(SPILL_FILE_PREFIX);
+        FileReference spillFile =
+                ctx.getJobletContext().createManagedWorkspaceFile(SPILL_FILE_PREFIX, WorkspaceFileKind.INDEX_SEARCH);
         RunFileWriter writer = new RunFileWriter(spillFile, ctx.getIoManager());
         writer.open();
 

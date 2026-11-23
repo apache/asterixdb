@@ -32,6 +32,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
+import org.apache.hyracks.api.io.WorkspaceFileKind;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.ResultSetPartitionId;
 
@@ -334,7 +335,7 @@ public class ResultState implements IStateObject {
     private void initWriteFileHandle() throws HyracksDataException {
         if (fileHandle == null) {
             String fName = FILE_PREFIX + String.valueOf(resultSetPartitionId.getPartition());
-            fileRef = fileFactory.createUnmanagedWorkspaceFile(fName);
+            fileRef = fileFactory.createUnmanagedWorkspaceFile(fName, WorkspaceFileKind.RESULT);
             fileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
                     IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
             if (referenceCount != 0) {
