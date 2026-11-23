@@ -108,4 +108,15 @@ public interface ILogManager {
      * @param lsn
      */
     void ensureMinLSN(long lsn);
+
+    /**
+     * @return the total time, in nanoseconds, that appends to the log tail have been blocked waiting for the log
+     *         flusher: for a free log buffer, or for the tail to be flushed before switching log files
+     */
+    long getAppendBlockedNanos();
+
+    /**
+     * @return the number of times an append to the log tail has been blocked waiting for the log flusher
+     */
+    long getAppendBlockedCount();
 }

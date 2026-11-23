@@ -73,6 +73,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final MutableLong flushLSN;
     private final String nodeId;
     private final long logFileSize;
+    private final AtomicLong appendBlockedNanos = new AtomicLong();
+    private final AtomicLong appendBlockedCount = new AtomicLong();
     private final int logPageSize;
     private final AtomicLong appendLSN;
     private final long maxLogRecordSize;
@@ -244,7 +246,16 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         final ILogBuffer currentPage = appendPage;
         appendPage = null;
         try {
-            appendPage = emptyQ.take();
+            appendPage = emptyQ.poll();
+            if (appendPage == null) {
+                // every log buffer is waiting to be flushed
+                long start = System.nanoTime();
+                try {
+                    appendPage = emptyQ.take();
+                } finally {
+                    appendBlocked(start);
+                }
+            }
             if (stash) {
                 stashQ.add(appendPage);
             }
@@ -281,16 +292,39 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         // Make sure to flush whatever left in the log tail.
         appendPage.setFull();
         synchronized (flushLSN) {
-            while (flushLSN.get() != appendLSN.get()) {
-                // notification will come from LogBuffer.internalFlush(.)
-                try {
-                    flushLSN.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new ACIDException(e);
+            if (flushLSN.get() == appendLSN.get()) {
+                return;
+            }
+            long start = System.nanoTime();
+            try {
+                while (flushLSN.get() != appendLSN.get()) {
+                    // notification will come from LogBuffer.internalFlush(.)
+                    try {
+                        flushLSN.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new ACIDException(e);
+                    }
                 }
+            } finally {
+                appendBlocked(start);
             }
         }
+    }
+
+    private void appendBlocked(long startNanos) {
+        appendBlockedNanos.addAndGet(System.nanoTime() - startNanos);
+        appendBlockedCount.incrementAndGet();
+    }
+
+    @Override
+    public long getAppendBlockedNanos() {
+        return appendBlockedNanos.get();
+    }
+
+    @Override
+    public long getAppendBlockedCount() {
+        return appendBlockedCount.get();
     }
 
     @Override

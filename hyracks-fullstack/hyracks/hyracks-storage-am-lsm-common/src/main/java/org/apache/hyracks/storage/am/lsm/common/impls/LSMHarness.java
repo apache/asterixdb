@@ -112,6 +112,8 @@ public class LSMHarness implements ILSMHarness {
             validateOperationEnterComponentsState(ctx);
             long start = System.nanoTime();
             boolean dumpState = false;
+            boolean writer = opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION;
+            LSMWriterBlockedStats.Reason blockedReason = null;
             synchronized (opTracker) {
                 while (true) {
                     lsmIndex.getOperationalComponents(ctx);
@@ -121,16 +123,28 @@ public class LSMHarness implements ILSMHarness {
                         return false;
                     }
                     dumpState = false;
-                    long minutes = TimeUnit.NANOSECONDS.toMinutes(System.nanoTime() - start);
+                    long now = System.nanoTime();
+                    long minutes = TimeUnit.NANOSECONDS.toMinutes(now - start);
                     if (minutes > 2) {
-                        start = System.nanoTime();
+                        start = now;
                         dumpState = true;
+                    }
+                    if (writer) {
+                        LSMWriterBlockedStats.Reason reason = getWriterBlockedReason(ctx);
+                        if (blockedReason != reason) {
+                            LSMWriterBlockedStats.blocked(reason);
+                            blockedReason = reason;
+                        }
                     }
                     try {
                         opTracker.wait(100);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw HyracksDataException.create(e);
+                    } finally {
+                        if (blockedReason != null) {
+                            LSMWriterBlockedStats.blockedFor(blockedReason, System.nanoTime() - now);
+                        }
                     }
                 }
             }
@@ -139,6 +153,23 @@ public class LSMHarness implements ILSMHarness {
                 ctx.incrementEnterExitTime(System.nanoTime() - before);
             }
         }
+    }
+
+    /**
+     * Classifies why a writer failed to enter the mutable memory component. If that component is still writable,
+     * it was refused because the memory budget is exhausted (or the component is being flushed to relieve it);
+     * otherwise the index's memory components are all full or flushing.
+     */
+    private static LSMWriterBlockedStats.Reason getWriterBlockedReason(ILSMIndexOperationContext ctx) {
+        List<ILSMComponent> components = ctx.getComponentHolder();
+        if (!components.isEmpty()) {
+            ILSMComponent mutable = components.get(0);
+            if (mutable.getType() == LSMComponentType.MEMORY
+                    && mutable.getState() == ComponentState.READABLE_WRITABLE) {
+                return LSMWriterBlockedStats.Reason.MEMORY_BUDGET;
+            }
+        }
+        return LSMWriterBlockedStats.Reason.MEMORY_COMPONENT;
     }
 
     @CriticalPath
