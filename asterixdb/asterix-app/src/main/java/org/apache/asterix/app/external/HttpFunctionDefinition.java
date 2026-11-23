@@ -99,7 +99,7 @@ public final class HttpFunctionDefinition {
                             List.of(OPTION_OAUTH_ALLOWED_SCOPES)));
     private static final Set<String> URL_OPTIONS = urlOptions();
     // the HTTP client sets these from the request itself; a definer's value would fail or redirect each call
-    private static final Set<String> RUNTIME_HEADERS = caseInsensitiveSet(HttpHeaders.HOST, HttpHeaders.CONTENT_LENGTH,
+    public static final Set<String> RUNTIME_HEADERS = caseInsensitiveSet(HttpHeaders.HOST, HttpHeaders.CONTENT_LENGTH,
             HttpHeaders.TRANSFER_ENCODING, HttpHeaders.CONNECTION, HttpHeaders.EXPECT, HttpHeaders.UPGRADE,
             HttpHeaders.TE, HttpHeaders.CONTENT_TYPE);
 
