@@ -171,7 +171,17 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             if (printStarted) {
                 printer.end();
             }
+            resultsDelivered(stats);
         }
+    }
+
+    /**
+     * Called once the results of a handle have been written, or have failed part-way, with what was written of them.
+     * Extensions override it to account for result delivery; the default does nothing.
+     *
+     * @param stats the count and size of the results written, as reported in the response metrics
+     */
+    protected void resultsDelivered(Stats stats) {
     }
 
     private ResponseMetrics buildMetrics(Stats stats, ResultMetadata metadata, long resultDeliveryElapsed) {
