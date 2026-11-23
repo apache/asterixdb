@@ -34,6 +34,8 @@ import java.util.Objects;
 public record HttpOAuthClient(String tokenUri, String clientId, String clientSecret, String scopes)
         implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     public HttpOAuthClient {
         Objects.requireNonNull(tokenUri);
         Objects.requireNonNull(clientId);
