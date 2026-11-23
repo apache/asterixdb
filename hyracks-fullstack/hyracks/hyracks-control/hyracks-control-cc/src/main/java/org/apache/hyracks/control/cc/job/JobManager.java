@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.exceptions.IError;
 import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.HyracksJobProperty;
@@ -85,6 +84,7 @@ public class JobManager implements IJobManager {
     private long dmlJobs;
     private long ingestionJobs;
     private IJobQueue jobQueue;
+    private volatile IJobAdmissionListener admissionListener = IJobAdmissionListener.NO_OP;
 
     public JobManager(CCConfig ccConfig, ClusterControllerService ccs, IJobCapacityController jobCapacityController) {
         this.ccs = ccs;
@@ -151,7 +151,9 @@ public class JobManager implements IJobManager {
                     throw new IllegalStateException("unknown submission status: " + status);
             }
             submitted = true;
-        } catch (HyracksDataException ex) {
+        } catch (HyracksException ex) {
+            // JOB_QUEUE_FULL and JOB_REQUIREMENTS_EXCEED_CAPACITY are thrown as HyracksException, not as
+            // HyracksDataException, so catching only the latter left them out of the rejected count
             handleException(ex);
             throw ex;
         } finally {
@@ -177,6 +179,7 @@ public class JobManager implements IJobManager {
         // Removes a pending job.
         JobRun jobRun = jobQueue.remove(jobId);
         if (jobRun != null) {
+            notifyAdmissionEnded(jobRun, IJobAdmissionListener.Result.CANCELLED);
             incrementCancelledJobs();
             List<Exception> exceptions =
                     Collections.singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobId));
@@ -203,6 +206,8 @@ public class JobManager implements IJobManager {
         checkJob(run);
         ccs.removeJobParameterByteStore(run.getJobId());
         if (status == JobStatus.FAILURE_BEFORE_EXECUTION) {
+            // only the job queue fails a job this way, as it drops a queued job it can no longer admit
+            notifyAdmissionEnded(run, IJobAdmissionListener.Result.REJECTED);
             run.setPendingStatus(JobStatus.FAILURE, exceptions);
             finalComplete(run);
             return;
@@ -429,6 +434,11 @@ public class JobManager implements IJobManager {
         return totalRejectedJobs.get();
     }
 
+    @Override
+    public void setAdmissionListener(IJobAdmissionListener listener) {
+        admissionListener = listener != null ? listener : IJobAdmissionListener.NO_OP;
+    }
+
     private void pickJobsToRun() throws HyracksException {
         List<JobRun> selectedRuns = jobQueue.pull();
         for (JobRun run : selectedRuns) {
@@ -445,6 +455,7 @@ public class JobManager implements IJobManager {
         updateActiveJobCounts(run.getJobSpecification(), 1);
         activeRunMap.put(jobId, run);
         run.setStatus(JobStatus.RUNNING, null);
+        notifyAdmissionEnded(run, IJobAdmissionListener.Result.ADMITTED);
         executeJobInternal(run);
     }
 
@@ -453,6 +464,17 @@ public class JobManager implements IJobManager {
         logJobCapacity(jobRun, "queueing", Level.INFO);
         jobRun.setStatus(JobStatus.PENDING, null);
         jobQueue.add(jobRun);
+    }
+
+    // a queued job leaves the queue exactly once, by one of pull() admitting it, pull() failing it, or cancel()
+    // removing it, so each job is reported once without having to remember which have been
+    private void notifyAdmissionEnded(JobRun run, IJobAdmissionListener.Result result) {
+        try {
+            admissionListener.admissionEnded(run.getJobSpecification(), System.nanoTime() - run.getCreateNanoTime(),
+                    result);
+        } catch (Exception e) {
+            LOGGER.warn("Exception notifying end of admission ({}) of job {}", result, run.getJobId(), e);
+        }
     }
 
     private void executeJobInternal(JobRun run) {
@@ -508,13 +530,9 @@ public class JobManager implements IJobManager {
     }
 
     private void handleException(HyracksException ex) {
-        if (ex.getError().isPresent()) {
-            IError error = ex.getError().get();
-            switch ((ErrorCode) error) {
-                case JOB_QUEUE_FULL:
-                case JOB_REQUIREMENTS_EXCEED_CAPACITY:
-                    incrementRejectedJobs();
-            }
+        // matches() rather than a cast: a job creation listener can fail with an error code from another component
+        if (ex.matchesAny(ErrorCode.JOB_QUEUE_FULL, ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY)) {
+            incrementRejectedJobs();
         }
     }
 

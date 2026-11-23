@@ -127,6 +127,7 @@ public class JobManagerTest {
             jobQueueFull = e.matches(ErrorCode.JOB_QUEUE_FULL);
         }
         Assert.assertTrue(jobQueueFull);
+        Assert.assertEquals(1, jobManager.getTotalRejectedJobs());
 
         // Completes runnable jobs.
         for (JobRun run : acceptedRuns) {
@@ -170,6 +171,169 @@ public class JobManagerTest {
         Assert.assertTrue(jobManager.getRunningJobs().isEmpty());
         Assert.assertTrue(jobManager.getPendingJobs().isEmpty());
         Assert.assertTrue(jobManager.getArchivedJobs().size() == 0);
+        Assert.assertEquals(1, jobManager.getTotalRejectedJobs());
+    }
+
+    @Test
+    public void testRejectedCountIgnoresOtherFailures() throws HyracksException {
+        IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
+        IJobManager jobManager = new JobManager(ccConfig, mockClusterControllerService(), jobCapacityController);
+        JobRun run = mockJobRun(1);
+        JobSpecification job = mock(JobSpecification.class);
+        when(run.getJobSpecification()).thenReturn(job);
+        JobId jobId = run.getJobId();
+        when(jobCapacityController.allocate(job, jobId, none))
+                .thenThrow(HyracksException.create(ErrorCode.JOB_REJECTED, jobId));
+        try {
+            jobManager.add(run);
+            Assert.fail("expected the job to be rejected");
+        } catch (HyracksException e) {
+            Assert.assertTrue(e.matches(ErrorCode.JOB_REJECTED));
+        }
+        Assert.assertEquals(0, jobManager.getTotalRejectedJobs());
+    }
+
+    /** One report per job leaving admission, kept in order */
+    private static final class Recorder implements IJobAdmissionListener {
+        final List<JobSpecification> specs = new ArrayList<>();
+        final List<Long> waits = new ArrayList<>();
+        final List<Result> results = new ArrayList<>();
+
+        @Override
+        public void admissionEnded(JobSpecification spec, long waitNanos, Result result) {
+            specs.add(spec);
+            waits.add(waitNanos);
+            results.add(result);
+        }
+    }
+
+    private JobRun submit(IJobManager jobManager, IJobCapacityController jobCapacityController, long id,
+            long createNanos, IJobCapacityController.JobSubmissionStatus first,
+            IJobCapacityController.JobSubmissionStatus... then) throws HyracksException {
+        JobRun run = mockJobRun(id);
+        JobSpecification job = mock(JobSpecification.class);
+        when(run.getJobSpecification()).thenReturn(job);
+        when(run.getCreateNanoTime()).thenReturn(createNanos);
+        when(jobCapacityController.allocate(job, run.getJobId(), none)).thenReturn(first, then);
+        jobManager.add(run);
+        return run;
+    }
+
+    @Test
+    public void testAdmissionListener() throws HyracksException {
+        IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
+        IJobManager jobManager = new JobManager(ccConfig, mockClusterControllerService(), jobCapacityController);
+        Recorder recorder = new Recorder();
+        jobManager.setAdmissionListener(recorder);
+
+        // admitted straight away
+        JobRun run1 = submit(jobManager, jobCapacityController, 1, System.nanoTime(),
+                IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        // queued, then admitted once the first job releases its capacity
+        JobRun run2 = submit(jobManager, jobCapacityController, 2, System.nanoTime() - 1_000_000_000L,
+                IJobCapacityController.JobSubmissionStatus.QUEUE, IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        Assert.assertEquals(Collections.singletonList(run1.getJobSpecification()), recorder.specs);
+
+        jobManager.prepareComplete(run1, JobStatus.TERMINATED, Collections.emptyList());
+        jobManager.finalComplete(run1);
+        Assert.assertEquals(List.of(run1.getJobSpecification(), run2.getJobSpecification()), recorder.specs);
+        Assert.assertEquals(List.of(IJobAdmissionListener.Result.ADMITTED, IJobAdmissionListener.Result.ADMITTED),
+                recorder.results);
+        Assert.assertTrue(recorder.waits.get(0) >= 0 && recorder.waits.get(0) < 1_000_000_000L);
+        Assert.assertTrue(recorder.waits.get(1) >= 1_000_000_000L);
+
+        // an admitted job is reported once, not again as it runs, completes or is cancelled
+        jobManager.cancel(run2.getJobId(), NoOpCallback.INSTANCE);
+        jobManager.prepareComplete(run2, JobStatus.TERMINATED, Collections.emptyList());
+        jobManager.finalComplete(run2);
+        Assert.assertEquals(2, recorder.specs.size());
+
+        // a listener that throws does not stop the job from running
+        jobManager.setAdmissionListener((spec, waitNanos, result) -> {
+            throw new IllegalStateException("listener failure");
+        });
+        submit(jobManager, jobCapacityController, 3, 0, IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        Assert.assertEquals(1, jobManager.getRunningJobsCount());
+
+        // null removes the listener
+        jobManager.setAdmissionListener(null);
+        submit(jobManager, jobCapacityController, 4, 0, IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        Assert.assertEquals(2, recorder.specs.size());
+    }
+
+    @Test
+    public void testAJobCancelledWhileQueuedIsReported() throws HyracksException {
+        IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
+        IJobManager jobManager = new JobManager(ccConfig, mockClusterControllerService(), jobCapacityController);
+        Recorder recorder = new Recorder();
+        jobManager.setAdmissionListener(recorder);
+
+        JobRun running = submit(jobManager, jobCapacityController, 1, System.nanoTime(),
+                IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        JobRun queued = submit(jobManager, jobCapacityController, 2, System.nanoTime() - 2_000_000_000L,
+                IJobCapacityController.JobSubmissionStatus.QUEUE, IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        Assert.assertEquals(1, jobManager.getPendingJobs().size());
+
+        jobManager.cancel(queued.getJobId(), NoOpCallback.INSTANCE);
+        Assert.assertTrue(jobManager.getPendingJobs().isEmpty());
+        Assert.assertEquals(List.of(running.getJobSpecification(), queued.getJobSpecification()), recorder.specs);
+        Assert.assertEquals(List.of(IJobAdmissionListener.Result.ADMITTED, IJobAdmissionListener.Result.CANCELLED),
+                recorder.results);
+        Assert.assertTrue(recorder.waits.get(1) >= 2_000_000_000L);
+
+        // the cancelled job is gone from the queue, so releasing capacity neither admits nor reports it again
+        jobManager.prepareComplete(running, JobStatus.TERMINATED, Collections.emptyList());
+        jobManager.finalComplete(running);
+        jobManager.cancel(queued.getJobId(), NoOpCallback.INSTANCE);
+        Assert.assertEquals(2, recorder.specs.size());
+    }
+
+    @Test
+    public void testAJobFailedWhileQueuedIsReported() throws HyracksException {
+        IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
+        IJobManager jobManager = new JobManager(ccConfig, mockClusterControllerService(), jobCapacityController);
+        Recorder recorder = new Recorder();
+        jobManager.setAdmissionListener(recorder);
+
+        JobRun running = submit(jobManager, jobCapacityController, 1, System.nanoTime(),
+                IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        JobRun queued = mockJobRun(2);
+        JobSpecification job = mock(JobSpecification.class);
+        when(queued.getJobSpecification()).thenReturn(job);
+        when(queued.getCreateNanoTime()).thenReturn(System.nanoTime());
+        JobId queuedId = queued.getJobId();
+        // the cluster shrinks while the job waits, so it can no longer ever be admitted
+        when(jobCapacityController.allocate(job, queuedId, none))
+                .thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
+                .thenThrow(HyracksException.create(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY, "1", "0"));
+        jobManager.add(queued);
+
+        jobManager.prepareComplete(running, JobStatus.TERMINATED, Collections.emptyList());
+        jobManager.finalComplete(running);
+        Assert.assertEquals(List.of(running.getJobSpecification(), job), recorder.specs);
+        Assert.assertEquals(List.of(IJobAdmissionListener.Result.ADMITTED, IJobAdmissionListener.Result.REJECTED),
+                recorder.results);
+    }
+
+    @Test
+    public void testAJobRefusedAtSubmissionIsNotReported() throws HyracksException {
+        IJobCapacityController jobCapacityController = mock(IJobCapacityController.class);
+        IJobManager jobManager = new JobManager(ccConfig, mockClusterControllerService(), jobCapacityController);
+        Recorder recorder = new Recorder();
+        jobManager.setAdmissionListener(recorder);
+        JobRun run = mockJobRun(1);
+        JobSpecification job = mock(JobSpecification.class);
+        when(run.getJobSpecification()).thenReturn(job);
+        JobId jobId = run.getJobId();
+        when(jobCapacityController.allocate(job, jobId, none))
+                .thenThrow(HyracksException.create(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY, "1", "0"));
+        try {
+            jobManager.add(run);
+            Assert.fail("expected the job to be refused");
+        } catch (HyracksException e) {
+            Assert.assertTrue(e.matches(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY));
+        }
+        Assert.assertTrue(recorder.specs.isEmpty());
     }
 
     @Test

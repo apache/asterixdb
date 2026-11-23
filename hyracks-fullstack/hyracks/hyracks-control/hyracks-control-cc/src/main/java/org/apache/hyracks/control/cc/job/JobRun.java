@@ -84,6 +84,8 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final long createTime;
 
+    private final long createNanoTime;
+
     private volatile long startTime;
 
     private String startTimeZoneId;
@@ -114,6 +116,7 @@ public class JobRun implements IJobStatusConditionVariable {
         connectorPolicyMap = new HashMap<>();
         operatorLocations = new HashMap<>();
         createTime = System.currentTimeMillis();
+        createNanoTime = System.nanoTime();
         profile = new JobProfile(jobId);
         profile.setCreateTime(createTime);
     }
@@ -193,6 +196,13 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public long getCreateTime() {
         return createTime;
+    }
+
+    /**
+     * @return the {@link System#nanoTime()} at which this run was created, for measuring intervals from its creation
+     */
+    public long getCreateNanoTime() {
+        return createNanoTime;
     }
 
     public long getStartTime() {

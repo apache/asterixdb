@@ -150,4 +150,12 @@ public interface IJobManager {
      * @return total rejected jobs
      */
     long getTotalRejectedJobs();
+
+    /**
+     * Sets the listener told about each job as it leaves admission, replacing any earlier one.
+     *
+     * @param listener
+     *            the listener, or {@code null} for none
+     */
+    void setAdmissionListener(IJobAdmissionListener listener);
 }
