@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
@@ -77,6 +78,8 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
     private long persistenceLsn = 0L;
     private int pendingFlushes = 0;
     private final Deque<ILSMComponentId> componentIds = new ArrayDeque<>();
+    // start times of the flushes and merges running on this index, for LSMIOOperationListeners
+    private final Map<ILSMIOOperation, Long> startNanos = new ConcurrentHashMap<>();
 
     public LSMIOOperationCallback(DatasetInfo dsInfo, ILSMIndex lsmIndex, ILSMComponentId componentId,
             IIndexCheckpointManagerProvider indexCheckpointManagerProvider, IIOManager ioManager) {
@@ -90,6 +93,9 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
 
     @Override
     public void beforeOperation(ILSMIOOperation operation) throws HyracksDataException {
+        if (LSMIOOperationListeners.isEnabled() && isReported(operation)) {
+            startNanos.put(operation, System.nanoTime());
+        }
         if (isMerge(operation)) {
             FileReference operationMaskFilePath = getOperationMaskFilePath(operation);
             // if a merge operation is attempted after a failure, its mask file may already exist
@@ -139,10 +145,34 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         } else if (isMerge(operation)) {
             ioManager.delete(getOperationMaskFilePath(operation));
         }
+        reportCompleted(operation);
+    }
+
+    /**
+     * Reports a flush or merge that has finalized successfully to {@link LSMIOOperationListeners}. Called last from
+     * {@link #afterFinalize(ILSMIOOperation)}, once the new component is durable and checkpointed. A failed operation
+     * is not reported; {@link #afterFailure(ILSMIOOperation)} forgets its start time.
+     */
+    protected void reportCompleted(ILSMIOOperation operation) {
+        Long start = startNanos.remove(operation);
+        if (start == null || operation.getStatus() == LSMIOOperationStatus.FAILURE) {
+            return;
+        }
+        long durationNanos = System.nanoTime() - start;
+        ILSMDiskComponent newComponent = operation.getNewComponent();
+        long bytes = newComponent == null ? 0L : newComponent.getComponentSize();
+        LSMIOOperationListeners.completed(operation.getIOOperationType(), durationNanos, bytes);
+    }
+
+    private static boolean isReported(ILSMIOOperation operation) {
+        LSMIOOperationType type = operation.getIOOperationType();
+        return (type == LSMIOOperationType.FLUSH || type == LSMIOOperationType.MERGE)
+                && operation.getAccessor().getOpContext().getOperation() != IndexOperation.DELETE_COMPONENTS;
     }
 
     @Override
     public void afterFailure(ILSMIOOperation operation) {
+        startNanos.remove(operation);
         dsInfo.incrementFailedIoOp(operation.getIOOperationType());
         if (isMerge(operation)) {
             try {

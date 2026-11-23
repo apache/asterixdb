@@ -50,5 +50,6 @@ public class AtomicLSMIOOperationCallback extends LSMIOOperationCallback {
         } else if (isMerge(operation)) {
             ioManager.delete(getOperationMaskFilePath(operation));
         }
+        reportCompleted(operation);
     }
 }

@@ -22,11 +22,14 @@ package org.apache.asterix.test.ioopcallbacks;
 import static org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId.MIN_VALID_COMPONENT_ID;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationListeners;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -36,6 +39,8 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
@@ -203,6 +208,105 @@ public class LSMIOOperationCallbackTest extends TestCase {
             callback.completed(flush);
             checkMemoryComponent(expectedId, mockComponent);
         }
+    }
+
+    @Test
+    public void testCompletedFlushIsReported() throws HyracksDataException {
+        List<Object[]> reported = new ArrayList<>();
+        LSMIOOperationListeners
+                .set((type, durationNanos, bytes) -> reported.add(new Object[] { type, durationNanos, bytes }));
+        try {
+            LSMIOOperationCallback callback = newCallback();
+            FlushOperation flush = newFlush(callback);
+            ILSMDiskComponent component = mockDiskComponent();
+            Mockito.when(component.getComponentSize()).thenReturn(4096L);
+            runFlush(callback, flush, component);
+            Assert.assertEquals(1, reported.size());
+            Assert.assertEquals(LSMIOOperationType.FLUSH, reported.get(0)[0]);
+            Assert.assertTrue((Long) reported.get(0)[1] >= 0);
+            Assert.assertEquals(4096L, reported.get(0)[2]);
+        } finally {
+            LSMIOOperationListeners.set(null);
+        }
+    }
+
+    @Test
+    public void testFailedFlushIsNotReported() throws HyracksDataException {
+        List<Object[]> reported = new ArrayList<>();
+        LSMIOOperationListeners
+                .set((type, durationNanos, bytes) -> reported.add(new Object[] { type, durationNanos, bytes }));
+        try {
+            LSMIOOperationCallback callback = newCallback();
+            FlushOperation flush = newFlush(callback);
+            callback.scheduled(flush);
+            callback.beforeOperation(flush);
+            flush.setStatus(LSMIOOperationStatus.FAILURE);
+            callback.afterFinalize(flush);
+            callback.afterFailure(flush);
+            callback.completed(flush);
+            Assert.assertTrue(reported.isEmpty());
+            // a later flush on the same index is still reported
+            runFlush(callback, newFlush(callback), mockDiskComponent());
+            Assert.assertEquals(1, reported.size());
+        } finally {
+            LSMIOOperationListeners.set(null);
+        }
+    }
+
+    @Test
+    public void testNothingReportedWithoutListener() throws HyracksDataException {
+        Assert.assertFalse(LSMIOOperationListeners.isEnabled());
+        LSMIOOperationCallback callback = newCallback();
+        FlushOperation flush = newFlush(callback);
+        callback.scheduled(flush);
+        callback.beforeOperation(flush);
+        // installed mid-operation: the operation was not timed, so it must not be reported
+        List<Object[]> reported = new ArrayList<>();
+        LSMIOOperationListeners.set((type, durationNanos, bytes) -> reported.add(new Object[] { type }));
+        try {
+            flush.setNewComponent(mockDiskComponent());
+            callback.afterOperation(flush);
+            callback.afterFinalize(flush);
+            callback.completed(flush);
+            Assert.assertTrue(reported.isEmpty());
+        } finally {
+            LSMIOOperationListeners.set(null);
+        }
+    }
+
+    private LSMIOOperationCallback newCallback() throws HyracksDataException {
+        ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
+        Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
+        Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(Mockito.mock(AbstractLSMMemoryComponent.class));
+        Mockito.when(mockIndex.getIndexIdentifier()).thenReturn(getIndexPath());
+        return new LSMIOOperationCallback(new DatasetInfo(101, null), mockIndex,
+                new LSMComponentIdGenerator(2, MIN_VALID_COMPONENT_ID).getId(), mockIndexCheckpointManagerProvider(),
+                mockIOManager());
+    }
+
+    private FlushOperation newFlush(LSMIOOperationCallback callback) throws HyracksDataException {
+        ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
+        Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(Mockito.mock(AbstractLSMMemoryComponent.class));
+        Map<String, Object> flushMap = new HashMap<>();
+        flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, 1L);
+        flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, new LSMComponentId(1, 1));
+        ILSMIndexAccessor accessor = new TestLSMIndexAccessor(new TestLSMIndexOperationContext(mockIndex));
+        accessor.getOpContext().setParameters(flushMap);
+        IODeviceHandle mockIoDevice = Mockito.mock(IODeviceHandle.class);
+        Mockito.when(mockIoDevice.getMount()).thenReturn(new File(getIndexPath()));
+        FileReference target = new FileReference(mockIoDevice, getComponentFileName());
+        LSMComponentFileReferences files = new LSMComponentFileReferences(target, target, target);
+        return new TestFlushOperation(accessor, target, callback, "mockIndexId", files, new LSMComponentId(0, 0));
+    }
+
+    private static void runFlush(LSMIOOperationCallback callback, FlushOperation flush, ILSMDiskComponent component)
+            throws HyracksDataException {
+        callback.scheduled(flush);
+        callback.beforeOperation(flush);
+        flush.setNewComponent(component);
+        callback.afterOperation(flush);
+        callback.afterFinalize(flush);
+        callback.completed(flush);
     }
 
     private void checkMemoryComponent(ILSMComponentId expected, ILSMMemoryComponent memoryComponent)
