@@ -32,6 +32,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -86,6 +87,7 @@ public class HttpServer {
     private final EventLoopGroup workerGroup;
     private final Set<InetSocketAddress> addresses;
     private final ThreadPoolExecutor executor;
+    private final AtomicLong rejectedRequests = new AtomicLong();
     // Mutable members
     private volatile int state = STOPPED;
     private volatile Thread recoveryThread;
@@ -407,6 +409,17 @@ public class HttpServer {
 
     public int getWorkQueueSize() {
         return workQueue.size();
+    }
+
+    /**
+     * @return the number of requests refused because the executor they were submitted to could not accept them
+     */
+    public long getRejectedRequestCount() {
+        return rejectedRequests.get();
+    }
+
+    void requestRejected() {
+        rejectedRequests.incrementAndGet();
     }
 
     public IChannelClosedHandler getChannelClosedHandler() {
