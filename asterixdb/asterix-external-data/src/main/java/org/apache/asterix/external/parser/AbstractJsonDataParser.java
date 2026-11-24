@@ -92,6 +92,13 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
      ****************************************************
      */
 
+    /**
+     * @return the bytes held by this parser's pooled buffers and builders, see {@link ParserContext#getPooledBytes()}
+     */
+    public long getPooledBytes() {
+        return parserContext.getPooledBytes();
+    }
+
     public boolean parseAnyValue(DataOutput out) throws HyracksDataException {
         try {
             if (nextToken() == ADMToken.EOF) {
@@ -189,49 +196,53 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
         final IMutableValueStorage valueBuffer = parserContext.enterObject();
         final IARecordBuilder objectBuilder = parserContext.getObjectBuilder(recordType);
         final BitSet nullBitMap = parserContext.getNullBitmap(recordType.getFieldTypes().length);
-        while (nextToken() != ADMToken.OBJECT_END) {
-            /*
-             * Jackson parser calls String.intern() for field names (if enabled).
-             * Calling getCurrentName() will not create multiple objects.
-             */
-            final String fieldName = jsonParser.getCurrentName();
-            final int fieldIndex = recordType.getFieldIndex(fieldName);
+        try {
+            while (nextToken() != ADMToken.OBJECT_END) {
+                /*
+                 * Jackson parser calls String.intern() for field names (if enabled).
+                 * Calling getCurrentName() will not create multiple objects.
+                 */
+                final String fieldName = jsonParser.getCurrentName();
+                final int fieldIndex = recordType.getFieldIndex(fieldName);
 
-            if (!recordType.isOpen() && fieldIndex < 0) {
-                throw new RuntimeDataException(ErrorCode.PARSER_ADM_DATA_PARSER_EXTRA_FIELD_IN_CLOSED_RECORD,
-                        LogRedactionUtil.userData(fieldName));
-            }
-            valueBuffer.reset();
-            nextToken();
-
-            if (fieldIndex < 0) {
-                //field is not defined and the type is open
-                parseValue(BuiltinType.ANY, valueBuffer.getDataOutput());
-                objectBuilder.addField(parserContext.getSerializedFieldName(fieldName), valueBuffer);
-            } else {
-                //field is defined
-                final IAType fieldType = recordType.getFieldType(fieldName);
-
-                //fail fast if the current field is not nullable
-                if (currentToken() == ADMToken.NULL && !isNullableType(fieldType)) {
-                    throw new RuntimeDataException(ErrorCode.PARSER_EXT_DATA_PARSER_CLOSED_FIELD_NULL,
+                if (!recordType.isOpen() && fieldIndex < 0) {
+                    throw new RuntimeDataException(ErrorCode.PARSER_ADM_DATA_PARSER_EXTRA_FIELD_IN_CLOSED_RECORD,
                             LogRedactionUtil.userData(fieldName));
                 }
+                valueBuffer.reset();
+                nextToken();
 
-                nullBitMap.set(fieldIndex);
-                parseValue(fieldType, valueBuffer.getDataOutput());
-                objectBuilder.addField(fieldIndex, valueBuffer);
+                if (fieldIndex < 0) {
+                    //field is not defined and the type is open
+                    parseValue(BuiltinType.ANY, valueBuffer.getDataOutput());
+                    objectBuilder.addField(parserContext.getSerializedFieldName(fieldName), valueBuffer);
+                } else {
+                    //field is defined
+                    final IAType fieldType = recordType.getFieldType(fieldName);
+
+                    //fail fast if the current field is not nullable
+                    if (currentToken() == ADMToken.NULL && !isNullableType(fieldType)) {
+                        throw new RuntimeDataException(ErrorCode.PARSER_EXT_DATA_PARSER_CLOSED_FIELD_NULL,
+                                LogRedactionUtil.userData(fieldName));
+                    }
+
+                    nullBitMap.set(fieldIndex);
+                    parseValue(fieldType, valueBuffer.getDataOutput());
+                    objectBuilder.addField(fieldIndex, valueBuffer);
+                }
             }
-        }
 
-        /*
-         * Check for any possible missed values for a defined (non-nullable) type.
-         * Throws exception if there is a violation
-         */
-        if (nullBitMap != null) {
-            checkOptionalConstraints(recordType, nullBitMap);
+            /*
+             * Check for any possible missed values for a defined (non-nullable) type.
+             * Throws exception if there is a violation
+             */
+            if (nullBitMap != null) {
+                checkOptionalConstraints(recordType, nullBitMap);
+            }
+        } finally {
+            // a failed parse returns what it borrowed too, so the pools are whole again for the next document
+            parserContext.exitObject(valueBuffer, nullBitMap, objectBuilder);
         }
-        parserContext.exitObject(valueBuffer, nullBitMap, objectBuilder);
         objectBuilder.write(out, true);
     }
 
@@ -271,20 +282,23 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
         final IMutableValueStorage valueBuffer = parserContext.enterCollection();
         final IAsterixListBuilder arrayBuilder = parserContext.getCollectionBuilder(collectionType);
         final boolean isOpen = collectionType.getItemType().getTypeTag() == ATypeTag.ANY;
-        while (nextToken() != endToken) {
-            valueBuffer.reset();
-            if (isOpen) {
-                parseValue(BuiltinType.ANY, valueBuffer.getDataOutput());
-            } else {
-                //fail fast if current value is null
-                if (currentToken() == ADMToken.NULL) {
-                    throw new RuntimeDataException(ErrorCode.PARSER_COLLECTION_ITEM_CANNOT_BE_NULL);
+        try {
+            while (nextToken() != endToken) {
+                valueBuffer.reset();
+                if (isOpen) {
+                    parseValue(BuiltinType.ANY, valueBuffer.getDataOutput());
+                } else {
+                    //fail fast if current value is null
+                    if (currentToken() == ADMToken.NULL) {
+                        throw new RuntimeDataException(ErrorCode.PARSER_COLLECTION_ITEM_CANNOT_BE_NULL);
+                    }
+                    parseValue(collectionType.getItemType(), valueBuffer.getDataOutput());
                 }
-                parseValue(collectionType.getItemType(), valueBuffer.getDataOutput());
+                arrayBuilder.addItem(valueBuffer);
             }
-            arrayBuilder.addItem(valueBuffer);
+        } finally {
+            parserContext.exitCollection(valueBuffer, arrayBuilder);
         }
-        parserContext.exitCollection(valueBuffer, arrayBuilder);
         arrayBuilder.write(out, true);
     }
 

@@ -32,6 +32,10 @@ public class IntArrayList {
         this.growth = growth;
     }
 
+    public int capacity() {
+        return data.length;
+    }
+
     public int size() {
         return size;
     }

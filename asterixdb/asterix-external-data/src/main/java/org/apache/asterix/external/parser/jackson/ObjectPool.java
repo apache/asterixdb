@@ -18,12 +18,10 @@
  */
 package org.apache.asterix.external.parser.jackson;
 
+import java.util.function.ToLongFunction;
+
 import org.apache.asterix.om.util.container.IObjectFactory;
 
-/**
- * Object pool for DFS traversal mode, which allows to recycle objects
- * as soon as it is not needed.
- */
 public class ObjectPool<E, T> extends AbstractObjectPool<E, T, E> {
     public ObjectPool() {
         this(null, null);
@@ -34,16 +32,24 @@ public class ObjectPool<E, T> extends AbstractObjectPool<E, T, E> {
     }
 
     public ObjectPool(IObjectFactory<E, T> objectFactory, T param) {
-        super(objectFactory, param);
+        this(objectFactory, param, null);
+    }
+
+    public ObjectPool(IObjectFactory<E, T> objectFactory, T param, ToLongFunction<E> sizer) {
+        super(objectFactory, param, sizer);
     }
 
     @Override
     protected E unwrap(E wrapped) {
+        if (wrapped != null) {
+            // a pooled object is not modified, so it measures what it did when recycled
+            borrowed(sizeOf(wrapped));
+        }
         return wrapped;
     }
 
     @Override
-    protected E wrap(E element) {
+    protected E wrap(E element, int size) {
         return element;
     }
 }

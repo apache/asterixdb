@@ -48,7 +48,7 @@ public class ParserContext {
     private static final int SERIALIZED_FIELDNAME_MAP_MAX_SIZE = 128;
 
     private final IObjectPool<IARecordBuilder> objectBuilderPool;
-    private final ObjectPool<IAsterixListBuilder, ATypeTag> arrayBuilderPool;
+    private final IObjectPool<IAsterixListBuilder> arrayBuilderPool;
 
     /**
      * Parsing nested structure using temporary buffers is expensive.
@@ -62,19 +62,31 @@ public class ParserContext {
     private final Map<String, IMutableValueStorage> serializedFieldNames;
     private final ISerializerDeserializer<AString> stringSerDe;
     private final AMutableString aString;
+    private int depth;
 
     @SuppressWarnings("unchecked")
     public ParserContext() {
-        objectBuilderPool = new SoftObjectPool<>(new RecordBuilderFactory());
-        arrayBuilderPool = new ObjectPool<>(new ListBuilderFactory(), ATypeTag.ARRAY);
-        tempBufferPool = new SoftObjectPool<>(new AbvsBuilderFactory());
-        nullBitmapPool = new ObjectPool<>();
+        objectBuilderPool = new SoftObjectPool<>(new RecordBuilderFactory(), null, IARecordBuilder::getCapacity);
+        arrayBuilderPool =
+                new SoftObjectPool<>(new ListBuilderFactory(), ATypeTag.ARRAY, IAsterixListBuilder::getCapacity);
+        tempBufferPool = new SoftObjectPool<>(new AbvsBuilderFactory(), null, buffer -> buffer.getByteArray().length);
+        nullBitmapPool = new ObjectPool<>(null, null, bitmap -> bitmap.size() / Byte.SIZE);
         serializedFieldNames = new LRUMap<>(SERIALIZED_FIELDNAME_MAP_MAX_SIZE);
         stringSerDe = SerializerDeserializerProvider.INSTANCE.getAStringSerializerDeserializer();
         aString = new AMutableString("");
     }
 
+    /**
+     * @return the bytes held by this context's pooled buffers and builders, as of the end of the last value parsed.
+     *         Safe to call from any thread.
+     */
+    public long getPooledBytes() {
+        return objectBuilderPool.getPooledBytes() + arrayBuilderPool.getPooledBytes() + tempBufferPool.getPooledBytes()
+                + nullBitmapPool.getPooledBytes();
+    }
+
     public IMutableValueStorage enterObject() {
+        depth++;
         return tempBufferPool.getInstance();
     }
 
@@ -123,9 +135,11 @@ public class ParserContext {
             nullBitmap.clear();
             nullBitmapPool.recycle(nullBitmap);
         }
+        exit();
     }
 
     public IMutableValueStorage enterCollection() {
+        depth++;
         return tempBufferPool.getInstance();
     }
 
@@ -138,5 +152,16 @@ public class ParserContext {
     public void exitCollection(IMutableValueStorage tempBuffer, IAsterixListBuilder builder) {
         tempBufferPool.recycle(tempBuffer);
         arrayBuilderPool.recycle(builder);
+        exit();
+    }
+
+    private void exit() {
+        // everything borrowed is back once the outermost value ends, so the pools measure all they hold only then
+        if (--depth == 0) {
+            objectBuilderPool.publishPooledBytes();
+            arrayBuilderPool.publishPooledBytes();
+            tempBufferPool.publishPooledBytes();
+            nullBitmapPool.publishPooledBytes();
+        }
     }
 }
