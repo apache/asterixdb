@@ -221,7 +221,7 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
 
         // Next evict all inactive indexes
         for (UnsweepableIndexUnit index : unsweepableIndexes) {
-            if (now - index.getLastAccessTime() >= inactiveTimeThreshold) {
+            if (index.isInactive(now, inactiveTimeThreshold)) {
                 try {
                     cloudIOManager.evict(index.getPath());
                 } catch (HyracksDataException e) {

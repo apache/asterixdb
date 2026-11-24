@@ -30,7 +30,8 @@ public abstract class AbstractIndexUnit {
 
     AbstractIndexUnit(LocalResource localResource) {
         this.localResource = localResource;
-        this.lastAccessTime = new AtomicLong(0);
+        // System.nanoTime() has an arbitrary origin, so 0 would not read as long ago
+        this.lastAccessTime = new AtomicLong(System.nanoTime());
         this.openCounter = new AtomicInteger(0);
     }
 
@@ -40,11 +41,31 @@ public abstract class AbstractIndexUnit {
     }
 
     public final void close() {
+        lastAccessTime.set(System.nanoTime());
         openCounter.decrementAndGet();
     }
 
+    /**
+     * @return whether the index is in use now: a job has it open, as a feed may do for days
+     */
+    public final boolean isOpen() {
+        return openCounter.get() > 0;
+    }
+
+    /**
+     * @return the {@link System#nanoTime()} of the last time the index was registered, opened or closed
+     */
     public final long getLastAccessTime() {
         return lastAccessTime.get();
+    }
+
+    /**
+     * @param now       {@link System#nanoTime()}
+     * @param threshold how long, in nanoseconds, an index must go unused to be inactive
+     * @return whether the index is closed, and has been since {@code threshold} before {@code now}
+     */
+    public final boolean isInactive(long now, long threshold) {
+        return !isOpen() && now - lastAccessTime.get() >= threshold;
     }
 
     public abstract void drop();

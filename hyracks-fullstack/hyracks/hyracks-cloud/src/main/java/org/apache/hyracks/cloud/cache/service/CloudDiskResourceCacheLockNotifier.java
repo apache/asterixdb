@@ -64,7 +64,13 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
                 } else {
                     unsweepableIndexes.put(resourceId, new UnsweepableIndexUnit(localResource, lsmIndex));
                 }
-                inactiveResources.remove(localResource.getId());
+                if (inactiveResources.remove(resourceId) == null) {
+                    // A new index can take the path of one dropped before it was ever opened, whose entry the drop
+                    // leaves behind; left there, it would evict the new index's files while it is open. The entries
+                    // come from one listing of the local resources, so an index that has its own has no such twin.
+                    String path = localResource.getPath();
+                    inactiveResources.values().removeIf(inactive -> path.equals(inactive.getPath()));
+                }
             }
         } finally {
             evictionLock.readLock().unlock();
