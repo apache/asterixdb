@@ -81,4 +81,10 @@ public interface IARecordBuilder {
 
     public int getFieldId(String fieldName);
 
+    /**
+     * @return the allocated size in bytes of the arrays holding the record's content and field offsets, which
+     *         {@link #reset} keeps; the field-name hash set is not counted
+     */
+    public long getCapacity();
+
 }
