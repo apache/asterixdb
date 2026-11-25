@@ -309,6 +309,22 @@ public class RecordBuilder implements IARecordBuilder {
         return recType.getFieldIndex(fieldName);
     }
 
+    @Override
+    public long getCapacity() {
+        long capacity = (long) closedPartOutputStream.capacity() + openPartOutputStream.capacity()
+                + (long) Long.BYTES * openPartOffsets.length + (long) Integer.BYTES * openFieldNameLengths.length;
+        if (openPartOffsetArray != null) {
+            capacity += openPartOffsetArray.length;
+        }
+        if (closedPartOffsets != null) {
+            capacity += (long) Integer.BYTES * closedPartOffsets.length;
+        }
+        if (nullBitMap != null) {
+            capacity += nullBitMap.length;
+        }
+        return capacity;
+    }
+
     public IBinaryHashFunction getFieldNameHashFunction() {
         return utf8HashFunction;
     }

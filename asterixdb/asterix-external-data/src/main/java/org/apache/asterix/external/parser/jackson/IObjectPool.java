@@ -26,4 +26,16 @@ public interface IObjectPool<E> {
     E getInstance();
 
     void recycle(E object);
+
+    /**
+     * Makes the pool's current size the one {@link #getPooledBytes()} reports. For the pool's owner to call when it
+     * has returned everything it borrowed: a borrowed object is not counted, so the size is too low at any other time.
+     */
+    void publishPooledBytes();
+
+    /**
+     * @return the bytes held by the pooled objects when the size was last {@link #publishPooledBytes() published},
+     *         less what the garbage collector has reclaimed since; safe to call from any thread
+     */
+    long getPooledBytes();
 }
