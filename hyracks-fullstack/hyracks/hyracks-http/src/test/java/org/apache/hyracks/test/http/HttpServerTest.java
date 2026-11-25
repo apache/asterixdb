@@ -127,6 +127,43 @@ public class HttpServerTest {
         }
     }
 
+    @Test
+    public void testOverloadedServerAnswersLargeRequests() throws Exception {
+        WebManager webMgr = new WebManager();
+        int numExecutors = 2;
+        int serverQueueSize = 2;
+        int numRejected = 16;
+        // large enough that the server cannot buffer the whole body, so closing early would break the pipe
+        int entitySize = 8 * 1024 * 1024;
+        final HttpServerConfig config = HttpServerConfigBuilder.custom().setThreadCount(numExecutors)
+                .setRequestQueueSize(serverQueueSize).build();
+        HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, config);
+        SleepyServlet servlet = new SleepyServlet(server.ctx(), new String[] { PATH });
+        server.addServlet(servlet);
+        webMgr.add(server);
+        webMgr.start();
+        try {
+            request(numExecutors + serverQueueSize);
+            waitTillQueued(server, serverQueueSize);
+            ArrayList<Future<Void>> successSet = started();
+            request(numRejected, entitySize);
+            // every rejected request must get its 503, not an I/O error from a connection closed mid-body
+            for (Future<Void> f : started()) {
+                f.get();
+            }
+            Assert.assertEquals(numRejected, UNAVAILABLE_COUNT.get());
+            Assert.assertEquals(numRejected, server.getRejectedRequestCount());
+            servlet.wakeUp();
+            for (Future<Void> f : successSet) {
+                f.get();
+            }
+            Assert.assertEquals(numExecutors + serverQueueSize, SUCCESS_COUNT.get());
+            Assert.assertEquals(0, OTHER_COUNT.get());
+        } finally {
+            webMgr.stop();
+        }
+    }
+
     private void waitTillQueued(HttpServer server, int expectedQueued) throws Exception {
         int maxAttempts = 15;
         int attempt = 0;
