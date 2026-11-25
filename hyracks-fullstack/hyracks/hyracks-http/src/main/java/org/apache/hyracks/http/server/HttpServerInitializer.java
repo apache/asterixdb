@@ -46,10 +46,10 @@ public class HttpServerInitializer extends ChannelInitializer<DuplexChannel> {
     @Override
     public void initChannel(DuplexChannel ch) {
         ChannelPipeline p = ch.pipeline();
-        p.addLast(new HttpRequestCapacityController(server));
         p.addLast(new HttpRequestDecoder(maxRequestInitialLineLength, maxRequestHeaderSize, maxRequestChunkSize));
         p.addLast(new HttpResponseEncoder());
         p.addLast(getCLFLogger());
+        p.addLast(new HttpRequestCapacityController(server, maxRequestSize));
         p.addLast(new HttpRequestAggregator(maxRequestSize));
         p.addLast(server.createHttpHandler(maxResponseChunkSize));
     }
