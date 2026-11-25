@@ -24,15 +24,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.cluster.IClusterStateChangeListener;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.StorageComputePartitionsMap;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -84,6 +88,7 @@ public class ClusterStateManager implements IClusterStateManager {
     private ClusterPartition metadataPartition;
     private boolean rebalanceRequired;
     private StorageComputePartitionsMap storageComputePartitionsMap;
+    private final List<IClusterStateChangeListener> stateChangeListeners = new CopyOnWriteArrayList<>();
 
     @Override
     public void setCcAppCtx(ICcApplicationContext appCtx) {
@@ -132,11 +137,25 @@ public class ClusterStateManager implements IClusterStateManager {
             return;
         }
         LOGGER.info("updating cluster state from " + this.state + " to " + state.name());
+        ClusterState previous = this.state;
         this.state = state;
         appCtx.getGlobalRecoveryManager().notifyStateChange(state);
         LOGGER.info("Cluster State is now " + state.name());
+        for (IClusterStateChangeListener listener : stateChangeListeners) {
+            try {
+                listener.stateChanged(previous, state);
+            } catch (Exception e) {
+                // a listener only observes; the change has been made and must still reach the waiters below
+                LOGGER.warn("cluster state change listener {} failed on {} -> {}", listener, previous, state, e);
+            }
+        }
         // Notify any waiting threads for the cluster state to change.
         notifyAll();
+    }
+
+    @Override
+    public void addStateChangeListener(IClusterStateChangeListener listener) {
+        stateChangeListeners.add(Objects.requireNonNull(listener));
     }
 
     @Override

@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.runtime;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -102,6 +104,27 @@ public class ClusterStateManagerTest {
         csm.notifyNodeFailure(NC2);
         // cluster should now be unusable
         Assert.assertTrue(!csm.isClusterActive());
+    }
+
+    /**
+     * Ensures that state change listeners are told of each change exactly once, in order, and that a failing listener
+     * neither prevents the change nor hides it from the other listeners.
+     */
+    @Test
+    public void stateChangeListeners() throws Exception {
+        ClusterStateManager csm = new ClusterStateManager();
+        csm.setCcAppCtx(ccAppContext(csm));
+        List<String> changes = new ArrayList<>();
+        csm.addStateChangeListener((from, to) -> {
+            throw new IllegalStateException("failing listener");
+        });
+        csm.addStateChangeListener((from, to) -> changes.add(from + "->" + to));
+        csm.setState(ClusterState.PENDING);
+        csm.setState(ClusterState.PENDING);
+        csm.setState(ClusterState.RECOVERING);
+        csm.setState(ClusterState.ACTIVE);
+        Assert.assertEquals(List.of("UNUSABLE->PENDING", "PENDING->RECOVERING", "RECOVERING->ACTIVE"), changes);
+        Assert.assertEquals(ClusterState.ACTIVE, csm.getState());
     }
 
     /**

@@ -58,6 +58,16 @@ public interface IClusterStateManager {
     void setState(ClusterState state);
 
     /**
+     * Registers a listener to be told of every subsequent change of the cluster state.
+     *
+     * @param listener
+     *            the listener to add
+     */
+    default void addStateChangeListener(IClusterStateChangeListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Updates all partitions of {@code nodeId} based on the {@code active} flag.
      *
      * @param nodeId
