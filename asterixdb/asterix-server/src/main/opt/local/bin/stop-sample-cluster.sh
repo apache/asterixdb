@@ -103,8 +103,8 @@ fi
 export JAVA_VERSION=$($JAVACMD -version 2>&1 | head -1 | awk '{ print $3 }' | tr -d '"')
 
 case $JAVA_VERSION in
-  1.[0-7]*)
-  echo JAVA_HOME must be at version 1.8 or later, but is: $JAVA_VERSION
+  1.*|[2-9]|[2-9][.-]*|1[0-9]|1[0-9][.-]*|20|20[.-]*)
+  echo JAVA_HOME must be at version 21 or later, but is: $JAVA_VERSION
   exit 2
 esac
 
